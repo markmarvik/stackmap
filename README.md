@@ -10,7 +10,7 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 
 **Active stack (v0.3.10):** My Stack has an **All / Active** toggle on the personal map. Each saved item stays **Active** until you mark it **Paused**; Active view shows only stack items that are still active. The choice is saved in this browser.
 
-**All nodes (v0.3.9):** the Map list includes **All nodes**, one map of every constellation, framed to the screen. The crosshairs button fits whatever is visible. Names show when you zoom in; `/` still jumps to a node. New nodes landed in every constellation, and a few headline supplement lines were rewritten so they do not read like guaranteed extra years.
+**All nodes (v0.3.9):** the Map list includes **All nodes**, one map of every constellation, framed to the screen. The crosshairs button fits whatever is visible. Names show when you zoom in; `/` still jumps to a node. New nodes landed in every constellation, and a few headline supplement lines were rewritten into neutral, educational wording.
 
 **Find + starters (v0.3.8):** search any node (`/` focuses the box) and jump to it, including across constellations. My Stack includes five starter sets (Sleep base, Foundation, Train, Plate, First labs) that merge into the saved stack.
 **Shell (v0.3.7):** product name StackMap across the map, pricing, print, and share card. Browser data copies forward from `aetheris-*` localStorage keys. Desktop right rail is Map / Body / Stack — one tool at a time. Phone keeps the stacked column.
@@ -30,7 +30,7 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 - **Analytics + feedback**: `track()` stub + constellation hooks; footer Feedback (Tally placeholder)
 - **Layered anatomy** (Issue #16 Phase 1): independent opacity for base / organs / skeleton / muscles + view presets; **mobile** opens as fixed bottom sheet (v0.2.8)
 - **Organ impact** (v0.3.0): My Stack → tagged systems coverage strip + anatomy highlight
-- **Organ explode (v0.3.3+)**: hover/tap the central body to spread organs; constellation nodes also spread radially so they clear the organ ring; click an organ to highlight linked nodes (green = beneficial framing, red = harmful / negative) — educational “nodes linked to this organ” only
+- **Organ explode (v0.3.3+)**: hover/tap the central body to spread organs; constellation nodes also spread radially so they clear the organ ring; click an organ to highlight linked nodes (green = positive framing, red = higher-risk / negative) — educational “nodes linked to this organ” only
 - **Explode node spread (v0.3.4)**: nodes ease outward with the same explode progress (closer-to-body nodes move more)
 - **Explode organ spacing (v0.3.5)**: retuned organ ring (staggered radii + even-ish angles) so exploded sprites no longer stack; node push bumped to clear the wider ring
 - **Explode node labels (v0.3.6)**: score/value text inside nodes uses the same explode draw position as circles (BiomarkerTree override was lagging at home coords)

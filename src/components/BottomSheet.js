@@ -101,6 +101,7 @@ export class BottomSheet {
       const vit = node.vitality || node.longevity || 0;
       const isNeg = !!(node.impact === 'negative' || node._isNegative);
       this.vitEl.textContent = isNeg ? `${vit} HARM` : `${vit} VS`;
+      this.vitEl.title = 'App rating, not a health outcome';
       this.vitEl.className = isNeg
         ? 'font-mono text-[11px] px-2 py-0.5 rounded-xl bg-red-500/10 text-red-300 border border-red-400/30 shrink-0'
         : (vit >= 85
@@ -123,7 +124,7 @@ export class BottomSheet {
           const ps = scorer(node);
           if (ps) {
             personalHtml = `
-              <div class="mt-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/30">
+              <div class="mt-2 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/30" title="App match rating from your profile, not a health outcome.">
                 <span class="font-mono">${ps}</span>
                 <span class="uppercase tracking-widest text-[9px]">match for you</span>
               </div>`;
@@ -148,6 +149,7 @@ export class BottomSheet {
         : 'w-full text-[11px] py-1.5 rounded-xl border border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/15 text-amber-200';
 
       this.previewEl.innerHTML = `
+        <div class="text-[9px] text-white/35 leading-snug mb-1.5">App scores (0-100), not health outcomes</div>
         <div class="text-white/80 text-[12px] leading-snug line-clamp-3">${blurb}</div>
         ${personalHtml}
         ${organPills ? `<div class="mt-2 flex flex-wrap gap-1">${organPills}</div>` : ''}
@@ -172,7 +174,7 @@ export class BottomSheet {
     if (this.fullEl) this.fullEl.classList.add('hidden');
 
     this.sheetEl.classList.remove('hidden');
-    this._setHeight(34); // modest preview rise
+    this._setHeight(38); // modest preview rise (room for the app-score caption)
     this._syncSheetChrome();
   }
 
@@ -206,7 +208,7 @@ export class BottomSheet {
     this.mode = 'preview';
     if (this.fullEl) this.fullEl.classList.add('hidden');
     if (this.previewEl) this.previewEl.classList.remove('hidden');
-    this._setHeight(34);
+    this._setHeight(38);
     this._syncSheetChrome();
   }
 
