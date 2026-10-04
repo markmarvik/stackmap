@@ -4,7 +4,9 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 
 `github.com/markmarvik/aetheris` redirects to this repo. The old Pages address does not.
 
-## Current Status (v0.3.12)
+## Current Status (v0.4.0)
+
+**Founding Pro (v0.4.0):** one-time unlock with a Lemon Squeezy license key — unlimited My Stack, print and share without a watermark, and six stack templates. Setup is in [docs/PRO-SETUP.md](docs/PRO-SETUP.md). Store, product, and variant ids are still placeholders.
 
 **Neutral wording + analytics (v0.3.12):** node copy reworded to educational language ("studied for", "associated with … in studies"), with no lifespan figures or cure/prevent claims. Scores are labelled as app ratings, not health outcomes. Cookieless GoatCounter analytics (site code in `src/core/Analytics.js`).
 
@@ -26,9 +28,9 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 - **Constellation deep-link (v0.3.2)**: `?c=habits|exercises|foods|environment|biomarkers|supplements` switches on load (shareable)
 - **Footer polish (v0.3.2)**: Feedback + Pricing + version string stay visible on mobile without heavy map cover
 - **Touch pan polish (v0.3.1)**: RAF-coalesced drag, inertia on release, chrome ignore (bottom sheet / anatomy), pinch→one-finger handoff
-- **Static pricing (v0.3.1)**: `/pricing.html` Free vs Founding Pro $29 + footer/modal links (`CHECKOUT_URL` / `VITE_CHECKOUT_URL` stub)
+- **Static pricing**: `/pricing.html` Free vs Founding Pro ($19, then $29). The buy button opens the map with `?pro=1`.
 - **Print protocol (v0.3.1)**: cleaner `@media print` + organ coverage scores
-- **Free/Pro soft scaffold**: `FeatureFlags` + localStorage license key stub; soft stack-limit warnings (no hard paywall); Pricing modal “Coming soon”
+- **Founding Pro**: Lemon Squeezy license check in the browser. Free stacks cap at 15 items (larger stacks already saved are kept and cannot grow). Print and share watermark on Free only.
 - **Analytics + feedback**: `track()` stub + constellation hooks; footer Feedback (Tally placeholder)
 - **Layered anatomy** (Issue #16 Phase 1): independent opacity for base / organs / skeleton / muscles + view presets; **mobile** opens as fixed bottom sheet (v0.2.8)
 - **Organ impact** (v0.3.0): My Stack → tagged systems coverage strip + anatomy highlight
