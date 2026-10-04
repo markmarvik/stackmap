@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://markmarvik.github.io/stackmap/</loc>
+    <loc>%SITE_URL%</loc>
   </url>
   <url>
-    <loc>https://markmarvik.github.io/stackmap/pricing.html</loc>
+    <loc>%SITE_URL%pricing.html</loc>
   </url>
   <url>
-    <loc>https://markmarvik.github.io/stackmap/privacy.html</loc>
+    <loc>%SITE_URL%privacy.html</loc>
   </url>
   <url>
-    <loc>https://markmarvik.github.io/stackmap/terms.html</loc>
+    <loc>%SITE_URL%terms.html</loc>
   </url>
 </urlset>
