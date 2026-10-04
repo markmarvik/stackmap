@@ -39,7 +39,7 @@ import {
   pricingPageUrl,
   FEEDBACK_FORM_URL
 } from "./core/FeatureFlags.js";
-import { track, trackPageView, trackConstellation } from "./core/Analytics.js";
+import { track, trackPageView, trackConstellation, initAnalytics } from "./core/Analytics.js";
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
 import { readStorage, writeStorage } from "./core/persist.js";
@@ -2529,6 +2529,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMyStack();
   initFeedbackAndPricing();
   initFirstRunTip();
+  initAnalytics(); // GoatCounter counts the pageview itself
   trackPageView();
 
   window.AETHERIS.tree = treeInstance;
