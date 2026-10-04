@@ -274,6 +274,23 @@ export class SupplementTree extends BaseTree {
     return vis;
   }
 
+  /**
+   * Nodes to paint and hit-test. Active view drops non-active stack nodes.
+   * Layout still uses _getVisibleNodes so the remaining nodes do not move.
+   */
+  _getShownNodes() {
+    const vis = this._getVisibleNodes();
+    const stack = (typeof window !== 'undefined' && window.AETHERIS && window.AETHERIS.myStack) || null;
+    if (!stack || stack.viewMode !== 'active' || typeof stack.shouldHide !== 'function') return vis;
+    return vis.filter((node) => {
+      const constellation = node._constellation
+        || (window.AETHERIS && window.AETHERIS.currentConstellation)
+        || 'supplements';
+      const stackId = node._sourceId || node.id;
+      return !stack.shouldHide(stackId, constellation);
+    });
+  }
+
   isGroupEnabled(key) {
     return this.enabledGroups.has(key);
   }
@@ -737,7 +754,7 @@ export class SupplementTree extends BaseTree {
 
     // Draw the central body model (silhouette + organs) -- now larger
     // We highlight organs that the currently selected node influences.
-    const visibleNodes = this._getVisibleNodes();
+    const visibleNodes = this._getShownNodes();
     const selectedNodeForBody = this.selectedId ? visibleNodes.find(n => n.id === this.selectedId) || null : null;
     const organFilter = this.organExplode?.activeOrganFilter || null;
     let rawHighlightOrgs = organFilter
@@ -1436,7 +1453,7 @@ export class SupplementTree extends BaseTree {
     const worldX = (screenX - w / 2) / scale + panX;
     const worldY = (screenY - h / 2) / scale + panY;
 
-    const visible = this._getVisibleNodes();
+    const visible = this._getShownNodes();
     const explode = this.organExplode;
     const spread = explode && explode.progress > 0.001;
     for (let i = visible.length - 1; i >= 0; i--) {
@@ -1574,7 +1591,9 @@ export class SupplementTree extends BaseTree {
 
   /** Frame every visible node inside the canvas, clear of the right rail and top search. */
   fitToNodes() {
-    const nodes = typeof this._getVisibleNodes === 'function' ? this._getVisibleNodes() : (this.nodes || []);
+    // Frame what is actually drawn (Active stack view); fall back to all visible if nothing is shown.
+    const shown = this._getShownNodes();
+    const nodes = shown.length ? shown : this._getVisibleNodes();
     const { width: w, height: h } = this.getLogicalSize();
     if (!w || !h) {
       this.view = { panX: 0, panY: 0, scale: 0.92 };

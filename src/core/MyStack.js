@@ -13,6 +13,7 @@ const STORAGE_KEY = 'stackmap-mystack-v1';
 const LEGACY_STORAGE_KEY = 'aetheris-mystack-v1';
 const HIGHLIGHT_KEY = 'stackmap-mystack-highlight';
 const LEGACY_HIGHLIGHT_KEY = 'aetheris-mystack-highlight';
+const VIEW_KEY = 'stackmap-mystack-view';
 const SCHEMA_VERSION = 1;
 
 /** @deprecated Prefer FREE_STACK_LIMIT from FeatureFlags — kept as alias. */
@@ -47,6 +48,8 @@ function normalizeEntry(raw) {
   if (slot === 'morning' || slot === 'evening') {
     entry.slot = slot;
   }
+  // Absent means active — only an explicit pause is stored.
+  if (raw.paused) entry.paused = true;
   return entry;
 }
 
@@ -54,6 +57,7 @@ export class MyStackStore {
   constructor() {
     this.profile = emptyProfile();
     this.highlightMode = false;
+    this.viewMode = 'all';
     this._listeners = new Set();
     this._index = new Map(); // key -> entry
   }
@@ -71,6 +75,7 @@ export class MyStackStore {
       this.profile = emptyProfile();
     }
     this.highlightMode = readStorage(HIGHLIGHT_KEY, [LEGACY_HIGHLIGHT_KEY]) === '1';
+    this.viewMode = readStorage(VIEW_KEY) === 'active' ? 'active' : 'all';
     this._rebuildIndex();
     this._emit();
     return this;
@@ -122,6 +127,11 @@ export class MyStackStore {
     return this.profile.selectedNodes.length;
   }
 
+  /** Stack entries that are not paused. */
+  getActiveCount() {
+    return this.profile.selectedNodes.filter((e) => !e.paused).length;
+  }
+
   getEntries() {
     return this.profile.selectedNodes.slice();
   }
@@ -132,6 +142,12 @@ export class MyStackStore {
 
   has(id, constellation) {
     return this._index.has(nodeKey(id, constellation));
+  }
+
+  /** In the stack and not paused. Missing `paused` counts as active. */
+  isActive(id, constellation) {
+    const entry = this.getEntry(id, constellation);
+    return !!(entry && !entry.paused);
   }
 
   /** Ids in stack for a single constellation (for canvas highlight). */
@@ -206,6 +222,15 @@ export class MyStackStore {
     return { ok: true };
   }
 
+  setPaused(id, constellation, paused) {
+    const entry = this.getEntry(id, constellation);
+    if (!entry) return { ok: false };
+    if (paused) entry.paused = true;
+    else delete entry.paused;
+    this._persist();
+    return { ok: true, paused: !!entry.paused };
+  }
+
   clear() {
     this.profile.selectedNodes = [];
     this._index.clear();
@@ -222,6 +247,12 @@ export class MyStackStore {
   toggleHighlightMode() {
     this.setHighlightMode(!this.highlightMode);
     return this.highlightMode;
+  }
+
+  setViewMode(mode) {
+    this.viewMode = mode === 'active' ? 'active' : 'all';
+    writeStorage(VIEW_KEY, this.viewMode);
+    this._emit();
   }
 
   exportJSON() {
@@ -265,6 +296,7 @@ export class MyStackStore {
           const existing = this._index.get(key);
           if (entry.note) existing.note = entry.note;
           if (entry.slot) existing.slot = entry.slot;
+          if (entry.paused) existing.paused = true;
         } else {
           this.profile.selectedNodes.push(entry);
         }
@@ -280,6 +312,11 @@ export class MyStackStore {
     if (!this.highlightMode) return false;
     if (this.getCount() === 0) return false;
     return !this.has(id, constellation);
+  }
+
+  /** Active view hides everything except active stack entries. All view hides nothing. */
+  shouldHide(id, constellation) {
+    return this.viewMode === 'active' && !this.isActive(id, constellation);
   }
 }
 
