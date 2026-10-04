@@ -2,11 +2,12 @@
  * MyStack — local personal stack profile (Phase 1+ depth).
  *
  * Persists selected constellation nodes in localStorage so users can build
- * and re-open a personal stack without accounts. Free-tier soft limit is
- * advisory only (no paywall). Supports notes + morning/evening slots.
+ * and re-open a personal stack without accounts. Free tier hard-caps new
+ * items at FREE_STACK_LIMIT. Rows already over that cap are kept.
+ * Supports notes + morning/evening slots.
  */
 
-import { FREE_STACK_LIMIT, isOverFreeStackLimit } from './FeatureFlags.js';
+import { FREE_STACK_LIMIT, isPro } from './FeatureFlags.js';
 import { readStorage, writeStorage } from './persist.js';
 
 const STORAGE_KEY = 'stackmap-mystack-v1';
@@ -161,26 +162,26 @@ export class MyStackStore {
   }
 
   /**
-   * Add a node. Soft-limit: still allows add but returns { overSoftLimit: true }.
-   * Never hard-blocks.
+   * Add a node. Free users stop at FREE_STACK_LIMIT.
+   * A stack that is already larger (older data) is not trimmed here.
    */
   add(id, constellation, extras = {}) {
     if (!id) return { ok: false, reason: 'missing-id' };
     const c = String(constellation || 'supplements').toLowerCase();
     const key = nodeKey(id, c);
     if (this._index.has(key)) {
-      return { ok: true, already: true, overSoftLimit: isOverFreeStackLimit(this.getCount()) };
+      return { ok: true, already: true, count: this.getCount() };
+    }
+    // Free cap. Over-limit stacks stay; they just cannot grow.
+    if (!isPro() && this.getCount() >= FREE_STACK_LIMIT) {
+      return { ok: false, reason: 'limit', overLimit: true, count: this.getCount() };
     }
     const entry = normalizeEntry({ id, constellation: c, ...extras });
     if (!entry) return { ok: false, reason: 'invalid' };
     this.profile.selectedNodes.push(entry);
     this._index.set(key, entry);
     this._persist();
-    return {
-      ok: true,
-      overSoftLimit: isOverFreeStackLimit(this.getCount()),
-      count: this.getCount()
-    };
+    return { ok: true, count: this.getCount() };
   }
 
   remove(id, constellation) {
@@ -198,7 +199,9 @@ export class MyStackStore {
     if (this.has(id, constellation)) {
       return { ...this.remove(id, constellation), removed: true };
     }
-    return { ...this.add(id, constellation, extras), added: true };
+    const result = this.add(id, constellation, extras);
+    if (!result.ok) return result;
+    return { ...result, added: true };
   }
 
   setNote(id, constellation, note) {
@@ -287,7 +290,13 @@ export class MyStackStore {
     if (!list) throw new Error('My Stack JSON missing selectedNodes[]');
 
     const incoming = list.map(normalizeEntry).filter(Boolean);
+    const pro = isPro();
+    let limited = false;
     if (!merge) {
+      // Refuse a replace that would grow past the free cap, so the current stack stays.
+      if (!pro && incoming.length > FREE_STACK_LIMIT && incoming.length > this.getCount()) {
+        return { ok: false, reason: 'limit', limited: true, count: this.getCount() };
+      }
       this.profile.selectedNodes = incoming;
     } else {
       for (const entry of incoming) {
@@ -297,14 +306,17 @@ export class MyStackStore {
           if (entry.note) existing.note = entry.note;
           if (entry.slot) existing.slot = entry.slot;
           if (entry.paused) existing.paused = true;
+        } else if (!pro && this.profile.selectedNodes.length >= FREE_STACK_LIMIT) {
+          limited = true;
         } else {
           this.profile.selectedNodes.push(entry);
+          this._index.set(key, entry);
         }
       }
     }
     this._rebuildIndex();
     this._persist();
-    return { ok: true, count: this.getCount() };
+    return { ok: true, count: this.getCount(), limited };
   }
 
   /** Whether canvas should dim this node under highlight mode. */
