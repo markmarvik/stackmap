@@ -32,6 +32,25 @@
   color: #f4e9c8;
 }
 
+/* Phone map list starts collapsed (is-collapsed). Desktop always shows the list; the toggle row stays off. */
+@media (max-width: 767px) {
+  #constellation-picker-list.is-collapsed {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  #constellation-picker-toggle {
+    display: none;
+  }
+}
+
+/* Footer is z-110, above the sheet, and covers the hint. Hide it only while the sheet is open. */
+@media (max-width: 1023px) {
+  body.sheet-open #app-footer {
+    display: none;
+  }
+}
+
 /* Desktop rail shows one tool. Phone keeps the stacked column (max-md sheets). */
 @media (min-width: 768px) {
   #right-map-controls[data-rail="map"] #anatomy-controls,
