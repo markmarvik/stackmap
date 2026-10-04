@@ -34,6 +34,10 @@ jobs:
 
       - name: Build for production (uses /stackmap/ base)
         run: npm run build
+        env:
+          # GitHub Pages serves under /stackmap/ until the Cloudflare cutover (vite defaults to / for Cloudflare)
+          BASE: /stackmap/
+          SITE_URL: https://markmarvik.github.io/stackmap/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
