@@ -44,7 +44,7 @@
     .popup-blink {
       animation: popup-blink 3s infinite;
     }
-    /* Printable My Stack protocol — soft Pro gate (Free still prints with watermark) */
+    /* Printable My Stack protocol — Free corner watermark; Pro prints none */
     #mystack-print-sheet { display: none; }
     @media print {
       @page { margin: 14mm 12mm; size: auto; }
@@ -132,6 +132,10 @@
         font-size: 12px;
         color: #999;
         font-weight: 600;
+      }
+      #mystack-print-sheet .print-watermark:empty,
+      #mystack-print-sheet .print-watermark[hidden] {
+        display: none !important;
       }
       /* Hide app chrome completely in print */
       #loading-overlay,
@@ -399,10 +403,14 @@
                 <summary class="cursor-pointer text-[9px] uppercase tracking-[1px] text-amber-200/70">Starter stacks</summary>
                 <div id="starter-stack-list" class="flex flex-col gap-1 mt-1"></div>
               </details>
+              <details id="pro-templates" class="px-0.5">
+                <summary class="cursor-pointer text-[9px] uppercase tracking-[1px] text-amber-200/70">Templates · Pro</summary>
+                <div id="pro-template-list" class="flex flex-col gap-1 mt-1"></div>
+              </details>
               <div id="mystack-soft-limit-warn"
                    class="hidden px-1.5 py-1 rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-100/90 text-[9px] leading-snug">
-                Over free soft limit (<span id="mystack-limit-n">15</span>). Still editable —
-                <button type="button" id="mystack-pricing-hint" class="underline text-amber-200 hover:text-amber-100">Pro coming soon</button>
+                This stack is over the free limit (<span id="mystack-limit-n">15</span>). It stays saved and cannot grow.
+                <button type="button" id="mystack-pricing-hint" class="underline text-amber-200 hover:text-amber-100">Upgrade</button>
               </div>
               <div id="mystack-empty"
                    class="hidden px-1.5 py-2 rounded-lg border border-dashed border-white/15 text-white/40 text-[9px] leading-snug text-center">
@@ -660,12 +668,12 @@
     </a>
     <button type="button" id="pricing-btn"
             class="hidden md:inline-flex px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-            title="StackMap Pro">
-      <i class="fa-solid fa-crown mr-1 text-amber-400/70"></i>Pro
+            title="Founding Pro">
+      <i class="fa-solid fa-crown mr-1 text-amber-400/70"></i><span id="pricing-btn-label">Pro</span>
     </button>
     <span id="app-version"
           class="px-1.5 py-0.5 rounded-full font-mono tabular-nums text-white/60 border border-white/10 bg-[#0a0d1a]/70"
-          title="App version">v0.3.12</span>
+          title="App version">v0.4.0</span>
     <a id="footer-medical" href="terms.html#medical"
        class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
        title="Educational only, not medical advice">
@@ -731,40 +739,61 @@
     <div id="mystack-print-watermark" class="print-watermark"></div>
   </div>
 
-  <!-- Pricing modal stub (Coming soon / checkout link placeholder) -->
+  <!-- Founding Pro upgrade + license restore -->
   <div id="pricing-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="pricing-modal-title">
-    <div class="w-full max-w-md rounded-3xl border border-amber-400/25 bg-[#0a0d1a] p-5 shadow-2xl">
+    <div class="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl border border-amber-400/25 bg-[#0a0d1a] p-5 shadow-2xl">
       <div class="flex items-start justify-between gap-3 mb-3">
         <div>
-          <div id="pricing-modal-title" class="text-lg font-semibold text-amber-100">StackMap Pro</div>
-          <div class="text-[11px] text-white/45 mt-0.5">Coming soon · checkout link placeholder</div>
+          <div id="pricing-modal-title" class="text-lg font-semibold text-amber-100">Founding Pro</div>
+          <div id="pricing-price" class="text-2xl font-semibold text-amber-100 mt-1">
+            <span id="pricing-price-amount">$19</span>
+            <span class="text-sm font-medium text-white/50">one-time</span>
+          </div>
         </div>
         <button type="button" id="pricing-modal-close" class="text-white/50 hover:text-white text-2xl leading-none px-1" aria-label="Close">×</button>
       </div>
+      <p id="pricing-founding-note" class="text-[10px] text-white/45 mb-3">Founding price for the first 100 buyers, then $29</p>
       <ul class="text-xs text-white/70 space-y-1.5 mb-4 list-disc pl-4">
-        <li>Unlimited My Stack (free soft-limits lift)</li>
-        <li>Protocol print / share without Free watermark</li>
-        <li>Saved lab filters &amp; early anatomy extras (roadmap)</li>
+        <li>Unlimited My Stack</li>
+        <li>Print and share card without a watermark</li>
+        <li>6 stack templates</li>
+        <li>Supports development</li>
       </ul>
-      <p class="text-[10px] text-white/40 mb-3">Founding Pro <strong class="text-amber-200/80">$29</strong> intro · no custom billing backend — Lemon Squeezy / Stripe Payment Link when doors open. Soft unlock via local license key for founding buyers.</p>
       <div class="flex flex-col gap-2">
-        <a id="pricing-checkout-link" href="#"
-           class="block text-center px-3 py-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20 text-sm">
-          Checkout — Coming soon ($29)
-        </a>
+        <button type="button" id="pricing-checkout-btn" disabled
+                class="block w-full text-center px-3 py-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-400/10">
+          Checkout opens soon
+        </button>
         <a id="pricing-page-link" href="pricing.html"
            class="block text-center px-3 py-1.5 rounded-2xl border border-white/15 text-white/65 hover:bg-white/5 text-xs">
           Compare Free vs Pro →
         </a>
-        <label class="text-[10px] text-white/45 flex flex-col gap-1">
-          Dev / founding license key
-          <input id="pricing-license-input" type="text" placeholder="paste key → stackmap-pro-key"
-                 class="px-2 py-1.5 rounded-xl bg-black/40 border border-white/15 text-white/80 text-xs" />
-        </label>
-        <button type="button" id="pricing-apply-key"
-                class="px-3 py-1.5 rounded-2xl border border-white/15 text-white/70 hover:bg-white/5 text-xs">
-          Apply key
-        </button>
+      </div>
+      <div class="mt-4 border-t border-white/10 pt-3">
+        <div class="text-[10px] uppercase tracking-[1.5px] text-amber-200/70 mb-1">Restore purchase / enter license key</div>
+        <p class="text-[10px] text-white/45 leading-snug mb-2">
+          The license key is in your Lemon Squeezy receipt email and at
+          <a href="https://app.lemonsqueezy.com/my-orders" target="_blank" rel="noopener noreferrer" class="text-amber-200/90 underline">app.lemonsqueezy.com/my-orders</a>.
+        </p>
+        <div id="pricing-pro-active" class="hidden flex flex-col gap-2">
+          <p id="pricing-pro-status" class="text-xs text-amber-100">Pro active</p>
+          <button type="button" id="pricing-deactivate"
+                  class="px-3 py-1.5 rounded-2xl border border-white/15 text-white/70 hover:bg-white/5 text-xs">
+            Remove from this browser
+          </button>
+        </div>
+        <div id="pricing-activate-row" class="flex flex-col gap-2">
+          <label class="text-[10px] text-white/45 flex flex-col gap-1">
+            License key
+            <input id="pricing-license-input" type="text" autocomplete="off" spellcheck="false" placeholder="Paste key from your receipt"
+                   class="px-2 py-1.5 rounded-xl bg-black/40 border border-white/15 text-white/80 text-xs font-mono" />
+          </label>
+          <button type="button" id="pricing-apply-key"
+                  class="px-3 py-1.5 rounded-2xl border border-white/15 text-white/70 hover:bg-white/5 text-xs">
+            Activate
+          </button>
+        </div>
+        <p id="pricing-license-status" class="text-[10px] text-amber-100/80 leading-snug mt-2 min-h-[1rem]" role="status"></p>
       </div>
     </div>
   </div>

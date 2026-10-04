@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StackMap Pro · Pricing</title>
-  <meta name="description" content="StackMap (formerly Aetheris) Free vs Founding Pro — educational longevity map. Soft stack limits, protocol print, and checkout placeholder. Not medical advice." />
+  <title>StackMap Founding Pro · Pricing</title>
+  <meta name="description" content="StackMap Free vs Founding Pro. $19 once for the first 100 buyers, then $29. Unlimited stack, print and share without a watermark, six templates. Not medical advice." />
   <link rel="canonical" href="https://markmarvik.github.io/stackmap/pricing.html" />
   <meta name="theme-color" content="#05070f" />
   <link rel="icon" href="favicon.ico" sizes="any" />
@@ -14,8 +14,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" />
   <meta property="og:site_name" content="StackMap" />
-  <meta property="og:title" content="StackMap Pro · Pricing" />
-  <meta property="og:description" content="Free explore vs Founding Pro ($29) — unlimited My Stack, protocol print, early extras." />
+  <meta property="og:title" content="StackMap Founding Pro · Pricing" />
+  <meta property="og:description" content="Free explore vs Founding Pro — $19 once for the first 100 buyers, then $29." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://markmarvik.github.io/stackmap/pricing.html" />
   <meta property="og:image" content="https://markmarvik.github.io/stackmap/og-image.png" />
@@ -23,8 +23,8 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="StackMap longevity constellation — a dark body map of supplements, habits, and biomarkers" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="StackMap Pro · Pricing" />
-  <meta name="twitter:description" content="Free explore vs Founding Pro ($29) — unlimited My Stack, protocol print, early extras." />
+  <meta name="twitter:title" content="StackMap Founding Pro · Pricing" />
+  <meta name="twitter:description" content="Free explore vs Founding Pro — $19 once for the first 100 buyers, then $29." />
   <meta name="twitter:image" content="https://markmarvik.github.io/stackmap/og-image.png" />
   <style>
     :root {
@@ -224,8 +224,8 @@
     <div class="hero">
       <h2>Free explore · Founding Pro</h2>
       <p>
-        Soft Free / Pro boundary matching in-app FeatureFlags.
-        Checkout is a placeholder until Lemon Squeezy / Stripe Payment Link is live.
+        $19 once for the first 100 buyers, then $29.
+        The map stays free. Founding Pro lifts the stack limit, drops the watermark, and unlocks templates.
         Educational framing only — not medical advice.
       </p>
     </div>
@@ -234,36 +234,35 @@
       <article class="card">
         <div class="tier">Free</div>
         <div class="price">$0</div>
-        <p class="blurb">Full constellation explore on the map. Local My Stack with a soft ceiling.</p>
+        <p class="blurb">The map, search, and a personal stack saved in this browser.</p>
         <ul>
-          <li>All constellations (supplements, habits, exercises, foods, environment, biomarkers)</li>
-          <li>My Stack with soft limit of <strong>15</strong> items (warns, never hard-blocks)</li>
-          <li>Organ impact strip + anatomy layers (Phase 1)</li>
-          <li>Protocol print / share with Free watermark</li>
+          <li>Map and search</li>
+          <li>My Stack up to <strong>15</strong> items</li>
+          <li>Export and import</li>
+          <li>Print and share with a watermark</li>
+          <li>Starter stacks</li>
         </ul>
         <a class="cta" href="./">Open the map</a>
       </article>
 
       <article class="card pro">
         <div class="tier">Founding Pro</div>
-        <div class="price">$29 <span>one-time intro</span></div>
-        <p class="blurb">Unlocks the soft Pro perks. License key stub today; hosted checkout when doors open.</p>
+        <div class="price">$19 <span>one-time</span></div>
+        <p class="blurb">Founding price for the first 100 buyers, then $29. A license key unlocks this browser.</p>
         <ul>
-          <li>Unlimited My Stack (advisory Free ceiling lifts)</li>
-          <li>Protocol print / share without Free watermark</li>
-          <li>Saved lab specimen filters &amp; early anatomy extras (roadmap)</li>
-          <li>Founding buyer local unlock via in-app license key</li>
+          <li>Unlimited My Stack</li>
+          <li>Print and share card without a watermark</li>
+          <li>6 stack templates</li>
+          <li>Supports development</li>
         </ul>
-        <!-- Replace href with Lemon Squeezy / Stripe Payment Link, or set via ?checkout= -->
-        <a id="checkout-cta" class="cta primary" href="#">Founding Pro — $29 (coming soon)</a>
+        <a id="checkout-cta" class="cta primary" href="./?pro=1">Get Founding Pro</a>
       </article>
     </div>
 
     <p class="note">
-      No custom billing backend. Soft unlock uses localStorage key <code>stackmap-pro-key</code>
-      (an older <code>aetheris-pro-key</code> is copied once, then the new key is stored).
-      Pro button → paste key. Replace this CTA with your Payment Link when ready.
-      Optional: open this page with <code>?checkout=YOUR_URL</code> to override the button href for demos.
+      Checkout is a one-time Lemon Squeezy purchase. Lemon Squeezy is the merchant of record.
+      The license key arrives in the receipt email and at app.lemonsqueezy.com/my-orders.
+      Open the map to activate it. Educational only — not medical advice.
     </p>
 
     <footer>
@@ -275,21 +274,5 @@
       </nav>
     </footer>
   </div>
-  <script>
-    (function () {
-      var DEFAULT_CHECKOUT = '#';
-      var params = new URLSearchParams(window.location.search);
-      var fromQuery = params.get('checkout');
-      var cta = document.getElementById('checkout-cta');
-      if (!cta) return;
-      var url = (fromQuery && /^https?:\/\//i.test(fromQuery)) ? fromQuery : DEFAULT_CHECKOUT;
-      cta.href = url;
-      if (url !== '#' && !url.startsWith('#')) {
-        cta.textContent = 'Checkout — Founding Pro $29';
-        cta.setAttribute('target', '_blank');
-        cta.setAttribute('rel', 'noopener noreferrer');
-      }
-    })();
-  </script>
 </body>
 </html>

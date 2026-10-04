@@ -74,7 +74,8 @@ export async function downloadStackShareCard(entries, opts = {}) {
     ctx.fillText(`… +${list.length - maxRows} more`, pad, y);
   }
 
-  // Footer / Free watermark
+  // Source line stays so the PNG names where it came from.
+  // The Free mark is the watermark — Pro cards omit it.
   ctx.fillStyle = 'rgba(255,255,255,0.25)';
   ctx.font = '12px system-ui, -apple-system, sans-serif';
   ctx.fillText(PUBLIC_HOST_LABEL, pad, H - 18);

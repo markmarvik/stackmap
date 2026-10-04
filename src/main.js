@@ -13,6 +13,7 @@ import { foods, foodCategories } from "./data/foods.js";
 import { environment, environmentCategories } from "./data/environment.js";
 import { biomarkers, biomarkerCategories, specimenTypes } from "./data/biomarkers.js";
 import { searchCatalog, STARTER_STACKS, CATALOG } from "./data/catalog.js";
+import { PRO_TEMPLATES } from "./data/templates.js";
 import { SupplementTree } from "./trees/SupplementTree.js";
 import { HabitsTree } from "./trees/HabitsTree.js";
 import { ExerciseTree } from "./trees/ExerciseTree.js";
@@ -31,14 +32,19 @@ import {
   APP_VERSION,
   FREE_STACK_LIMIT,
   isPro,
-  setProKey,
   isOverFreeStackLimit,
   softProGate,
-  CHECKOUT_URL,
-  PRICING_CHECKOUT_URL,
   pricingPageUrl,
   FEEDBACK_FORM_URL
 } from "./core/FeatureFlags.js";
+import { PRO_CONFIG, isProConfigured } from "./config/pro.js";
+import {
+  activateLicense,
+  deactivateLicense,
+  revalidateIfStale,
+  setLicenseHooks,
+  getLicensePublicState
+} from "./core/License.js";
 import { track, trackPageView, trackConstellation, initAnalytics } from "./core/Analytics.js";
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
@@ -1962,6 +1968,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1600);
   }
 
+  function showFreeLimit() {
+    showMyStackToast('Free stacks hold 15 items. Founding Pro removes the limit.');
+    track('mystack_limit', { count: myStack.getCount() });
+    openPricingModal();
+  }
+
   function styleStackToggleBtn(btn, inStack) {
     if (!btn) return;
     const isPreview = btn.id === 'sheet-mystack-btn';
@@ -1991,6 +2003,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const c = ident.constellation;
     const wasEmpty = myStack.getCount() === 0;
     const result = myStack.toggle(id, c);
+    if (result.reason === 'limit') {
+      showFreeLimit();
+      return;
+    }
     const nowIn = myStack.has(id, c);
     styleStackToggleBtn(btnEl, nowIn);
     // Keep sibling inspector/preview buttons in sync if both exist
@@ -1999,10 +2015,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const label = node.name || id;
     showMyStackToast(nowIn ? `Added ${label}` : `Removed ${label}`);
-    if (result.added && result.overSoftLimit) {
-      showMyStackToast(`Soft limit (${FREE_STACK_LIMIT}) — still saved. Pro lifts the advisory ceiling.`);
-      track('mystack_soft_limit', { count: myStack.getCount() });
-    }
     if (result.added && wasEmpty && !myStack.highlightMode) {
       myStack.setHighlightMode(true);
     }
@@ -2222,7 +2234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const badge = document.getElementById('mystack-count-badge');
     if (badge) {
       badge.textContent = String(count);
-      badge.title = isPro() ? 'Pro · unlimited' : `Free soft limit ${FREE_STACK_LIMIT}`;
+      badge.title = isPro() ? 'Pro · unlimited' : `Free limit ${FREE_STACK_LIMIT}`;
     }
     const hlBtn = document.getElementById('mystack-highlight-btn');
     const hlLabel = document.getElementById('mystack-highlight-label');
@@ -2247,6 +2259,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (limitN) limitN.textContent = String(FREE_STACK_LIMIT);
     if (warn) warn.classList.toggle('hidden', !isOverFreeStackLimit(count));
     renderMyStackList();
+    renderProTemplates();
+    syncProChrome();
     recomputeOrganSystem();
     renderOrganImpactUI();
     window.AETHERIS.organSystem = globalOrganSystem;
@@ -2296,28 +2310,108 @@ document.addEventListener("DOMContentLoaded", () => {
     if (organsEmpty) {
       organsEmpty.style.display = ranked.length ? 'none' : 'block';
     }
-    if (wm) wm.textContent = isPro() ? `${PRODUCT_NAME} Pro` : `${PRODUCT_NAME} Free`;
+    // Free watermark only. Pro prints the sheet with this corner empty.
+    if (wm) {
+      const showMark = !isPro();
+      wm.textContent = showMark ? `${PRODUCT_NAME} Free` : '';
+      wm.hidden = !showMark;
+    }
+  }
+
+  function syncProChrome() {
+    const pub = getLicensePublicState();
+    const variant = PRO_CONFIG.activeVariant;
+    const price = PRO_CONFIG.prices[variant] || '';
+    const founding = variant === 'founding';
+    const title = document.getElementById('pricing-modal-title');
+    if (title) title.textContent = founding ? 'Founding Pro' : 'StackMap Pro';
+    const amount = document.getElementById('pricing-price-amount');
+    if (amount) amount.textContent = price;
+    const note = document.getElementById('pricing-founding-note');
+    if (note) {
+      note.classList.toggle('hidden', !founding);
+      if (founding) {
+        note.textContent = `Founding price for the first ${PRO_CONFIG.foundingCap} buyers, then ${PRO_CONFIG.prices.standard}`;
+      }
+    }
+    const checkoutBtn = document.getElementById('pricing-checkout-btn');
+    const configured = isProConfigured();
+    if (checkoutBtn) {
+      checkoutBtn.disabled = !configured;
+      checkoutBtn.textContent = configured ? `Checkout — ${price} one-time` : 'Checkout opens soon';
+      checkoutBtn.classList.toggle('hidden', pub.active); // already bought on this browser
+    }
+    const pageLink = document.getElementById('pricing-page-link');
+    if (pageLink) pageLink.href = pricingPageUrl();
+    const activeBox = document.getElementById('pricing-pro-active');
+    const activateRow = document.getElementById('pricing-activate-row');
+    if (activeBox) activeBox.classList.toggle('hidden', !pub.active);
+    if (activateRow) activateRow.classList.toggle('hidden', pub.active);
+    const proStatus = document.getElementById('pricing-pro-status');
+    if (proStatus && pub.active) proStatus.textContent = `Pro active · key ${pub.maskedKey}`;
+    const label = document.getElementById('pricing-btn-label');
+    if (label) label.textContent = pub.active ? 'Pro active' : 'Pro';
+    const pricingBtn = document.getElementById('pricing-btn');
+    if (pricingBtn) pricingBtn.title = pub.active ? 'Founding Pro is active on this browser' : 'Founding Pro';
   }
 
   function openPricingModal() {
     const modal = document.getElementById('pricing-modal');
     if (!modal) return;
-    const checkout = CHECKOUT_URL || PRICING_CHECKOUT_URL || '#';
-    const link = document.getElementById('pricing-checkout-link');
-    if (link) {
-      link.href = checkout.startsWith('#') ? checkout : checkout;
-      link.textContent = checkout && !String(checkout).startsWith('#')
-        ? 'Checkout — Founding Pro $29'
-        : 'Checkout — Coming soon ($29)';
-      if (checkout && !String(checkout).startsWith('#')) {
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-      }
-    }
-    const pageLink = document.getElementById('pricing-page-link');
-    if (pageLink) pageLink.href = pricingPageUrl();
+    syncProChrome();
     modal.classList.remove('hidden');
     track('pricing_open');
+  }
+
+  function loadLemonScript() {
+    if (typeof window.createLemonSqueezy === 'function' || window.LemonSqueezy) {
+      return Promise.resolve();
+    }
+    if (!loadLemonScript._p) {
+      loadLemonScript._p = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+        s.async = true;
+        s.dataset.stackmapLemon = '1';
+        s.onload = () => resolve();
+        s.onerror = () => {
+          loadLemonScript._p = null;
+          reject(new Error('lemon.js'));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return loadLemonScript._p;
+  }
+
+  function handleLemonEvent(event) {
+    const name = typeof event === 'string' ? event : event && event.event;
+    if (name !== 'Checkout.Success') return;
+    // The event does not carry the license key. The buyer pastes it from the receipt.
+    const status = document.getElementById('pricing-license-status');
+    if (status) {
+      status.textContent = 'Payment received — paste the license key from your receipt email to unlock.';
+    }
+  }
+
+  async function openProCheckout() {
+    const checkoutUrl = PRO_CONFIG.checkoutUrls[PRO_CONFIG.activeVariant];
+    if (!isProConfigured() || !checkoutUrl) return;
+    track('pro_checkout_open');
+    const openTab = () => window.open(checkoutUrl, '_blank', 'noopener');
+    try {
+      await loadLemonScript();
+      if (typeof window.createLemonSqueezy === 'function') window.createLemonSqueezy();
+      if (window.LemonSqueezy && typeof window.LemonSqueezy.Setup === 'function') {
+        window.LemonSqueezy.Setup({ eventHandler: handleLemonEvent });
+      }
+      const embedUrl = `${checkoutUrl}${checkoutUrl.includes('?') ? '&' : '?'}embed=1`;
+      if (window.LemonSqueezy?.Url?.Open) {
+        window.LemonSqueezy.Url.Open(embedUrl);
+        return;
+      }
+    } catch { /* overlay script failed — open the hosted checkout */ }
+    openTab();
   }
 
   function closePricingModal() {
@@ -2389,20 +2483,72 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target === modal) closePricingModal();
       });
     }
+    const checkoutBtn = document.getElementById('pricing-checkout-btn');
+    if (checkoutBtn) checkoutBtn.onclick = () => openProCheckout();
     const apply = document.getElementById('pricing-apply-key');
     const input = document.getElementById('pricing-license-input');
+    const statusLine = document.getElementById('pricing-license-status');
+    const setStatus = (msg) => { if (statusLine) statusLine.textContent = msg || ''; };
     if (apply && input) {
-      apply.onclick = () => {
-        setProKey(input.value);
-        showMyStackToast(isPro() ? 'Pro unlocked (local key)' : 'Pro key cleared');
-        track('pro_key_apply', { pro: isPro() });
-        refreshMyStackUI();
-        closePricingModal();
+      const runActivate = async () => {
+        apply.disabled = true;
+        setStatus('Checking key…');
+        try {
+          await activateLicense(input.value);
+          input.value = '';
+          setStatus('');
+          showMyStackToast('Pro unlocked on this browser.');
+          track('pro_activate', { ok: true });
+          refreshMyStackUI();
+        } catch (err) {
+          setStatus(err && err.message ? err.message : 'Could not activate this key.');
+          track('pro_activate', { ok: false });
+        } finally {
+          apply.disabled = false;
+        }
       };
+      apply.onclick = () => runActivate();
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          runActivate();
+        }
+      });
+    }
+    const deactivateBtn = document.getElementById('pricing-deactivate');
+    if (deactivateBtn) {
+      deactivateBtn.onclick = async () => {
+        deactivateBtn.disabled = true;
+        try {
+          const result = await deactivateLicense();
+          showMyStackToast('Pro removed from this browser.');
+          setStatus(result.remote
+            ? 'Pro removed from this browser.'
+            : 'Pro removed from this browser. The license server was not reached, so this activation may still count until you remove it from your Lemon Squeezy orders.');
+          track('pro_deactivate', { remote: !!result.remote });
+          refreshMyStackUI();
+        } finally {
+          deactivateBtn.disabled = false;
+        }
+      };
+    }
+    setLicenseHooks({
+      toast: (msg) => showMyStackToast(msg),
+      onChange: () => refreshMyStackUI()
+    });
+    // Non-blocking. A stale key is checked once per boot and again when the tab is back online.
+    revalidateIfStale();
+    if (!window._stackmapLicenseOnline) {
+      window._stackmapLicenseOnline = true;
+      window.addEventListener('online', () => { revalidateIfStale(); });
     }
     window.AETHERIS = window.AETHERIS || {};
     window.AETHERIS.isPro = isPro;
     window.AETHERIS.openPricingModal = openPricingModal;
+    syncProChrome();
+    try {
+      if (new URLSearchParams(window.location.search).get('pro') === '1') openPricingModal();
+    } catch { /* ignore */ }
   }
 
   function initMyStack() {
@@ -2467,11 +2613,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const merge = modeEl && modeEl.value === 'merge';
         try {
           const textIn = await file.text();
-          myStack.importJSON(textIn, { merge });
-          showMyStackToast(`${merge ? 'Merged' : 'Imported'} · ${myStack.getCount()} item(s)`);
-          track('mystack_import', { merge, count: myStack.getCount() });
+          const result = myStack.importJSON(textIn, { merge });
           refreshMyStackUI();
           if (treeInstance) treeInstance.draw();
+          if (result.reason === 'limit' || result.limited) {
+            showFreeLimit();
+            track('mystack_import', { merge, count: myStack.getCount(), limited: true });
+          } else {
+            showMyStackToast(`${merge ? 'Merged' : 'Imported'} · ${myStack.getCount()} item(s)`);
+            track('mystack_import', { merge, count: myStack.getCount() });
+          }
         } catch (err) {
           console.warn('[AETHERIS] My Stack import failed', err);
           showMyStackToast('Import failed — invalid JSON');
@@ -2678,11 +2829,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function catalogKeySet() {
+    return new Set(CATALOG.map((n) => `${n.constellation}::${n.id}`));
+  }
+
+  function applyCuratedItems(items, label, eventName, id) {
+    const known = catalogKeySet();
+    let added = 0;
+    let limited = false;
+    for (const item of items) {
+      if (!known.has(`${item.constellation}::${item.id}`)) continue;
+      const res = myStack.add(item.id, item.constellation, item.slot ? { slot: item.slot } : {});
+      if (res.reason === 'limit') {
+        limited = true;
+        break;
+      }
+      if (res.ok && !res.already) added += 1;
+    }
+    refreshMyStackUI();
+    if (treeInstance) treeInstance.draw();
+    if (limited) showFreeLimit();
+    else showMyStackToast(added ? `Added ${added} from ${label}` : `${label} already in your stack`);
+    track(eventName, { id, added, limited });
+    if (!isMobileViewport()) setRailMode('stack');
+  }
+
   function renderStarterStacks() {
     const mount = document.getElementById('starter-stack-list');
     if (!mount || mount._wired) return;
     mount._wired = true;
-    const known = new Set(CATALOG.map((n) => `${n.constellation}::${n.id}`));
+    const known = catalogKeySet();
     mount.innerHTML = STARTER_STACKS.map((stack) => {
       const count = stack.items.filter((item) => known.has(`${item.constellation}::${item.id}`)).length;
       return `
@@ -2697,17 +2873,40 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         const stack = STARTER_STACKS.find((s) => s.id === btn.dataset.starter);
         if (!stack) return;
-        let added = 0;
-        for (const item of stack.items) {
-          if (!known.has(`${item.constellation}::${item.id}`)) continue;
-          const res = myStack.add(item.id, item.constellation, item.slot ? { slot: item.slot } : {});
-          if (res.ok && !res.already) added += 1;
+        applyCuratedItems(stack.items, stack.name, 'starter_stack_apply', stack.id);
+      };
+    });
+  }
+
+  function renderProTemplates() {
+    const mount = document.getElementById('pro-template-list');
+    if (!mount) return;
+    const known = catalogKeySet();
+    const pro = isPro();
+    const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    mount.innerHTML = PRO_TEMPLATES.map((tpl) => {
+      const count = tpl.items.filter((item) => known.has(`${item.constellation}::${item.id}`)).length;
+      const badge = pro
+        ? ''
+        : ' <span class="ml-1 px-1 rounded border border-amber-400/40 text-amber-200 uppercase tracking-wider text-[8px]">Pro</span>';
+      return `
+        <button type="button" data-template="${esc(tpl.id)}"
+                class="text-left px-1.5 py-1 rounded-lg border border-white/10 hover:bg-white/5">
+          <div class="text-[10px] text-amber-100/90">${esc(tpl.name)}${badge} <span class="text-white/35 font-mono">${count}</span></div>
+          <div class="text-[8px] text-white/40 leading-snug">${esc(tpl.blurb)}</div>
+        </button>`;
+    }).join('');
+    mount.querySelectorAll('[data-template]').forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const tpl = PRO_TEMPLATES.find((t) => t.id === btn.dataset.template);
+        if (!tpl) return;
+        if (!isPro()) {
+          track('pro_template_locked', { id: tpl.id });
+          openPricingModal();
+          return;
         }
-        refreshMyStackUI();
-        if (treeInstance) treeInstance.draw();
-        showMyStackToast(added ? `Added ${added} from ${stack.name}` : `${stack.name} already in your stack`);
-        track('starter_stack_apply', { id: stack.id, added });
-        if (!isMobileViewport()) setRailMode('stack');
+        applyCuratedItems(tpl.items, tpl.name, 'template_apply', tpl.id);
       };
     });
   }
