@@ -774,7 +774,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isEventOverMapChrome(e)) return;
 
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    try { canvas.setPointerCapture(e.pointerId); } catch { /* capture may already be gone */ }
     stopInertia();
     // New gesture: keep selection stable (inertia must not fake a click later)
     suppressNextClick = false;
@@ -942,7 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activePointerId = null;
       lastPanDx = 0;
       lastPanDy = 0;
-      try { if (e && e.pointerId != null) canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      try { if (e && e.pointerId != null) canvas.releasePointerCapture(e.pointerId); } catch { /* capture may already be gone */ }
       canvas.style.cursor = 'grab';
 
       if (shouldInertia) {
@@ -1346,7 +1346,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="flex-1 h-2 bg-white/10 rounded overflow-hidden"><div class="${barColor} h-full" style="width:${ps}%"></div></div>
               </div>`;
             }
-          } catch(e){}
+          } catch { /* personal score is optional */ }
           return '';
         })()}
 
@@ -1382,7 +1382,6 @@ document.addEventListener("DOMContentLoaded", () => {
               const slp = (p.sleep||'').toLowerCase();
               const mood = (p.mood||'').toLowerCase();
               const dig = (p.digestion||'').toLowerCase();
-              const push = parseInt(p.pushups,10)||0;
               const orgs = (node.organs||[]).map(o=>o.toLowerCase());
               if ((sys>130||dia>85) && (orgs.includes('heart')||orgs.includes('mito'))) reasons.push('your BP profile');
               if ((slp==='poor'||slp==='fair') && (orgs.includes('brain')||/magnes|taurine/.test((node.name||'').toLowerCase()))) reasons.push('sleep quality');
@@ -1396,7 +1395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (!hasAny) {
               return `<div class="mt-2 text-[10px] px-2 py-1 rounded-xl border border-emerald-400/30 bg-emerald-400/5 text-emerald-300/90 popup-blink">Enter your stats in Personal Corner for a personalized match score &amp; impact notes on this node.</div>`;
             }
-          } catch(e){}
+          } catch { /* personal score is optional */ }
           return '';
         })()}
 
@@ -1533,7 +1532,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof toggle === 'function') toggle(node, stackBtn);
       };
     }
-    try { renderOrganImpactUI(); } catch (_) {}
+    try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
   }
 
   // Desktop path kept for wide screens. Mobile routes to bottom sheet instead.
@@ -1542,7 +1541,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!node) {
       const label = currentTreeType === 'all' ? 'full' : (currentTreeType === 'biomarkers' ? 'biomarkers' : (currentTreeType === 'environment' ? 'environment' : (currentTreeType === 'habits' ? 'habits' : (currentTreeType === 'exercises' ? 'exercises' : (currentTreeType === 'foods' ? 'foods' : 'supplements')))));
       detailPanel.innerHTML = `<div class="text-white/60 mb-3">Select a node on the ${label} map</div><div id="organ-impact-inspector" class="mt-2"></div>`;
-      try { renderOrganImpactUI(); } catch (_) {}
+      try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
       return;
     }
     populateInspector(detailPanel, node);
@@ -1602,7 +1601,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const raw = readStorage(PERSONAL_STORAGE_KEY, [LEGACY_PERSONAL_STORAGE_KEY]);
       personalData = raw ? JSON.parse(raw) : {};
-    } catch (e) {
+    } catch {
       personalData = {};
     }
     // Ensure global is populated early so trees can read gender for PNG body on first draw
@@ -1693,12 +1692,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderPersonalPanel() {
     const panel = document.getElementById('personal-panel');
-    const header = document.getElementById('personal-header');
     if (!panel) return;
 
     const p = personalData;
     const insights = getPersonalInsights(p);
-    const bmi = insights.bmi;
     const hasAnyData = Object.keys(p).some(k => p[k] !== '' && p[k] != null);
 
     let html = '';
@@ -2164,18 +2161,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return `<div class="text-[9px] uppercase tracking-widest text-white/45 mb-1">Organ impact <span class="normal-case tracking-normal text-white/30">(stack coverage)</span></div>
       <div class="flex flex-wrap gap-1">${chips}</div>
       <div class="mt-1 text-[8px] text-white/30 leading-snug">Educational tags from your stack — not medical advice.</div>`;
-  }
-
-  function ensureOrganImpactMount(parent, mountId) {
-    if (!parent) return null;
-    let el = document.getElementById(mountId);
-    if (!el) {
-      el = document.createElement('div');
-      el.id = mountId;
-      el.className = 'mt-1 px-1.5 py-1 rounded-xl border border-white/10 bg-white/[0.03]';
-      parent.appendChild(el);
-    }
-    return el;
   }
 
   function renderOrganImpactUI() {

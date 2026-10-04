@@ -26,7 +26,7 @@ export class BaseTree {
   }
 
   // Subclasses must implement
-  loadData(rawData) {
+  loadData() {
     throw new Error("loadData() must be implemented by subclass");
   }
 
@@ -34,7 +34,7 @@ export class BaseTree {
     throw new Error("computeLayout() must be implemented by subclass");
   }
 
-  draw(highlightIds = [], forceConnections = false) {
+  draw() {
     throw new Error("draw() must be implemented by subclass");
   }
 

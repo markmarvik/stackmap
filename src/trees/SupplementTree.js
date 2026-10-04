@@ -432,7 +432,7 @@ export class SupplementTree extends BaseTree {
       if (g === 'female') return 'female';
       // 'male', 'other', or unset -> male base (androgynous stylized figure still reads well)
       return 'male';
-    } catch (e) {
+    } catch {
       return 'male';
     }
   }
@@ -710,7 +710,7 @@ export class SupplementTree extends BaseTree {
     ctx.fillText(vit, dx, dy);
   }
 
-  draw(highlightIds = [], forceActiveConnections = false) {
+  draw(highlightIds = []) {
     if (!this.ctx) return;
 
     // Advance organ explode animation; keep RAF going while in flight

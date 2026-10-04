@@ -107,7 +107,7 @@ export class HoverPopup {
             blurbEl.parentNode.appendChild(scoreBadge);
           }
         }
-      } catch (e) { /* non-fatal */ }
+      } catch { /* non-fatal */ }
     }
 
     // Subtle note for high dose risk supps (referenced on map hover)
