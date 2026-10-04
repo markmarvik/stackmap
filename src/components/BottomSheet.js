@@ -132,7 +132,7 @@ export class BottomSheet {
         } else if (!isNeg && !hasP) {
           personalHtml = `<div class="mt-1.5 text-[10px] text-emerald-300/80">Enter stats in Personal Corner for your match score.</div>`;
         }
-      } catch (e) {}
+      } catch { /* personal score is optional */ }
 
       const organPills = organs.map(o => {
         const meta = (window.AETHERIS_ORGAN_META || {})[o];
@@ -250,7 +250,6 @@ export class BottomSheet {
     this.sheetEl.style.height = vh > 0 ? `${vh}vh` : '0px';
     if (immediate) {
       // force reflow then restore transition
-      // eslint-disable-next-line no-unused-expressions
       this.sheetEl.offsetHeight;
       this.sheetEl.style.transition = 'height 240ms cubic-bezier(0.22, 1.0, 0.36, 1)';
     }
@@ -286,7 +285,7 @@ export class BottomSheet {
       };
 
       this.sheetEl.style.transition = 'none';
-      try { this.handleEl.setPointerCapture(e.pointerId); } catch (_) {}
+      try { this.handleEl.setPointerCapture(e.pointerId); } catch { /* already released */ }
     };
 
     const onMove = (e) => {
@@ -304,10 +303,10 @@ export class BottomSheet {
       this.sheetEl.style.height = `${nextVh}vh`;
     };
 
-    const onUp = (e) => {
+    const onUp = () => {
       if (!this._dragState || !this.sheetEl) return;
 
-      try { this.handleEl.releasePointerCapture(this._dragState.pointerId); } catch (_) {}
+      try { this.handleEl.releasePointerCapture(this._dragState.pointerId); } catch { /* already released */ }
 
       const endVh = this._dragState.lastVh || 0;
       this.sheetEl.style.transition = 'height 220ms cubic-bezier(0.22, 1.0, 0.36, 1)';

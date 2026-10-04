@@ -72,7 +72,7 @@ export class ExplorerModal {
             psBadge.innerHTML = `<span class="font-mono font-semibold text-sm">${ps}</span> <span class="uppercase tracking-[1px] text-[9px]">personal score</span> <div class="w-10 h-1.5 bg-white/20 rounded overflow-hidden"><div class="${barColor} h-full" style="width:${Math.max(5,ps)}%"></div></div>`;
             glance.parentElement.appendChild(psBadge);
           }
-        } catch(e){}
+        } catch { /* personal score is optional */ }
       }
     }
 

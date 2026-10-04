@@ -106,7 +106,7 @@ export class AnatomyRenderer {
   _notify() {
     const snap = this.snapshot();
     this._listeners.forEach(fn => {
-      try { fn(snap); } catch (_) { /* ignore */ }
+      try { fn(snap); } catch { /* ignore */ }
     });
   }
 

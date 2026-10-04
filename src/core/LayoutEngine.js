@@ -18,7 +18,7 @@ export class LayoutEngine {
    * Computes positions for a list of nodes.
    * Each node is expected to have at least: vitality, cat, (optional) radius hint
    */
-  computePositions(nodes, options = {}) {
+  computePositions(nodes) {
     const positions = new Map();
 
     // Category angular sectors (same philosophy as the monolith, improved)
@@ -85,7 +85,6 @@ export class LayoutEngine {
    */
   resolveCollisions(positions, nodes, iterations = 12, padding = 6) {
     const posArray = Array.from(positions.entries()).map(([id, p]) => {
-      const node = nodes.find(n => n.id === id);
       return { id, x: p.x, y: p.y, r: (p.radius || 18) };
     });
 

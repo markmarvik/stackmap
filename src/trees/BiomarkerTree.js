@@ -97,7 +97,7 @@ export class BiomarkerTree extends SupplementTree {
     return super._getNodeColor ? super._getNodeColor(node) : '#94a3b8';
   }
 
-  _drawNodeScore(ctx, node, r, { isDimmed, isSelected, isHighValue, x, y, scale = 1 }) {
+  _drawNodeScore(ctx, node, r, { isDimmed, isSelected, x, y, scale = 1 }) {
     if (!isSelected && r * scale < 7) return;
     if (r < 8) return;
 

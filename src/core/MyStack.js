@@ -20,8 +20,6 @@ const SCHEMA_VERSION = 1;
 export const FREE_STACK_SOFT_LIMIT = FREE_STACK_LIMIT;
 export { FREE_STACK_LIMIT };
 
-const VALID_SLOTS = new Set(['morning', 'evening', null, undefined, '']);
-
 function emptyProfile() {
   return {
     schemaVersion: SCHEMA_VERSION,
