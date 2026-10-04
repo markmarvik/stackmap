@@ -301,6 +301,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (foodBtn) foodBtn.classList.toggle('active', activeType === 'foods');
     if (envBtn) envBtn.classList.toggle('active', activeType === 'environment');
     if (biomarkersBtn) biomarkersBtn.classList.toggle('active', activeType === 'biomarkers');
+
+    const currentIcon = document.getElementById('constellation-picker-icon');
+    const currentName = document.getElementById('constellation-picker-name');
+    const activeBtn = document.querySelector(`#constellation-picker .constellation-btn[data-type="${activeType}"]`);
+    if (activeBtn && currentIcon && currentName) {
+      const srcIcon = activeBtn.querySelector('i');
+      const srcLabel = activeBtn.querySelector('span');
+      if (srcIcon) currentIcon.className = srcIcon.className;
+      if (srcLabel) currentName.textContent = srcLabel.textContent;
+    }
+  }
+
+  function setMobileConstellationListOpen(open) {
+    const list = document.getElementById('constellation-picker-list');
+    const chevron = document.getElementById('constellation-picker-chevron');
+    const toggle = document.getElementById('constellation-picker-toggle');
+    if (list) list.classList.toggle('is-collapsed', !open);
+    if (chevron) {
+      chevron.classList.toggle('fa-chevron-down', !open);
+      chevron.classList.toggle('fa-chevron-up', open);
+    }
+    if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function collapseMobileConstellationPicker() {
+    if (!isMobileViewport()) return;
+    setMobileConstellationListOpen(false);
   }
 
   function renderGroupFilters() {
@@ -504,14 +531,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <button id="node-limit-all" class="px-2 py-0.5 rounded-lg border text-[9px] border-amber-400/40 hover:bg-amber-400/10 text-amber-300/80">ALL</button>
             </div>
           </div>
-          <input id="node-limit-range" type="range" min="5" max="${sliderMax}" step="5" value="${val}" class="w-full accent-amber-400">
+          <input id="node-limit-range" type="range" min="5" max="${sliderMax}" step="5" value="${val}" aria-label="Top nodes shown" class="w-full accent-amber-400">
         </div>
       `;
     } else {
       mount.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="uppercase tracking-[1px] text-white/50">TOP</span>
-          <input id="node-limit-range" type="range" min="5" max="${sliderMax}" step="5" value="${val}" class="w-28 accent-amber-400">
+          <input id="node-limit-range" type="range" min="5" max="${sliderMax}" step="5" value="${val}" aria-label="Top nodes shown" class="w-28 accent-amber-400">
           <span id="node-limit-val" class="font-mono w-8 text-amber-300">${current > 0 ? current : 'ALL'}</span>
           <button id="node-limit-all" class="px-2 py-0.5 rounded-xl border text-[9px] border-amber-400/40 hover:bg-amber-400/10 text-amber-300/80">ALL</button>
         </div>
@@ -1169,13 +1196,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const envBtn = document.getElementById('btn-constellation-environment');
   const biomarkersBtn = document.getElementById('btn-constellation-biomarkers');
 
-  if (allBtn) allBtn.onclick = () => switchConstellation('all');
-  if (supBtn) supBtn.onclick = () => switchConstellation('supplements');
-  if (habBtn) habBtn.onclick = () => switchConstellation('habits');
-  if (exBtn) exBtn.onclick = () => switchConstellation('exercises');
-  if (foodBtn) foodBtn.onclick = () => switchConstellation('foods');
-  if (envBtn) envBtn.onclick = () => switchConstellation('environment');
-  if (biomarkersBtn) biomarkersBtn.onclick = () => switchConstellation('biomarkers');
+  const pickConstellation = (type) => {
+    switchConstellation(type);
+    collapseMobileConstellationPicker();
+  };
+  if (allBtn) allBtn.onclick = () => pickConstellation('all');
+  if (supBtn) supBtn.onclick = () => pickConstellation('supplements');
+  if (habBtn) habBtn.onclick = () => pickConstellation('habits');
+  if (exBtn) exBtn.onclick = () => pickConstellation('exercises');
+  if (foodBtn) foodBtn.onclick = () => pickConstellation('foods');
+  if (envBtn) envBtn.onclick = () => pickConstellation('environment');
+  if (biomarkersBtn) biomarkersBtn.onclick = () => pickConstellation('biomarkers');
+
+  const pickerToggle = document.getElementById('constellation-picker-toggle');
+  if (pickerToggle && !pickerToggle._wired) {
+    pickerToggle._wired = true;
+    pickerToggle.onclick = (e) => {
+      e.stopPropagation();
+      const list = document.getElementById('constellation-picker-list');
+      const open = !!(list && list.classList.contains('is-collapsed'));
+      setMobileConstellationListOpen(open);
+    };
+  }
 
   // Mark initial active state
   updateConstellationButtons('supplements');
@@ -1390,6 +1432,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
           <button id="ext-link-btn" class="px-3 text-xs py-2 rounded-2xl border border-white/20 hover:bg-white/10 text-white/80" title="External sources">↗</button>
         </div>
+        <p class="mt-3 text-[10px] text-white/45 leading-snug">Educational, not medical advice</p>
       </div>
     `;
 
@@ -2325,6 +2368,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (hint) hint.onclick = () => openPricingModal();
     const footerPricingPage = document.getElementById('footer-pricing-page');
     if (footerPricingPage) footerPricingPage.href = pricingPageUrl();
+    // Same BASE_URL prefix as Pricing, so the links resolve under /stackmap/.
+    const siteBase = pricingPageUrl().replace(/pricing\.html$/, '');
+    const footerMedical = document.getElementById('footer-medical');
+    const footerPrivacy = document.getElementById('footer-privacy');
+    const footerTerms = document.getElementById('footer-terms');
+    if (footerMedical) footerMedical.href = `${siteBase}terms.html#medical`;
+    if (footerPrivacy) footerPrivacy.href = `${siteBase}privacy.html`;
+    if (footerTerms) footerTerms.href = `${siteBase}terms.html`;
     const closeBtn = document.getElementById('pricing-modal-close');
     if (closeBtn) closeBtn.onclick = () => closePricingModal();
     const modal = document.getElementById('pricing-modal');
@@ -2694,6 +2745,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   setTimeout(() => {
+    // Phone: the sheet would open under the Quick start tip.
+    if (isMobileViewport()) return;
     if (currentTreeType !== 'supplements' || !treeInstance) return;
     const omega = treeInstance.nodes.find(n => n.id === 'omega3');
     if (!omega) return;

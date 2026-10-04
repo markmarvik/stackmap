@@ -776,7 +776,9 @@ export class SupplementTree extends BaseTree {
     // PNG body is the only version (layered via AnatomyRenderer — Issue #16).
     if (this._bodyPngReady) {
       this._drawCentralBodyPng(ctx, 0, 0, 3.15, highlightOrgs, isNegativeImpact);
-    } else {
+    } else if (!this._bodyPngWarned) {
+      // draw() runs every frame; one warning is enough until the PNGs arrive.
+      this._bodyPngWarned = true;
       console.warn('[AETHERIS] Body PNGs not ready');
     }
 

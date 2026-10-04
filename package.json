@@ -1,6 +1,6 @@
 {
   "name": "aetheris",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "StackMap (formerly Aetheris) — longevity constellation map",
   "type": "module",
   "engines": {

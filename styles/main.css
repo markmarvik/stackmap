@@ -1,5 +1,5 @@
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:wght@700&amp;display=swap');
-    
+    /* Fonts load from <link> in the HTML. This @import blocked first paint, and the literal &amp; dropped Playfair and display=swap. */
+
     :root {
       --gold: #d4af37;
       --cyan: #67e8f9;

@@ -8,7 +8,7 @@
 
 import { readStorage, removeStorage, writeStorage } from './persist.js';
 
-export const APP_VERSION = '0.3.10';
+export const APP_VERSION = '0.3.11';
 
 export const PRO_LICENSE_KEY = 'stackmap-pro-key';
 const LEGACY_PRO_LICENSE_KEY = 'aetheris-pro-key';

@@ -155,6 +155,7 @@ export class BottomSheet {
           <button id="sheet-mystack-btn" type="button" class="${stackCls}">${stackLabel}</button>
         </div>
         <div class="mt-2 text-[10px] text-white/40">Tap header or <span class="text-amber-300/90">DETAILS</span> • drag up to expand • drag down to close</div>
+        <div class="mt-1.5 text-[9px] text-white/45">Educational, not medical advice</div>
       `;
       this.previewEl.classList.remove('hidden');
 
@@ -172,6 +173,7 @@ export class BottomSheet {
 
     this.sheetEl.classList.remove('hidden');
     this._setHeight(34); // modest preview rise
+    this._syncSheetChrome();
   }
 
   expand() {
@@ -196,6 +198,7 @@ export class BottomSheet {
     }
 
     this._setHeight(88);
+    this._syncSheetChrome();
   }
 
   _snapToPreview() {
@@ -204,6 +207,12 @@ export class BottomSheet {
     if (this.fullEl) this.fullEl.classList.add('hidden');
     if (this.previewEl) this.previewEl.classList.remove('hidden');
     this._setHeight(34);
+    this._syncSheetChrome();
+  }
+
+  /** Fixed footer sits over the sheet hint; body.sheet-open hides it on small screens. */
+  _syncSheetChrome() {
+    document.body.classList.toggle('sheet-open', this.mode !== 'closed');
   }
 
   close(animate = true) {
@@ -219,13 +228,17 @@ export class BottomSheet {
 
     if (animate) {
       this._setHeight(0);
-      // After transition, fully hide to not block clicks
+      // After transition, fully hide to not block clicks. Footer returns with the sheet.
       setTimeout(() => {
-        if (this.mode === 'closed' && this.sheetEl) this.sheetEl.classList.add('hidden');
+        if (this.mode === 'closed' && this.sheetEl) {
+          this.sheetEl.classList.add('hidden');
+          document.body.classList.remove('sheet-open');
+        }
       }, 260);
     } else {
       this._setHeight(0, true);
       this.sheetEl.classList.add('hidden');
+      document.body.classList.remove('sheet-open');
     }
   }
 

@@ -4,7 +4,9 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 
 `github.com/markmarvik/aetheris` redirects to this repo. The old Pages address does not.
 
-## Current Status (v0.3.10)
+## Current Status (v0.3.11)
+
+**Launch polish (v0.3.11):** social preview image + favicon, privacy and terms pages, medical disclaimer on every screen size, faster font loading, mobile map picker collapses so the map is visible.
 
 **Active stack (v0.3.10):** My Stack has an **All / Active** toggle on the personal map. Each saved item stays **Active** until you mark it **Paused**; Active view shows only stack items that are still active. The choice is saved in this browser.
 
