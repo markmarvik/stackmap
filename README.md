@@ -1,6 +1,6 @@
 # StackMap — Longevity Constellation
 
-Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. Live site: **https://markmarvik.github.io/stackmap/**.
+Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. Live site: **https://stackmap-31c.pages.dev/** (GitHub Pages mirror at https://markmarvik.github.io/stackmap/ until cutover).
 
 `github.com/markmarvik/aetheris` redirects to this repo. The old Pages address does not.
 
@@ -82,7 +82,7 @@ npm run preview
 Build env (see `vite.config.js`). Dev always uses base `/`.
 
 - `BASE` — production asset prefix. Default `/`. Normalised with a leading and trailing slash.
-- `SITE_URL` — full public URL, including that base. Default `https://stackmap.pages.dev/`.
+- `SITE_URL` — full public URL, including that base. Default `https://stackmap-31c.pages.dev/`.
 
 **Cloudflare Pages** (domain root): build command `npm run build`, output directory `dist`, Node version from `.nvmrc`. Leave `BASE` and `SITE_URL` unset.
 

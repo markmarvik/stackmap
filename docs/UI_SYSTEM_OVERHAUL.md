@@ -1,7 +1,7 @@
 # UI and system overhaul
 
 **Brand:** StackMap (locked 2026-09-21). **Repo:** `markmarvik/stackmap`.  
-**Live path:** https://markmarvik.github.io/stackmap/  
+**Live path:** https://stackmap-31c.pages.dev/  
 **Started:** v0.3.7 · repo rename v0.3.8
 
 GitHub redirects `github.com/markmarvik/aetheris` to this repo. Project Pages do not redirect, so the public site is only the `/stackmap/` path.

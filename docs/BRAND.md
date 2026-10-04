@@ -14,7 +14,7 @@
 - [ ] Instagram `@stackmap`
 - [ ] TikTok `@stackmap`
 - [ ] Domain `stackmap.app` or best available
-- [ ] Bio → https://markmarvik.github.io/stackmap/
+- [ ] Bio → https://stackmap-31c.pages.dev/
 
 ## Cutover
 

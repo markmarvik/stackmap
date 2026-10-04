@@ -1,7 +1,7 @@
 # Aetheris Improvement Plan
 
 **Status:** living doc · updated 2026-09-21  
-**Product:** Modular Longevity Constellation (Vite + canvas) · https://markmarvik.github.io/stackmap/
+**Product:** Modular Longevity Constellation (Vite + canvas) · https://stackmap-31c.pages.dev/
 
 ## Current baseline (post #14 / #16 Phase 1)
 
