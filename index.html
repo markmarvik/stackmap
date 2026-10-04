@@ -186,6 +186,10 @@
       <div class="tree-frame w-full h-full bg-[#05070f] border border-white/10 border-l-0 overflow-hidden relative">
         <canvas id="tree-canvas"
                 class="w-full h-full block bg-[#05070f] cursor-grab active:cursor-grabbing"></canvas>
+        <div id="mystack-active-empty"
+             class="hidden pointer-events-none absolute left-1/2 top-24 z-[40] -translate-x-1/2 px-3 py-1 rounded-full border border-white/10 bg-[#0a0d1a]/90 text-[10px] text-white/60">
+          No active consumed nodes
+        </div>
         
         <!-- Logo placed in top-left of the map (subtle, inside the frame) -->
         <div class="absolute top-4 left-4 z-[60] flex items-center gap-x-2.5 pointer-events-none select-none">
@@ -377,6 +381,14 @@
               </div>
               <div id="mystack-list"
                    class="max-h-48 overflow-y-auto flex flex-col gap-1"></div>
+              <div class="grid grid-cols-2 gap-1" role="group" aria-label="Stack view">
+                <button id="mystack-view-all" type="button"
+                        class="px-1.5 py-1 rounded-lg border border-white/10 text-[10px] text-white/70 hover:bg-white/5 transition"
+                        title="Show every node">All</button>
+                <button id="mystack-view-active" type="button"
+                        class="px-1.5 py-1 rounded-lg border border-white/10 text-[10px] text-white/70 hover:bg-white/5 transition"
+                        title="Show only nodes in your stack that are still active">Active</button>
+              </div>
               <button id="mystack-highlight-btn"
                       type="button"
                       class="w-full text-left px-2 py-1 rounded-lg border border-white/10 text-white/70 hover:bg-white/5 transition"
@@ -621,7 +633,7 @@
     </button>
     <span id="app-version"
           class="px-1.5 py-0.5 rounded-full font-mono tabular-nums text-white/35 border border-white/10 bg-[#0a0d1a]/70"
-          title="App version">v0.3.9</span>
+          title="App version">v0.3.10</span>
     <span class="text-white/25 hidden md:inline">Educational map only</span>
   </footer>
 

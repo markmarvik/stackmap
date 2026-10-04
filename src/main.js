@@ -282,6 +282,8 @@ document.addEventListener("DOMContentLoaded", () => {
     recomputeOrganSystem();
     renderOrganImpactUI();
     if (treeInstance && typeof treeInstance.draw === 'function') treeInstance.draw();
+    // Empty state depends on which map is showing.
+    syncMyStackActiveEmpty();
   }
 
   function updateConstellationButtons(activeType) {
@@ -1184,6 +1186,8 @@ document.addEventListener("DOMContentLoaded", () => {
     switchConstellation(deepLinkConstellation, { fromDeepLink: true });
   } else {
     syncConstellationQuery(currentTreeType);
+    // Default map skips switchConstellation, so wire Map/Body/Stack tabs here too (guarded, idempotent).
+    wireAnatomyControls();
   }
 
   // Wire mobile-only expandable vertical filters toggle (right column under selector)
@@ -1978,12 +1982,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const safeC = esc(entry.constellation);
       const noteVal = esc(entry.note || '');
       const slot = entry.slot || '';
-      return `<div class="flex flex-col gap-0.5 px-1.5 py-1 rounded-lg border border-white/10 bg-white/[0.03]" data-stack-row="${safeId}" data-stack-const="${safeC}">
+      const paused = !!entry.paused;
+      const pauseCls = paused
+        ? 'shrink-0 px-1 py-0.5 rounded border border-white/10 text-white/40 hover:bg-white/5 text-[9px]'
+        : 'shrink-0 px-1 py-0.5 rounded border border-emerald-400/30 text-emerald-300 hover:bg-emerald-400/10 text-[9px]';
+      return `<div class="flex flex-col gap-0.5 px-1.5 py-1 rounded-lg border border-white/10 bg-white/[0.03]${paused ? ' opacity-50' : ''}" data-stack-row="${safeId}" data-stack-const="${safeC}">
         <div class="flex items-center gap-1">
           <div class="flex-1 min-w-0">
             <div class="truncate text-white/85 text-[10px] leading-tight">${esc(title)}</div>
             ${sub ? `<div class="truncate text-white/35 text-[8px]">${esc(sub)}</div>` : ''}
           </div>
+          <button type="button" data-stack-pause="${safeId}" data-stack-const="${safeC}"
+                  class="${pauseCls}"
+                  title="${paused ? 'Paused — click to mark active' : 'Active — click to pause'}">${paused ? 'Paused' : 'Active'}</button>
           <button type="button" data-stack-remove="${safeId}" data-stack-const="${safeC}"
                   class="shrink-0 px-1.5 py-0.5 rounded border border-red-400/25 text-red-300/80 hover:bg-red-950/40 text-[9px]"
                   title="Remove">×</button>
@@ -2017,6 +2028,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sel === id && curC === c) {
           document.querySelectorAll('#mystack-toggle-node-btn, #sheet-mystack-btn').forEach((b) => styleStackToggleBtn(b, false));
         }
+        refreshMyStackUI();
+        if (treeInstance) treeInstance.draw();
+      };
+    });
+
+    listEl.querySelectorAll('[data-stack-pause]').forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = String(btn.getAttribute('data-stack-pause'));
+        const c = String(btn.getAttribute('data-stack-const') || 'supplements');
+        const entry = myStack.getEntry(id, c);
+        const paused = !(entry && entry.paused);
+        myStack.setPaused(id, c, paused);
+        track('mystack_set_paused', { id, constellation: c, paused });
         refreshMyStackUI();
         if (treeInstance) treeInstance.draw();
       };
@@ -2131,6 +2156,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function syncMyStackActiveEmpty() {
+    const el = document.getElementById('mystack-active-empty');
+    if (!el) return;
+    // Ask the tree what it really draws, so group filters / node caps count too.
+    const shown = treeInstance && typeof treeInstance._getShownNodes === 'function'
+      ? treeInstance._getShownNodes().length
+      : myStack.getActiveCount();
+    const show = myStack.viewMode === 'active' && shown === 0;
+    el.classList.toggle('hidden', !show);
+  }
+
   function refreshMyStackUI() {
     window.AETHERIS = window.AETHERIS || {};
     window.AETHERIS.myStack = myStack;
@@ -2148,6 +2184,16 @@ document.addEventListener("DOMContentLoaded", () => {
       hlBtn.classList.toggle('bg-amber-400/10', myStack.highlightMode);
       hlBtn.classList.toggle('text-amber-100', myStack.highlightMode);
     }
+    const viewActiveOn = myStack.viewMode === 'active';
+    const styleViewBtn = (btn, on) => {
+      if (!btn) return;
+      btn.classList.toggle('border-amber-400/50', on);
+      btn.classList.toggle('bg-amber-400/10', on);
+      btn.classList.toggle('text-amber-100', on);
+    };
+    styleViewBtn(document.getElementById('mystack-view-all'), !viewActiveOn);
+    styleViewBtn(document.getElementById('mystack-view-active'), viewActiveOn);
+    syncMyStackActiveEmpty();
     const warn = document.getElementById('mystack-soft-limit-warn');
     const limitN = document.getElementById('mystack-limit-n');
     if (limitN) limitN.textContent = String(FREE_STACK_LIMIT);
@@ -2328,6 +2374,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (treeInstance) treeInstance.draw();
       };
     }
+    const setStackView = (mode) => {
+      myStack.setViewMode(mode);
+      track('mystack_view_mode', { mode });
+      refreshMyStackUI();
+      if (treeInstance) treeInstance.draw();
+    };
+    const viewAllBtn = document.getElementById('mystack-view-all');
+    const viewActiveBtn = document.getElementById('mystack-view-active');
+    if (viewAllBtn) viewAllBtn.onclick = () => setStackView('all');
+    if (viewActiveBtn) viewActiveBtn.onclick = () => setStackView('active');
     const exportBtn = document.getElementById('mystack-export-btn');
     if (exportBtn) {
       exportBtn.onclick = () => {

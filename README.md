@@ -4,7 +4,9 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 
 `github.com/markmarvik/aetheris` redirects to this repo. The old Pages address does not.
 
-## Current Status (v0.3.9)
+## Current Status (v0.3.10)
+
+**Active stack (v0.3.10):** My Stack has an **All / Active** toggle on the personal map. Each saved item stays **Active** until you mark it **Paused**; Active view shows only stack items that are still active. The choice is saved in this browser.
 
 **All nodes (v0.3.9):** the Map list includes **All nodes**, one map of every constellation, framed to the screen. The crosshairs button fits whatever is visible. Names show when you zoom in; `/` still jumps to a node. New nodes landed in every constellation, and a few headline supplement lines were rewritten so they do not read like guaranteed extra years.
 
