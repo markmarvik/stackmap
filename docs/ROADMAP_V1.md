@@ -1,6 +1,6 @@
 # Aetheris Roadmap → v1.0
 
-**Baseline:** v0.3.9 (all-nodes map, fuller catalog) · live: https://markmarvik.github.io/stackmap/  
+**Baseline:** v0.3.9 (all-nodes map, fuller catalog) · live: https://stackmap-31c.pages.dev/  
 **Goal:** Ship a **v1.0** web product people can explore, personalize, and (optionally) pay for — without native apps or a custom billing backend.
 
 Related: [`IMPROVEMENT_PLAN.md`](./IMPROVEMENT_PLAN.md), [`MONETIZATION_ROADMAP.md`](./MONETIZATION_ROADMAP.md).
