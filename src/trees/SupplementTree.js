@@ -438,7 +438,7 @@ export class SupplementTree extends BaseTree {
   }
 
   _loadBodyAssets() {
-    // Use import.meta.env.BASE_URL so GitHub Pages (/aetheris/) + local dev both resolve PNGs correctly.
+    // Use import.meta.env.BASE_URL so the configured base and local dev both resolve PNGs correctly.
     const base = import.meta.env.BASE_URL + 'assets/body';
 
     this.anatomy.load(base).then(() => {
