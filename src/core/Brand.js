@@ -11,7 +11,7 @@ export const FORMERLY_LINE = 'formerly Aetheris';
 export const REPO_SLUG = 'stackmap';
 
 // import.meta.env is undefined when plain Node imports this file.
-const rawSiteUrl = import.meta.env?.VITE_SITE_URL || 'https://stackmap.pages.dev/';
+const rawSiteUrl = import.meta.env?.VITE_SITE_URL || 'https://stackmap-31c.pages.dev/';
 export const PUBLIC_URL = rawSiteUrl.endsWith('/') ? rawSiteUrl : `${rawSiteUrl}/`;
 // Host + path, no protocol and no trailing slash.
 export const PUBLIC_HOST_LABEL = PUBLIC_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');

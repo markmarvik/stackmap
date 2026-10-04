@@ -11,7 +11,7 @@ function normaliseBase(value) {
 
 // Full public URL including the base path. Callers join paths onto the trailing slash.
 function normaliseSiteUrl(value) {
-  const raw = (value && String(value).trim()) || 'https://stackmap.pages.dev/';
+  const raw = (value && String(value).trim()) || 'https://stackmap-31c.pages.dev/';
   return raw.endsWith('/') ? raw : `${raw}/`;
 }
 
