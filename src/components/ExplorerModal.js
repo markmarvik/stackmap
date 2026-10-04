@@ -5,6 +5,8 @@
  * Ports the full interactive experience from the original.
  */
 
+import { PUBLIC_HOST_LABEL } from '../core/Brand.js';
+
 export class ExplorerModal {
   constructor() {
     this.el = null;
@@ -215,7 +217,7 @@ export class ExplorerModal {
     const shareBtn = actionsRow.querySelector('#modal-share-btn');
     if (shareBtn) {
       shareBtn.onclick = () => {
-        const txt = `${node.name} — app rating ${node.vitality || node.longevity} on StackMap. ${node.blurb || ''} markmarvik.github.io/stackmap 🧬`;
+        const txt = `${node.name} — app rating ${node.vitality || node.longevity} on StackMap. ${node.blurb || ''} ${PUBLIC_HOST_LABEL} 🧬`;
         navigator.clipboard?.writeText(txt).catch(()=>{});
         window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'width=560,height=420');
       };

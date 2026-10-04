@@ -2358,7 +2358,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (hint) hint.onclick = () => openPricingModal();
     const footerPricingPage = document.getElementById('footer-pricing-page');
     if (footerPricingPage) footerPricingPage.href = pricingPageUrl();
-    // Same BASE_URL prefix as Pricing, so the links resolve under /stackmap/.
+    // Same BASE_URL prefix as Pricing, so the links resolve under the configured base.
     const siteBase = pricingPageUrl().replace(/pricing\.html$/, '');
     const footerMedical = document.getElementById('footer-medical');
     const footerPrivacy = document.getElementById('footer-privacy');
