@@ -26,8 +26,8 @@ const environmentCore = [
       "Neuroinflammation & blood-brain barrier leakage"
     ],
     risks: "Cardiovascular disease, COPD, lung cancer, cognitive decline, dementia, low birth weight",
-    blurb: "Tiny particles from traffic, wildfires, industry penetrate deep into lungs and bloodstream. One of the top global killers.",
-    studies: [{ year: 2023, finding: "Long-term PM2.5 exposure linked to +1-2 years biological age acceleration", source: "Lancet Planet Health" }],
+    blurb: "Tiny particles from traffic, wildfires, and industry reach deep lung and blood. Among the larger environmental risks studied globally.",
+    studies: [{ year: 2023, finding: "Long-term PM2.5 exposure associated with faster biological aging in studies", source: "Lancet Planet Health" }],
     avoidance: "HEPA air purifiers, avoid rush-hour/outdoor exercise in polluted areas, check AQI daily",
     mitigation: "Support Nrf2 & glutathione (NAC, sulforaphane, exercise in clean air)"
   },
@@ -41,9 +41,9 @@ const environmentCore = [
     qol: 38,
     diseases: 12,
     organs: ["lungs", "heart", "immune"],
-    mechanisms: ["Airway inflammation", "Increased asthma & respiratory infections", "Oxidative damage to lung tissue"],
-    risks: "Worsened asthma, bronchitis, heart disease, reduced lung development in children",
-    blurb: "Mainly from vehicle exhaust. Even low levels impair lung function and increase ER visits.",
+    mechanisms: ["Airway inflammation", "Asthma and respiratory infections", "Oxidative damage to lung tissue"],
+    risks: "Asthma, bronchitis, heart disease; lung-development concerns in children",
+    blurb: "Mainly from vehicle exhaust. Even low levels are associated with poorer lung function and more ER visits in studies.",
     avoidance: "Live/work away from busy roads; close windows during peak traffic; use car cabin filters",
     mitigation: "Antioxidant support (vit C, E, omega-3)"
   },
@@ -58,7 +58,7 @@ const environmentCore = [
     diseases: 10,
     organs: ["lungs", "heart"],
     mechanisms: ["Reactive oxygen species damaging lung lining", "Inflammation & reduced lung capacity"],
-    risks: "Aggravates asthma, COPD, heart arrhythmias on high-ozone days",
+    risks: "Associated with worse asthma, COPD, and heart rhythm symptoms on high-ozone days",
     blurb: "Secondary pollutant from sunlight + traffic emissions. Peaks in summer afternoons.",
     avoidance: "Limit outdoor activity 11am-4pm on high AQI days; indoor air filtration"
   },
@@ -72,7 +72,7 @@ const environmentCore = [
     qol: 40,
     diseases: 9,
     organs: ["lungs", "skin", "immune"],
-    mechanisms: ["DNA cross-linking & carcinogenicity", "Respiratory tract irritation"],
+    mechanisms: ["DNA cross-linking; cancer association", "Respiratory tract irritation"],
     risks: "Nasopharyngeal cancer, leukemia risk, eye/skin/respiratory irritation",
     blurb: "Off-gasses from pressed wood furniture, flooring, smoke, personal care products.",
     avoidance: "Choose solid wood or low-VOC furniture; ventilate new items; avoid smoking indoors"
@@ -91,7 +91,7 @@ const environmentCore = [
     organs: ["brain", "kidney", "heart", "bones"],
     mechanisms: ["Neurotoxicity & synaptic damage", "Oxidative stress", "Hypertension & kidney damage"],
     risks: "Cognitive decline, hypertension, kidney disease, developmental delays in children",
-    blurb: "No safe level. Legacy in paint, pipes, soil. Still affects millions via old housing & contaminated water.",
+    blurb: "Often described as having no known safe level. Legacy in paint, pipes, soil. Still affects millions via old housing and contaminated water.",
     avoidance: "Test old homes/water; wet-clean dust; use certified filters (NSF for lead)",
     mitigation: "Chelation under medical supervision if high burden; calcium, iron, vit C support"
   },
@@ -140,9 +140,9 @@ const environmentCore = [
     organs: ["gut", "liver", "brain", "repro"],
     mechanisms: ["Physical particle damage", "Leaching of additives + adsorbed toxins", "Microbiome disruption"],
     risks: "Inflammation, oxidative stress, potential endocrine & reproductive disruption",
-    blurb: "Found in bottled water, food packaging, air, salt, seafood. Particles cross gut and blood-brain barriers.",
+    blurb: "Found in bottled water, food packaging, air, salt, seafood. Particles are investigated for crossing gut and blood-brain barriers.",
     avoidance: "Avoid plastic bottles & food containers (esp. heated); use glass/stainless; HEPA vacuum",
-    mitigation: "Support liver detox pathways; fiber-rich diet for elimination"
+    mitigation: "Fiber-rich diet; reduce known exposure sources"
   },
   {
     id: "bisphenol-a",
@@ -154,7 +154,7 @@ const environmentCore = [
     qol: 37,
     diseases: 12,
     organs: ["endocrine", "heart", "brain", "repro"],
-    mechanisms: ["Potent endocrine disruptor (estrogen mimic)", "Epigenetic & metabolic reprogramming"],
+    mechanisms: ["Endocrine activity (estrogen-like)", "Epigenetic & metabolic reprogramming"],
     risks: "Obesity, diabetes, infertility, cardiovascular disease, neurobehavioral effects",
     blurb: "In polycarbonate plastics, can linings, receipts. 'BPA-free' often uses similar disruptors.",
     avoidance: "Never microwave plastics; avoid canned foods unless BPA-free lined; choose glass/steel"
@@ -170,7 +170,7 @@ const environmentCore = [
     diseases: 10,
     organs: ["repro", "endocrine", "liver"],
     mechanisms: ["Anti-androgenic effects", "PPAR activation & metabolic disruption"],
-    risks: "Reduced sperm quality, early puberty, obesity, asthma",
+    risks: "Sperm-quality, puberty-timing, obesity, and asthma findings in some studies",
     blurb: "Plasticizers in vinyl, fragrances, personal care. Absorbed through skin and inhalation.",
     avoidance: "Fragrance-free products; avoid vinyl shower curtains/flooring; read ingredient lists"
   },
@@ -234,7 +234,7 @@ const environmentCore = [
     diseases: 16,
     organs: ["lungs"],
     mechanisms: ["Alpha particle DNA damage in lung tissue"],
-    risks: "Lung cancer (2nd leading cause after smoking)",
+    risks: "Lung cancer risk (often discussed after smoking)",
     blurb: "Invisible radioactive gas seeps from soil into homes. Test kits are cheap.",
     avoidance: "Test home radon levels; seal cracks; install mitigation system if >4 pCi/L"
   },
@@ -281,7 +281,7 @@ const environmentCore = [
     diseases: 6,
     organs: ["lungs", "skin", "gut"],
     mechanisms: ["Forms disinfection byproducts (THMs, HAAs)", "Irritation & microbiome effects"],
-    risks: "Bladder cancer (long-term), respiratory irritation from showers, skin dryness",
+    risks: "Bladder cancer risk (long-term), respiratory irritation from showers, skin dryness",
     blurb: "Necessary for safety but byproducts and inhalation during showers are concerns.",
     avoidance: "Shower filter; whole-house carbon filter; let water sit or use vitamin C dechlorinator"
   },
@@ -299,7 +299,7 @@ const environmentCore = [
     organs: ["lungs", "brain", "immune"],
     mechanisms: ["Mycotoxin toxicity & inflammation", "Immune activation"],
     risks: "Chronic fatigue, cognitive issues ('brain fog'), asthma, sinusitis",
-    blurb: "Hidden in water-damaged buildings. Stachybotrys, aspergillus etc. produce potent toxins.",
+    blurb: "Hidden in water-damaged buildings. Stachybotrys, aspergillus, and others produce toxins.",
     avoidance: "Fix leaks immediately; dehumidify <50% RH; professional remediation if visible growth"
   },
   {
@@ -328,7 +328,7 @@ const environmentCore = [
     diseases: 10,
     organs: ["thyroid", "brain", "repro"],
     mechanisms: ["Thyroid hormone interference", "Neurodevelopmental toxicity"],
-    risks: "Lower IQ, ADHD-like symptoms, thyroid disorders, fertility issues",
+    risks: "IQ, ADHD-like symptoms, thyroid, and fertility findings in some studies",
     blurb: "In old furniture foam, electronics, carpets. Dust is main exposure route.",
     avoidance: "Replace old foam furniture; HEPA vacuum & wet dust; avoid 'flame retardant' labeled items"
   },
@@ -343,7 +343,7 @@ const environmentCore = [
     qol: 25,
     diseases: 19,
     organs: ["lungs", "pleura"],
-    mechanisms: ["Mesothelioma, asbestosis via fiber inhalation and inflammation"],
+    mechanisms: ["Fiber inhalation and inflammation; mesothelioma and asbestosis risk"],
     risks: "Lung cancer, mesothelioma, asbestosis",
     blurb: "Legacy in old insulation, tiles. Still a risk in renovations.",
     avoidance: "Professional abatement; do not disturb old materials; wet methods",
@@ -359,7 +359,7 @@ const environmentCore = [
     qol: 33,
     diseases: 15,
     organs: ["blood", "bone-marrow", "lungs"],
-    mechanisms: ["DNA damage, bone marrow toxicity, leukemogen"],
+    mechanisms: ["DNA damage, bone marrow toxicity, leukemia association"],
     risks: "Leukemia, aplastic anemia, immune suppression",
     blurb: "From gasoline, tobacco smoke, industrial solvents.",
     avoidance: "Avoid pumping gas yourself if possible; good ventilation; no smoking"
@@ -391,7 +391,7 @@ const environmentCore = [
     diseases: 11,
     organs: ["endocrine", "repro", "liver"],
     mechanisms: ["Aromatase induction, estrogen mimicry"],
-    risks: "Reproductive issues, birth defects, cancer risk",
+    risks: "Reproductive findings, birth-defect concerns in some studies, cancer risk",
     blurb: "Common corn herbicide; contaminates water widely.",
     avoidance: "Filter water; buy organic corn products"
   },
@@ -405,7 +405,7 @@ const environmentCore = [
     qol: 40,
     diseases: 8,
     organs: ["eyes", "brain", "sleep"],
-    mechanisms: ["Retinal damage, melatonin suppression, circadian disruption"],
+    mechanisms: ["Retinal stress (studied), melatonin suppression, circadian disruption"],
     risks: "Eye strain, sleep disorders, potential macular degeneration",
     blurb: "From LEDs, phones, computers. Especially at night.",
     avoidance: "Blue blockers at night; night mode; limit screen time before bed"
