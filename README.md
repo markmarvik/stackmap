@@ -4,7 +4,9 @@ Formerly **Aetheris**. Repository: **https://github.com/markmarvik/stackmap**. L
 
 `github.com/markmarvik/aetheris` redirects to this repo. The old Pages address does not.
 
-## Current Status (v0.3.11)
+## Current Status (v0.3.12)
+
+**Neutral wording + analytics (v0.3.12):** node copy reworded to educational language ("studied for", "associated with … in studies"), with no lifespan figures or cure/prevent claims. Scores are labelled as app ratings, not health outcomes. Cookieless GoatCounter analytics (site code in `src/core/Analytics.js`).
 
 **Launch polish (v0.3.11):** social preview image + favicon, privacy and terms pages, medical disclaimer on every screen size, faster font loading, mobile map picker collapses so the map is visible.
 
