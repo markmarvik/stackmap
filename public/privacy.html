@@ -139,13 +139,15 @@
 
       <h3>What stays in this browser</h3>
       <p>
-        The app stores the following only in this browser’s localStorage. It never sends that data anywhere.
+        The app stores the following only in this browser’s localStorage.
+        My Stack and Personal Corner are not sent to a server.
+        A Pro license key is the exception: activating or validating it contacts Lemon Squeezy, described under Third parties.
       </p>
       <ul>
         <li>My Stack: nodes, notes, slots, and the paused flag</li>
         <li>Personal Corner: age, gender, weight, height, blood pressure, sleep, push-ups, mood, and digestion</li>
         <li>View settings</li>
-        <li>Any Pro license key</li>
+        <li>Pro license status: the key, instance id, and last check, cached in localStorage</li>
       </ul>
 
       <h3>Clearing and export</h3>
@@ -163,6 +165,7 @@
         <li>Google Fonts</li>
         <li>cdnjs, for the Font Awesome icons</li>
         <li>GoatCounter (gc.zgo.at and stackmap.goatcounter.com), for cookieless analytics</li>
+        <li>Lemon Squeezy, when you buy Pro or activate a license. Checkout is handled on Lemon Squeezy. When you activate or validate a key, this browser sends the key and an instance name (“StackMap web”) to api.lemonsqueezy.com. License status is cached in localStorage.</li>
       </ul>
 
       <h3>Analytics</h3>
