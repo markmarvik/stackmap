@@ -41,7 +41,10 @@ export class HoverPopup {
     if (nameEl) nameEl.textContent = node.name || '';
 
     const vitEl = document.getElementById('popup-vitality');
-    if (vitEl) vitEl.textContent = String(node.vitality ?? '');
+    if (vitEl) {
+      vitEl.textContent = String(node.vitality ?? '');
+      vitEl.title = 'App rating, not a health outcome';
+    }
 
     const catEl = document.getElementById('popup-cat');
     if (catEl) catEl.textContent = (node.cat || '').toUpperCase();
@@ -53,10 +56,13 @@ export class HoverPopup {
         scoresEl.textContent = node.current != null
           ? `${node.current} ${node.unit || ''}${spec}`
           : `Biomarker${spec}`;
+        scoresEl.title = '';
       } else if (node._isEnvironment || node.impact === 'negative') {
         scoresEl.textContent = `Harm: ${node.longevity ?? '—'}`;
+        scoresEl.title = 'App rating, not a health outcome';
       } else {
         scoresEl.textContent = `L${node.longevity ?? '—'} · Q${node.qol ?? '—'}`;
+        scoresEl.title = 'App rating, not a health outcome';
       }
     }
 
@@ -88,7 +94,7 @@ export class HoverPopup {
         if (ps && ps > 0) {
           const scoreBadge = document.createElement('div');
           scoreBadge.className = 'mt-1.5 inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/30 popup-personal-score';
-          scoreBadge.title = `Personalized score based on your profile (age, BP, sleep, exercise, mood, digestion). Higher = better match for you.`;
+          scoreBadge.title = 'App match rating from your profile, not a health outcome.';
           let barColor = ps >= 70 ? 'bg-emerald-400' : (ps >= 50 ? 'bg-yellow-400' : 'bg-slate-400');
           scoreBadge.innerHTML = `
             <span class="font-mono font-bold">${ps}</span>
@@ -110,7 +116,7 @@ export class HoverPopup {
     if (hasHighDose && !isNegHover) {
       const note = document.createElement('div');
       note.className = 'text-[9px] text-orange-400/80 mt-1 flex items-center gap-1 popup-high-dose-note popup-blink';
-      note.innerHTML = '<span class="popup-blink">⚠ High dose risks documented</span>';
+      note.innerHTML = '<span class="popup-blink">⚠ High-dose caution noted</span>';
       organsEl.parentNode.appendChild(note);
     }
 

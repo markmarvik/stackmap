@@ -25,9 +25,7 @@
   <meta name="twitter:description" content="Explore your stack on a body map. Formerly Aetheris.">
   <meta name="twitter:image" content="https://markmarvik.github.io/stackmap/og-image.png">
 
-  <!-- Analytics: drop Plausible (or GA4) here when ready. Example:
-       <script defer data-domain="markmarvik.github.io" src="https://plausible.io/js/script.js"></script>
-       Then track() in src/core/Analytics.js forwards to window.plausible. -->
+  <!-- Analytics: cookieless GoatCounter, loaded from src/core/Analytics.js (GOATCOUNTER_CODE). -->
 
   <!-- Note: CSS is now injected via Vite through src/main.js import -->
   <!-- Fonts + icons load non-blocking (print→all swap) so the map paints first. -->
@@ -506,10 +504,11 @@
        style="background: linear-gradient(145deg, rgba(15,18,35,0.97), rgba(8,10,22,0.99)); border: 1px solid rgba(212,175,55,0.28);">
     <div id="popup-name" class="font-semibold text-base tracking-tight title-font text-amber-100/95 leading-tight"></div>
     <div class="flex items-center gap-2 mt-1 flex-wrap">
-      <div id="popup-vitality" class="font-mono text-[11px] px-1.5 py-0.5 rounded-md bg-amber-400/10 text-amber-200 border border-amber-400/25"></div>
+      <div id="popup-vitality" class="font-mono text-[11px] px-1.5 py-0.5 rounded-md bg-amber-400/10 text-amber-200 border border-amber-400/25" title="App rating, not a health outcome"></div>
       <div id="popup-cat" class="text-[10px] uppercase tracking-widest text-white/45"></div>
       <div id="popup-scores" class="text-[10px] font-mono text-white/50"></div>
     </div>
+    <div class="text-[9px] text-white/35 leading-snug mt-0.5">App scores (0-100), not health outcomes</div>
     <div id="popup-blurb" class="text-white/70 text-[11px] leading-snug mt-1.5 line-clamp-2"></div>
     <div class="flex flex-wrap gap-1 mt-2" id="popup-organs"></div>
   </div>
@@ -533,7 +532,7 @@
     <div class="px-4 pb-2 pt-0.5 flex items-center justify-between border-b border-white/10 bg-[#020408]">
       <div class="flex items-center gap-2 min-w-0">
         <div id="sheet-name" class="font-semibold title-font text-lg tracking-tight truncate"></div>
-        <div id="sheet-vitality" class="font-mono text-[11px] px-2 py-0.5 rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/20 shrink-0"></div>
+        <div id="sheet-vitality" class="font-mono text-[11px] px-2 py-0.5 rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/20 shrink-0" title="App rating, not a health outcome"></div>
       </div>
       <div class="flex items-center gap-1.5 shrink-0">
         <button id="sheet-expand-btn"
@@ -561,11 +560,11 @@
       <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40">
         <div class="flex items-center gap-x-3">
           <div id="modal-name" class="text-3xl title-font tracking-tight"></div>
-          <div id="modal-vitality-badge" class="font-mono text-sm px-3 py-1 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-bold"></div>
+          <div id="modal-vitality-badge" class="font-mono text-sm px-3 py-1 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-bold" title="App rating, not a health outcome"></div>
         </div>
         <div class="flex items-center gap-x-2">
           <div class="px-3 py-1 text-xs rounded-2xl border border-amber-400/50 bg-amber-400/10 text-amber-300 flex items-center gap-x-1.5">
-            <i class="fa-solid fa-book"></i> <span>GORKIPEDIA VERIFIED</span>
+            <i class="fa-solid fa-book"></i> <span>GORKIPEDIA ENTRY</span>
           </div>
           <button onclick="window.AETHERIS?.modal?.close()" class="text-white/60 hover:text-white text-2xl leading-none px-2">×</button>
         </div>
@@ -577,9 +576,10 @@
           <div class="flex-1">
             <div class="text-[10px] uppercase tracking-widest text-white/50 mb-1">AT A GLANCE</div>
             <div id="modal-glance" class="flex gap-3 text-xs"></div>
+            <div class="mt-1.5 text-[9px] text-white/35 leading-snug">App scores (0-100), not health outcomes</div>
           </div>
           <div>
-            <div class="text-[10px] uppercase tracking-widest text-white/50 mb-1">SUPPORTED SYSTEMS</div>
+            <div class="text-[10px] uppercase tracking-widest text-white/50 mb-1">TAGGED SYSTEMS</div>
             <div id="modal-organs" class="flex flex-wrap gap-1"></div>
           </div>
         </div>
@@ -594,14 +594,14 @@
 
         <!-- Studies -->
         <div>
-          <div class="text-[10px] uppercase tracking-widest text-white/50 mb-2">KEY CLINICAL EVIDENCE</div>
+          <div class="text-[10px] uppercase tracking-widest text-white/50 mb-2">KEY STUDIES</div>
           <div id="modal-studies" class="space-y-2"></div>
         </div>
 
         <!-- Practical + Synergies -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <div class="text-[10px] uppercase tracking-widest text-white/50 mb-1">PRACTICAL PROTOCOL</div>
+            <div class="text-[10px] uppercase tracking-widest text-white/50 mb-1">PRACTICAL NOTES</div>
             <div id="modal-dosage" class="text-sm bg-[#0a0d1a] p-3 rounded-2xl border border-white/10"></div>
             <div id="modal-risks" class="text-xs text-orange-300/80 mt-2 px-1"></div>
           </div>
@@ -632,7 +632,7 @@
             <i class="fa-solid fa-map"></i> <span>Center in Tree</span>
           </button>
           <button onclick="window.AETHERIS?.modal?.simulateStack()" class="px-4 py-1.5 rounded-2xl border border-white/15 hover:bg-white/5 flex items-center gap-x-2">
-            <i class="fa-solid fa-layer-group"></i> <span>Simulate Optimal Stack</span>
+            <i class="fa-solid fa-layer-group"></i> <span>Show related nodes</span>
           </button>
         </div>
         <div>
@@ -665,7 +665,7 @@
     </button>
     <span id="app-version"
           class="px-1.5 py-0.5 rounded-full font-mono tabular-nums text-white/60 border border-white/10 bg-[#0a0d1a]/70"
-          title="App version">v0.3.11</span>
+          title="App version">v0.3.12</span>
     <a id="footer-medical" href="terms.html#medical"
        class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
        title="Educational only, not medical advice">

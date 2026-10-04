@@ -39,7 +39,7 @@ import {
   pricingPageUrl,
   FEEDBACK_FORM_URL
 } from "./core/FeatureFlags.js";
-import { track, trackPageView, trackConstellation } from "./core/Analytics.js";
+import { track, trackPageView, trackConstellation, initAnalytics } from "./core/Analytics.js";
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
 import { readStorage, writeStorage } from "./core/persist.js";
@@ -1272,14 +1272,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const scoreLabel = isNegative ? 'Harm / Damage' : 'Longevity';
     const scoreColor = isNegative ? 'text-red-400' : 'text-cyan-300';
     const overallColor = isNegative ? 'text-red-300' : 'text-amber-300';
-    const supportsLabel = isNegative ? 'Damages / Negative Impact On' : 'Supports';
+    const supportsLabel = isNegative ? 'Associated with higher risk for' : 'Supports';
 
     let extraInfo = '';
     const mechs = (node.mechanisms || []).slice(0, 3);
     if (mechs.length) {
       extraInfo += `
         <div class="mt-3">
-          <div class="text-[10px] uppercase tracking-widest ${isNegative ? 'text-red-400/70' : 'text-white/50'} mb-1">MECHANISMS ${isNegative ? '(HARM)' : '(BENEFIT)'}</div>
+          <div class="text-[10px] uppercase tracking-widest ${isNegative ? 'text-red-400/70' : 'text-white/50'} mb-1">MECHANISMS ${isNegative ? '(RISK NOTES)' : '(STUDIED)'}</div>
           <div class="text-[11px] text-white/80 leading-snug">${mechs.join(' • ')}</div>
         </div>`;
     }
@@ -1299,8 +1299,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ${node.timing ? `<div class="text-[10px] text-white/60 mt-0.5"><span class="uppercase tracking-widest text-[9px] text-white/45">TIMING:</span> ${node.timing}</div>` : ''}
           ${node.bestForms ? `<div class="text-[10px] text-white/60 mt-0.5"><span class="uppercase tracking-widest text-[9px] text-white/45">BEST FORMS:</span> ${node.bestForms}</div>` : ''}
           ${node.dosage && !isNegative ? `<div class="mt-1.5">
-            <div class="h-1.5 w-full rounded bg-white/10 overflow-hidden flex"><span class="h-1.5 w-[18%] bg-emerald-400/60" title="Min effective"></span><span class="h-1.5 w-[45%] bg-emerald-300" title="Optimal zone"></span><span class="h-1.5 w-[20%] bg-amber-400/70" title="Megadose"></span><span class="h-1.5 flex-1 bg-red-500/50" title="Caution"></span></div>
-            <div class="flex text-[8px] text-white/50 mt-0.5 justify-between"><span>min</span><span class="text-emerald-300">opt</span><span>high</span><span class="text-red-300/70">risk</span></div>
+            <div class="h-1.5 w-full rounded bg-white/10 overflow-hidden flex"><span class="h-1.5 w-[18%] bg-emerald-400/60" title="Lower common range"></span><span class="h-1.5 w-[45%] bg-emerald-300" title="Often-cited range"></span><span class="h-1.5 w-[20%] bg-amber-400/70" title="Higher range"></span><span class="h-1.5 flex-1 bg-red-500/50" title="Caution"></span></div>
+            <div class="flex text-[8px] text-white/50 mt-0.5 justify-between"><span>low</span><span class="text-emerald-300">mid</span><span>high</span><span class="text-red-300/70">caution</span></div>
           </div>` : ''}
         </div>`;
     }
@@ -1323,13 +1323,14 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = `
       <div class="text-left w-full">
         <div class="text-2xl font-semibold title-font tracking-tight ${isNegative ? 'text-red-300' : ''}">${node.name}</div>
-        <div class="text-xs uppercase tracking-widest ${isNegative ? 'text-red-400' : 'text-amber-400'} mt-1">${(node._constellation ? node._constellation + (node._topic ? ' · ' + node._topic : '') : node.cat).toUpperCase()} • ${node.short}${(node._isBiomarker || node._isBlood) && node.specimen_type ? ' • ' + String(node.specimen_type).toUpperCase() : ''}${isNegative ? ' • HARMFUL' : ''}</div>
+        <div class="text-xs uppercase tracking-widest ${isNegative ? 'text-red-400' : 'text-amber-400'} mt-1">${(node._constellation ? node._constellation + (node._topic ? ' · ' + node._topic : '') : node.cat).toUpperCase()} • ${node.short}${(node._isBiomarker || node._isBlood) && node.specimen_type ? ' • ' + String(node.specimen_type).toUpperCase() : ''}${isNegative ? ' • RISK NODE' : ''}</div>
         
         <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
-          <div class="bg-[#0a0d1a] p-2 rounded-xl">${scoreLabel} <span class="font-mono ${scoreColor}">${node.longevity ?? node.vitality ?? '—'}</span></div>
-          <div class="bg-[#0a0d1a] p-2 rounded-xl">QoL <span class="font-mono text-violet-300">${node.qol ?? '—'}</span></div>
-          <div class="bg-[#0a0d1a] p-2 rounded-xl">Overall <span class="font-mono ${overallColor}">${node.vitality}</span></div>
+          <div class="bg-[#0a0d1a] p-2 rounded-xl" title="App rating, not a health outcome">${scoreLabel} <span class="font-mono ${scoreColor}">${node.longevity ?? node.vitality ?? '—'}</span></div>
+          <div class="bg-[#0a0d1a] p-2 rounded-xl" title="App rating, not a health outcome">QoL <span class="font-mono text-violet-300">${node.qol ?? '—'}</span></div>
+          <div class="bg-[#0a0d1a] p-2 rounded-xl" title="App rating, not a health outcome">Overall <span class="font-mono ${overallColor}">${node.vitality}</span></div>
         </div>
+        <div class="mt-1 text-[9px] text-white/35 leading-snug">App scores (0-100), not health outcomes</div>
 
         ${(() => {
           const p = personalData || {};
@@ -1339,7 +1340,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const ps = typeof personalizedScore === 'function' ? personalizedScore(node, p) : 0;
             if (ps) {
               const barColor = ps >= 70 ? 'bg-emerald-400' : (ps >= 50 ? 'bg-yellow-400' : 'bg-slate-400');
-              return `<div class="mt-2 p-2 rounded-xl bg-emerald-950/40 border border-emerald-400/40 text-sm flex items-center gap-2" title="Green Personalized Score (0-100): how beneficial this is specifically for YOU based on your profile.">
+              return `<div class="mt-2 p-2 rounded-xl bg-emerald-950/40 border border-emerald-400/40 text-sm flex items-center gap-2" title="App match rating from your profile, not a health outcome.">
                 <span class="font-mono text-lg text-emerald-300">${ps}</span>
                 <span class="uppercase tracking-widest text-emerald-300/80 text-xs">personal score</span>
                 <div class="flex-1 h-2 bg-white/10 rounded overflow-hidden"><div class="${barColor} h-full" style="width:${ps}%"></div></div>
@@ -1390,7 +1391,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (dig==='poor' && orgs.includes('gut')) reasons.push('digestion notes');
               const why = reasons.length ? reasons.join(' + ') : 'profile alignment';
               return `<div class="mt-2 p-2 rounded-xl bg-emerald-950/30 border border-emerald-400/30 text-[10px]">
-                <div class="text-white/80">Impact on <span class="text-emerald-200">YOUR</span> build: strong fit via ${why}. ${node.short || ''} aligns with your entered metrics.</div>
+                <div class="text-white/80">App match via ${why}. ${node.short || ''} lines up with your entered metrics.</div>
               </div>`;
             } else if (!hasAny) {
               return `<div class="mt-2 text-[10px] px-2 py-1 rounded-xl border border-emerald-400/30 bg-emerald-400/5 text-emerald-300/90 popup-blink">Enter your stats in Personal Corner for a personalized match score &amp; impact notes on this node.</div>`;
@@ -1440,23 +1441,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const organsWrap = container.querySelector('#inspector-organs');
     const benefitBox = container.querySelector('#inspector-organ-benefit');
     const organHintMap = {
-      brain: 'Supports cognition, neuroprotection & mood via BDNF, membrane fluidity, reduced inflammation, and neurotransmitter balance.',
-      heart: 'Cardioprotective: improves endothelial function, lipid profiles, mitochondrial efficiency in cardiac muscle.',
-      immune: 'Modulates inflammation & immune surveillance; supports cytokine balance and barrier integrity.',
-      mito: 'Enhances mitochondrial biogenesis, ATP production, and reduces oxidative stress in energy centers.',
-      muscle: 'Anabolic/anti-catabolic support, protein synthesis, recovery, and sarcopenia resistance.',
-      metabolic: 'Improves insulin sensitivity, AMPK activation, glucose/lipid handling, and metabolic flexibility.',
-      gut: 'Feeds microbiome, strengthens barrier, increases SCFA/butyrate, reduces endotoxemia.',
-      joints: 'Cartilage matrix support, anti-inflammatory on connective tissue, collagen synthesis.',
-      eyes: 'Protects macular pigment, reduces oxidative damage to retina, supports visual processing.',
-      liver: 'Phase II detox, NF-κB/Nrf2 modulation, fat metabolism, and hepatocyte protection.'
+      brain: 'Studied for cognition, mood, and inflammation pathways (BDNF, membranes, neurotransmitters).',
+      heart: 'Studied for endothelial function, lipid profiles, and cardiac energy use.',
+      immune: 'Studied for inflammation balance, immune surveillance, and barrier integrity.',
+      mito: 'Studied for mitochondrial biogenesis, ATP production, and oxidative stress.',
+      muscle: 'Studied for protein synthesis, recovery, and age-related muscle maintenance.',
+      metabolic: 'Studied for insulin sensitivity, AMPK, and glucose/lipid handling.',
+      gut: 'Studied for microbiome, barrier strength, SCFA/butyrate, and endotoxin load.',
+      joints: 'Studied for cartilage matrix, connective-tissue inflammation, and collagen.',
+      eyes: 'Studied for macular pigment, retinal oxidative stress, and visual processing.',
+      liver: 'Studied for phase II pathways, NF-κB/Nrf2, fat metabolism, and liver cells.'
     };
     if (organsWrap && benefitBox) {
       organsWrap.querySelectorAll('.organ-chip').forEach(chip => {
         chip.onclick = () => {
           const key = chip.dataset.organ;
           const meta = organMeta[key];
-          const hint = organHintMap[key] || 'Key longevity organ system targeted by this molecule.';
+          const hint = organHintMap[key] || 'Organ system tagged on this entry.';
           const relMechs = (node.mechanisms || []).filter(m => {
             const low = m.toLowerCase();
             return low.includes(key) || (key==='brain' && (low.includes('neuro')||low.includes('bdnf')||low.includes('cog'))) ||
@@ -1485,9 +1486,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (shareBtn) {
       shareBtn.onclick = () => {
         const isEnv = node._isEnvironment || node.cat && ['air-pollution','heavy-metals'].includes(node.cat);
-        const prefix = isEnv ? 'Avoid exposure to' : ((node._isBiomarker || node._isBlood) ? 'Track biomarker' : node.name + ' scores');
-        const score = node.vitality || node.longevity || node.current || '';
-        const txt = `${prefix} ${node.name} ${score ? '— ' + score : ''} on ${PRODUCT_NAME}. ${node.blurb ? node.blurb.slice(0,120) : ''} ${PUBLIC_HOST_LABEL} 🧬`;
+        const isLab = !!(node._isBiomarker || node._isBlood);
+        const score = isLab ? (node.current || '') : (node.vitality || node.longevity || '');
+        const scoreBit = score ? (isLab ? ` — ${score}` : ` — app rating ${score}`) : '';
+        const lead = isLab
+          ? `Track biomarker ${node.name}${scoreBit}`
+          : (isEnv ? `Exposure note: ${node.name}${scoreBit}` : `${node.name}${scoreBit}`);
+        const txt = `${lead} on ${PRODUCT_NAME}. ${node.blurb ? node.blurb.slice(0,120) : ''} ${PUBLIC_HOST_LABEL} 🧬`;
         navigator.clipboard?.writeText(txt).catch(()=>{});
         const xUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(txt)}`;
         window.open(xUrl, '_blank', 'width=560,height=420');
@@ -1637,29 +1642,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // BP rules (high BP examples)
     if (sys > 130 || dia > 85) {
-      out.recs.push({ name: 'L-Citrulline', reason: 'Nitric oxide support for endothelial function & BP' });
-      out.recs.push({ name: 'Coenzyme Q10', reason: 'Mitochondrial & cardio support for elevated BP' });
-      out.recs.push({ name: 'Omega-3 EPA/DHA', reason: 'Lowers triglycerides & vascular inflammation' });
+      out.recs.push({ name: 'L-Citrulline', reason: 'Studied for nitric oxide and blood pressure effects' });
+      out.recs.push({ name: 'Coenzyme Q10', reason: 'Studied for mitochondrial and cardio markers when BP is high' });
+      out.recs.push({ name: 'Omega-3 EPA/DHA', reason: 'Studied for triglyceride and vascular inflammation effects' });
       out.risks.push('Elevated BP — Omega-3, Citrulline & CoQ10 frequently studied for support');
     }
 
     // Sleep / recovery
     if (sleep === 'poor' || sleep === 'fair') {
-      out.recs.push({ name: 'Magnesium (Glycinate)', reason: 'Strong match for reported sleep quality & relaxation' });
-      out.recs.push({ name: 'Taurine', reason: 'Supports inhibitory tone & overnight recovery' });
-      out.risks.push('Poor sleep quality reported — magnesium & taurine commonly helpful');
+      out.recs.push({ name: 'Magnesium (Glycinate)', reason: 'Profile match for reported sleep and relaxation' });
+      out.recs.push({ name: 'Taurine', reason: 'Studied for calming tone and overnight recovery' });
+      out.risks.push('Poor sleep reported — magnesium and taurine are commonly discussed for sleep');
     }
 
-    // Age + strength markers (sarcopenia prevention)
+    // Age + strength markers (muscle maintenance notes)
     if (age > 50 && push < 25) {
-      out.recs.push({ name: 'Creatine Monohydrate', reason: 'Age + lower strength markers prioritize sarcopenia prevention' });
-      out.recs.push({ name: 'Vitamin D3', reason: 'Muscle function & bone support in older adults' });
+      out.recs.push({ name: 'Creatine Monohydrate', reason: 'Age and lower strength markers — studied for muscle support' });
+      out.recs.push({ name: 'Vitamin D3', reason: 'Studied for muscle and bone notes in older adults' });
     }
 
     // Low mood/energy quick flag (from the Mood/Energy select)
     if ((p.mood || '').toLowerCase() === 'low') {
-      out.recs.push({ name: 'Vitamin D3', reason: 'Mood & energy support when levels or latitude are low' });
-      out.recs.push({ name: 'Omega-3 EPA/DHA', reason: 'Brain membrane & mood pathways' });
+      out.recs.push({ name: 'Vitamin D3', reason: 'Studied for mood and energy notes' });
+      out.recs.push({ name: 'Omega-3 EPA/DHA', reason: 'Studied for brain membrane and mood pathways' });
     }
 
     // Dedup recs
@@ -1793,20 +1798,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (hasAnyData) {
       html += `<div class="mt-2 pt-2 border-t border-white/10">`;
       if (insights.recs.length) {
-        html += `<div class="text-[9px] uppercase tracking-widest text-emerald-400/80 mb-1">RECOMMENDED FOR YOU</div>`;
+        html += `<div class="text-[9px] uppercase tracking-widest text-emerald-400/80 mb-1">PROFILE MATCHES</div>`;
         insights.recs.forEach(r => {
           html += `<div class="text-[10px] text-white/85 mb-0.5">• <span class="text-emerald-300">${r.name}</span> — ${r.reason}</div>`;
         });
       }
       if (insights.risks.length) {
-        html += `<div class="mt-2 text-[9px] uppercase tracking-widest text-orange-400/80 mb-0.5">RISK FLAGS</div>`;
+        html += `<div class="mt-2 text-[9px] uppercase tracking-widest text-orange-400/80 mb-0.5">PROFILE NOTES</div>`;
         insights.risks.forEach(msg => {
           html += `<div class="text-[10px] text-orange-200/90 mb-0.5">⚠ ${msg}</div>`;
         });
       }
       html += `</div>`;
     } else {
-      html += `<div class="text-[10px] text-white/40 mt-1">Fill in a few fields above to see personalized supplement matches and risk flags.</div>`;
+      html += `<div class="text-[10px] text-white/40 mt-1">Fill in a few fields above to see profile matches and notes.</div>`;
     }
 
     // Footer actions
@@ -2524,6 +2529,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initMyStack();
   initFeedbackAndPricing();
   initFirstRunTip();
+  initAnalytics(); // GoatCounter counts the pageview itself
   trackPageView();
 
   window.AETHERIS.tree = treeInstance;

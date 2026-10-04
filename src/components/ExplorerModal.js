@@ -37,6 +37,7 @@ export class ExplorerModal {
     const badge = document.getElementById('modal-vitality-badge');
     const vit = node.vitality || 70;
     badge.textContent = vit + ' VS';
+    badge.title = 'App rating, not a health outcome';
     if (isNeg) {
       badge.textContent = vit + ' HARM';
       badge.className = 'font-mono text-sm px-3 py-1 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold';
@@ -51,8 +52,8 @@ export class ExplorerModal {
     const gLabel = isNeg ? 'Harm Score' : 'Longevity';
     const cLabel = isNeg ? 'Harms' : 'Conditions';
     glance.innerHTML = `
-      <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10">${gLabel} <span class="font-mono ${isNeg ? 'text-red-400' : 'text-emerald-400'}">${node.longevity}</span></div>
-      <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10">QoL <span class="font-mono text-violet-400">${node.qol}</span></div>
+      <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10" title="App rating, not a health outcome">${gLabel} <span class="font-mono ${isNeg ? 'text-red-400' : 'text-emerald-400'}">${node.longevity}</span></div>
+      <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10" title="App rating, not a health outcome">QoL <span class="font-mono text-violet-400">${node.qol}</span></div>
       <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10">${cLabel} <span class="font-mono ${isNeg ? 'text-red-400' : 'text-emerald-400'}">${node.diseases}</span></div>
     `;
 
@@ -66,7 +67,7 @@ export class ExplorerModal {
           if (ps) {
             const psBadge = document.createElement('div');
             psBadge.className = 'mt-2 text-xs px-2 py-1 rounded-xl bg-emerald-400/10 text-emerald-300 border border-emerald-400/30 inline-flex items-center gap-2';
-            psBadge.title = 'Personalized Score (0-100): how well this node matches your profile (age, BP, sleep, etc.). Updates live with Personal Corner.';
+            psBadge.title = 'App match rating from your profile, not a health outcome.';
             let barColor = ps >= 70 ? 'bg-emerald-400' : (ps >= 50 ? 'bg-yellow-400' : 'bg-slate-400');
             psBadge.innerHTML = `<span class="font-mono font-semibold text-sm">${ps}</span> <span class="uppercase tracking-[1px] text-[9px]">personal score</span> <div class="w-10 h-1.5 bg-white/20 rounded overflow-hidden"><div class="${barColor} h-full" style="width:${Math.max(5,ps)}%"></div></div>`;
             glance.parentElement.appendChild(psBadge);
@@ -79,16 +80,16 @@ export class ExplorerModal {
     const orgEl = document.getElementById('modal-organs');
     orgEl.innerHTML = '';
     const organHintMap = {
-      brain: 'Supports cognition, neuroprotection & mood via BDNF, membrane fluidity, reduced inflammation.',
-      heart: 'Cardioprotective: endothelial function, lipid profiles, mitochondrial efficiency.',
-      immune: 'Modulates inflammation & immune surveillance; cytokine balance, barrier integrity.',
-      mito: 'Enhances mitochondrial biogenesis, ATP, and reduces oxidative stress.',
-      muscle: 'Anabolic/anti-catabolic, protein synthesis, recovery, sarcopenia resistance.',
-      metabolic: 'Insulin sensitivity, AMPK, glucose/lipid handling, metabolic flexibility.',
-      gut: 'Microbiome support, barrier strength, SCFA/butyrate, reduced endotoxemia.',
-      joints: 'Cartilage matrix, anti-inflammatory on connective tissue, collagen synthesis.',
-      eyes: 'Macular pigment protection, retina oxidative damage reduction.',
-      liver: 'Phase II detox, NF-κB/Nrf2, fat metabolism, hepatocyte protection.'
+      brain: 'Studied for cognition, mood, and inflammation pathways.',
+      heart: 'Studied for endothelial function, lipid profiles, and cardiac energy use.',
+      immune: 'Studied for inflammation balance, immune surveillance, and barrier integrity.',
+      mito: 'Studied for mitochondrial biogenesis, ATP, and oxidative stress.',
+      muscle: 'Studied for protein synthesis, recovery, and muscle maintenance.',
+      metabolic: 'Studied for insulin sensitivity, AMPK, and glucose/lipid handling.',
+      gut: 'Studied for microbiome support, barrier strength, and SCFA/butyrate.',
+      joints: 'Studied for cartilage matrix and connective-tissue inflammation.',
+      eyes: 'Studied for macular pigment and retinal oxidative stress.',
+      liver: 'Studied for phase II pathways, NF-κB/Nrf2, and fat metabolism.'
     };
     let organBenefitHost = document.getElementById('modal-organ-benefit');
     if (!organBenefitHost) {
@@ -106,7 +107,7 @@ export class ExplorerModal {
       c.style.background = meta.color + '12';
       c.innerHTML = `<i class="fa-solid ${meta.icon}" style="color:${meta.color}"></i><span style="color:${meta.color}">${meta.label}</span>`;
       c.onclick = () => {
-        const hint = organHintMap[key] || 'Key longevity organ system targeted.';
+        const hint = organHintMap[key] || 'Organ system tagged on this entry.';
         const rel = (node.mechanisms || []).filter(m => m.toLowerCase().includes(key) || (key==='brain' && /neuro|bdnf|cog/i.test(m)) || (key==='heart' && /cardio|endoth|vascular/i.test(m))).slice(0,1);
         organBenefitHost.innerHTML = `<span class="text-[10px] font-semibold" style="color:${meta.color}">${meta.label}:</span> ${hint} ${rel.length ? ' <span class="text-white/50">Via: ' + rel[0] + '</span>' : ''}`;
         organBenefitHost.classList.remove('hidden');
@@ -118,8 +119,8 @@ export class ExplorerModal {
     // Mechanisms
     const mechEl = document.getElementById('modal-mechanisms');
     mechEl.innerHTML = '';
-    const mechs = node.mechanisms || (isNeg ? ['Causes oxidative damage', 'Disrupts normal physiology', 'Increases disease risk'] : ['Supports core longevity pathways', 'Reduces chronic inflammation', 'Enhances cellular resilience']);
-    const mechLabel = isNeg ? 'One of the documented pathways of harm.' : 'One of the primary biological routes through which this supplement exerts its documented benefits.';
+    const mechs = node.mechanisms || (isNeg ? ['Associated with oxidative stress in some studies', 'Studied for effects on normal physiology', 'Associated with higher disease risk in some studies'] : ['Studied for core longevity pathways', 'Studied for effects on chronic inflammation', 'Studied for cellular stress responses']);
+    const mechLabel = isNeg ? 'A risk pathway discussed in sources for this entry.' : 'A pathway discussed in sources for this entry.';
     mechs.forEach((m, idx) => {
       const row = document.createElement('div');
       row.className = isNeg 
@@ -136,7 +137,7 @@ export class ExplorerModal {
     // Studies
     const studyEl = document.getElementById('modal-studies');
     studyEl.innerHTML = '';
-    const studies = node.studies || (isNeg ? [{ year: 2020, finding: 'Multiple studies document harm and lack of benefit', source: 'RCTs, metas, cohorts' }] : [{ year: 2023, finding: 'Multiple human and mechanistic studies support benefits', source: 'Meta-analyses & RCTs' }]);
+    const studies = node.studies || (isNeg ? [{ year: 2020, finding: 'Associated with harm in some reports', source: 'RCTs, metas, cohorts' }] : [{ year: 2023, finding: 'Investigated for possible effects in human and mechanistic research', source: 'Meta-analyses & RCTs' }]);
     // study header text is static in HTML; the card content above already signals harm via red styling and negative findings in data
     studies.forEach(s => {
       const card = document.createElement('div');
@@ -166,16 +167,16 @@ export class ExplorerModal {
 
     // Dosage + Risks (deduped highDoseRisks into unified Safety Profile below)
     const dosageEl = document.getElementById('modal-dosage');
-    dosageEl.innerHTML = `<span class="text-white/60">Typical:</span> ${node.dosage || 'Consult clinical guidance'}`;
+    dosageEl.innerHTML = `<span class="text-white/60">Typical:</span> ${node.dosage || 'No typical range listed'}`;
     if (node.dosage && !(node.impact === 'negative' || node._isNegative)) {
       const bar = document.createElement('div');
       bar.className = 'mt-2';
-      bar.innerHTML = `<div class="h-1.5 w-full rounded bg-white/10 overflow-hidden flex"><span class="h-1.5 w-[18%] bg-emerald-400/60" title="Min effective"></span><span class="h-1.5 w-[45%] bg-emerald-300" title="Optimal zone"></span><span class="h-1.5 w-[20%] bg-amber-400/70" title="Megadose"></span><span class="h-1.5 flex-1 bg-red-500/50" title="Caution"></span></div>
-        <div class="flex text-[8px] text-white/50 mt-0.5 justify-between"><span>min</span><span class="text-emerald-300">opt</span><span>high</span><span class="text-red-300/70">risk</span></div>`;
+      bar.innerHTML = `<div class="h-1.5 w-full rounded bg-white/10 overflow-hidden flex"><span class="h-1.5 w-[18%] bg-emerald-400/60" title="Lower common range"></span><span class="h-1.5 w-[45%] bg-emerald-300" title="Often-cited range"></span><span class="h-1.5 w-[20%] bg-amber-400/70" title="Higher range"></span><span class="h-1.5 flex-1 bg-red-500/50" title="Caution"></span></div>
+        <div class="flex text-[8px] text-white/50 mt-0.5 justify-between"><span>low</span><span class="text-emerald-300">mid</span><span>high</span><span class="text-red-300/70">caution</span></div>`;
       dosageEl.appendChild(bar);
     }
     let risksHtml = node.risks ? `<i class="fa-solid fa-exclamation-triangle mr-1"></i>${node.risks}` : (isNeg ? '<span class="text-red-300/80">Documented negative effects — see mechanisms.</span>' : '');
-    document.getElementById('modal-risks').innerHTML = risksHtml || '<span class="text-white/40">Generally well-tolerated at standard doses.</span>';
+    document.getElementById('modal-risks').innerHTML = risksHtml || '<span class="text-white/40">No specific caution listed in this entry.</span>';
 
     // Synergies
     const synEl = document.getElementById('modal-synergies');
@@ -192,7 +193,7 @@ export class ExplorerModal {
         synEl.appendChild(pill);
       });
     } else {
-      synEl.innerHTML = `<span class="text-white/50 text-xs">Strong synergy with magnesium, omega-3, and vitamin D families.</span>`;
+      synEl.innerHTML = `<span class="text-white/50 text-xs">No related items listed for this entry.</span>`;
     }
 
     // 7.2 + 7.3 + 8.1: Share monograph + external sources (constructed, no node data changes)
@@ -214,7 +215,7 @@ export class ExplorerModal {
     const shareBtn = actionsRow.querySelector('#modal-share-btn');
     if (shareBtn) {
       shareBtn.onclick = () => {
-        const txt = `${node.name} scores ${node.vitality || node.longevity} VS on StackMap. ${node.blurb || ''} markmarvik.github.io/stackmap 🧬`;
+        const txt = `${node.name} — app rating ${node.vitality || node.longevity} on StackMap. ${node.blurb || ''} markmarvik.github.io/stackmap 🧬`;
         navigator.clipboard?.writeText(txt).catch(()=>{});
         window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(txt)}`, '_blank', 'width=560,height=420');
       };

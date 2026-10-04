@@ -24,7 +24,7 @@ const biomarkersCore = [
     organs: ["systemic", "cardiovascular"],
     mechanisms: ["chronic_inflammation", "inflammaging"],
     risks: ["cardiovascular_disease", "all_cause_mortality", "accelerated_aging"],
-    blurb: "Best single blood marker of chronic low-grade inflammation. Lower is strongly associated with longevity.",
+    blurb: "A common blood marker of chronic low-grade inflammation. Lower values are associated with longevity in studies.",
     links: ["omega3", "curcumin", "exercise", "sleep"],
     evidence: "5/5"
   },
@@ -43,7 +43,7 @@ const biomarkersCore = [
     organs: ["systemic"],
     mechanisms: ["pro_inflammatory_cytokine"],
     risks: ["inflammation", "frailty", "cardiovascular"],
-    blurb: "Key pro-inflammatory cytokine. Elevated levels drive inflammaging.",
+    blurb: "Key pro-inflammatory cytokine. Elevated levels are studied in inflammaging.",
     links: ["omega3", "exercise", "weight_management"],
     evidence: "4/5"
   },
@@ -62,7 +62,7 @@ const biomarkersCore = [
     organs: ["cardiovascular", "brain"],
     mechanisms: ["methylation", "endothelial_dysfunction"],
     risks: ["stroke", "cognitive_decline", "cardiovascular"],
-    blurb: "Marker of methylation status and vascular risk. Often improved with B vitamins.",
+    blurb: "Marker of methylation status and vascular risk. B vitamins are studied for this level.",
     links: ["b_vitamins", "tmg", "betaine"],
     evidence: "4/5"
   },
@@ -102,7 +102,7 @@ const biomarkersCore = [
     organs: ["pancreas"],
     mechanisms: ["glycation", "advanced_glycation_end_products"],
     risks: ["diabetes", "vascular_damage", "cognitive_decline"],
-    blurb: "3-month average blood sugar. Bryan Johnson targets very low for minimal glycation.",
+    blurb: "3-month average blood sugar. Some longevity protocols aim very low to limit glycation.",
     links: ["berberine", "exercise", "time_restricted_eating"],
     evidence: "5/5"
   },
@@ -121,7 +121,7 @@ const biomarkersCore = [
     organs: ["pancreas", "liver"],
     mechanisms: ["hyperinsulinemia", "insulin_resistance"],
     risks: ["metabolic_disease", "cancer_risk", "accelerated_aging"],
-    blurb: "Often more revealing than glucose alone. High insulin drives many aging processes.",
+    blurb: "Often more revealing than glucose alone. High insulin is studied alongside many aging-related processes.",
     links: ["berberine", "resistance_training", "low_carb", "sleep"],
     evidence: "5/5"
   },
@@ -140,7 +140,7 @@ const biomarkersCore = [
     organs: ["pancreas", "liver"],
     mechanisms: ["insulin_resistance"],
     risks: ["type_2_diabetes", "fatty_liver", "cardiovascular"],
-    blurb: "Calculated from fasting glucose + insulin. Excellent insulin sensitivity marker.",
+    blurb: "Calculated from fasting glucose and insulin. A common insulin-sensitivity marker.",
     links: ["exercise", "berberine", "weight_loss"],
     evidence: "4/5"
   },
@@ -161,7 +161,7 @@ const biomarkersCore = [
     organs: ["heart", "vascular"],
     mechanisms: ["atherosclerosis", "particle_number"],
     risks: ["heart_disease", "stroke", "all_cause_mortality"],
-    blurb: "Best marker of atherogenic particle number. Bryan prioritizes this heavily over standard LDL.",
+    blurb: "A widely used marker of atherogenic particle number. Some protocols prioritize it over standard LDL.",
     links: ["pcsk9_inhibitors", "statins", "diet", "exercise", "omega3"],
     evidence: "5/5"
   },
@@ -180,7 +180,7 @@ const biomarkersCore = [
     organs: ["heart", "vascular"],
     mechanisms: ["atherosclerosis"],
     risks: ["cardiovascular_disease"],
-    blurb: "Classic marker. ApoB is generally considered superior for risk assessment.",
+    blurb: "Classic marker. ApoB is often preferred over LDL-C in risk discussions.",
     links: ["diet", "exercise", "statins", "berberine"],
     evidence: "4/5"
   },
@@ -199,7 +199,7 @@ const biomarkersCore = [
     organs: ["heart", "vascular"],
     mechanisms: ["reverse_cholesterol_transport"],
     risks: ["cardiovascular_disease"],
-    blurb: "Protective cholesterol. Higher is generally better (with caveats).",
+    blurb: "Often discussed as favorable cholesterol. Higher is generally viewed as better (with caveats).",
     links: ["exercise", "niacin", "omega3", "weight_management"],
     evidence: "4/5"
   },
@@ -218,7 +218,7 @@ const biomarkersCore = [
     organs: ["liver", "pancreas"],
     mechanisms: ["metabolic_syndrome"],
     risks: ["cardiovascular", "fatty_liver", "pancreatitis"],
-    blurb: "Strong marker of metabolic health and dietary carbohydrate response.",
+    blurb: "A common marker of metabolic health and dietary carbohydrate response.",
     links: ["low_carb", "exercise", "omega3", "berberine"],
     evidence: "5/5"
   },
@@ -237,7 +237,7 @@ const biomarkersCore = [
     organs: ["heart", "vascular"],
     mechanisms: ["genetic_lipoprotein", "atherosclerosis"],
     risks: ["premature_cardiovascular_disease", "aortic_stenosis"],
-    blurb: "Genetically determined. High levels significantly increase CV risk independent of other lipids.",
+    blurb: "Genetically determined. High levels are associated with higher CV risk in studies, independent of other lipids.",
     links: ["pcsk9_inhibitors", "niacin", "lifestyle"],
     evidence: "5/5"
   },
@@ -258,7 +258,7 @@ const biomarkersCore = [
     organs: ["endocrine", "muscle", "brain"],
     mechanisms: ["anabolic", "libido", "mood", "muscle_mass"],
     risks: ["low_energy", "sarcopenia", "depression", "metabolic_dysfunction"],
-    blurb: "Critical for men. Optimal ranges for longevity are often higher than standard lab normals.",
+    blurb: "Commonly tracked in men. Ranges discussed for longevity are often higher than standard lab normals.",
     links: ["resistance_training", "sleep", "zinc", "vitamin_d", "weight_management"],
     evidence: "5/5"
   },
@@ -277,7 +277,7 @@ const biomarkersCore = [
     organs: ["endocrine"],
     mechanisms: ["bioavailable_testosterone"],
     risks: ["low_libido", "fatigue", "muscle_loss"],
-    blurb: "The biologically active portion. Often more important than total T.",
+    blurb: "The biologically active portion. Often weighted more than total T in discussions.",
     links: ["resistance_training", "sleep", "shbg_management"],
     evidence: "5/5"
   },
@@ -296,7 +296,7 @@ const biomarkersCore = [
     organs: ["liver", "endocrine"],
     mechanisms: ["hormone_transport"],
     risks: ["low_free_testosterone", "metabolic_issues"],
-    blurb: "Binds testosterone. High SHBG lowers free T even if total T looks okay.",
+    blurb: "Binds testosterone. High SHBG is associated with lower free T even if total T looks okay.",
     links: ["insulin_sensitivity", "weight_training", "avoid_excess_alcohol"],
     evidence: "4/5"
   },
@@ -353,7 +353,7 @@ const biomarkersCore = [
     organs: ["thyroid"],
     mechanisms: ["thyroid_function"],
     risks: ["hypothyroidism", "fatigue", "weight_gain", "cognitive_slowdown"],
-    blurb: "Screening test. Optimal longevity ranges are tighter than standard lab ranges.",
+    blurb: "Screening test. Ranges discussed for longevity are tighter than many standard lab ranges.",
     links: ["iodine", "selenium", "thyroid_medication_if_needed"],
     evidence: "5/5"
   },
@@ -410,7 +410,7 @@ const biomarkersCore = [
     organs: ["adrenal", "brain"],
     mechanisms: ["stress_response", "cortisol_rhythm"],
     risks: ["anxiety", "sleep_issues", "insulin_resistance", "muscle_loss"],
-    blurb: "Morning peak cortisol. Chronically high levels accelerate aging.",
+    blurb: "Morning peak cortisol. Chronically high levels are studied alongside faster aging.",
     links: ["stress_management", "sleep_hygiene", "ashwagandha", "phosphatidylserine"],
     evidence: "4/5"
   },
@@ -431,7 +431,7 @@ const biomarkersCore = [
     organs: ["immune", "bone", "endocrine"],
     mechanisms: ["immune_modulation", "gene_expression", "calcium_absorption"],
     risks: ["immune_dysfunction", "bone_loss", "mood_disorders", "cancer_risk"],
-    blurb: "One of the most important nutrients for longevity. Most people are suboptimal.",
+    blurb: "A nutrient many longevity panels track. Many people test below the ranges those panels prefer.",
     links: ["vitamin_d3_supplement", "sun_exposure", "magnesium"],
     evidence: "5/5"
   },
@@ -450,7 +450,7 @@ const biomarkersCore = [
     organs: ["brain", "nerves", "blood"],
     mechanisms: ["methylation", "myelin", "red_blood_cell_formation"],
     risks: ["neuropathy", "cognitive_decline", "anemia", "fatigue"],
-    blurb: "Critical for methylation and neurological health. Many people need higher levels for optimal function.",
+    blurb: "Tracked for methylation and neurological health. Levels above the deficiency cutoff are often discussed for day-to-day function.",
     links: ["b12_supplement", "methylfolate"],
     evidence: "5/5"
   },
@@ -469,7 +469,7 @@ const biomarkersCore = [
     organs: ["liver", "blood"],
     mechanisms: ["iron_storage"],
     risks: ["iron_deficiency", "iron_overload_(if_too_high)"],
-    blurb: "Best marker of iron stores. Both low and very high levels are problematic.",
+    blurb: "A standard marker of iron stores. Both low and very high levels are problematic.",
     links: ["iron_supplement_if_low", "donate_blood_if_high"],
     evidence: "5/5"
   },
@@ -505,9 +505,9 @@ const biomarkersCore = [
     age_impact: 0.7,
     status: "suboptimal",
     organs: ["immune", "endocrine", "skin"],
-    mechanisms: ["immune_function", "testosterone_synthesis", "wound_healing"],
+    mechanisms: ["immune_function", "testosterone_synthesis", "tissue_repair"],
     risks: ["immune_weakness", "low_testosterone", "poor_recovery"],
-    blurb: "Important for testosterone, immunity, and many enzymatic reactions.",
+    blurb: "Commonly tracked for testosterone, immunity, and enzymatic reactions.",
     links: ["zinc_supplement", "oysters", "avoid_excess_copper"],
     evidence: "4/5"
   },
@@ -524,9 +524,9 @@ const biomarkersCore = [
     age_impact: 2.2,
     status: "suboptimal",
     organs: ["heart", "brain", "cell_membranes"],
-    mechanisms: ["anti_inflammatory", "membrane_fluidity", "cardiovascular_protection"],
+    mechanisms: ["anti_inflammatory", "membrane_fluidity", "cardiovascular_markers"],
     risks: ["cardiovascular_disease", "inflammation", "cognitive_decline"],
-    blurb: "Percentage of EPA+DHA in red blood cell membranes. Strong predictor of cardiovascular and brain health.",
+    blurb: "Percentage of EPA+DHA in red blood cell membranes. Associated with cardiovascular and brain health in studies.",
     links: ["high_quality_fish_oil", "algae_oil", "fatty_fish"],
     evidence: "5/5"
   },
@@ -547,7 +547,7 @@ const biomarkersCore = [
     organs: ["kidney"],
     mechanisms: ["glomerular_filtration"],
     risks: ["chronic_kidney_disease", "cardiovascular_risk"],
-    blurb: "Key marker of kidney function. eGFR declines with age — slower decline = better longevity.",
+    blurb: "Key marker of kidney function. eGFR declines with age — a slower decline is associated with better outcomes in studies.",
     links: ["hydration", "blood_pressure_control", "avoid_nsaids"],
     evidence: "5/5"
   },
@@ -606,7 +606,7 @@ const biomarkersCore = [
     organs: ["liver"],
     mechanisms: ["hepatocellular_injury"],
     risks: ["fatty_liver", "inflammation", "fibrosis"],
-    blurb: "Most sensitive liver enzyme for fatty liver and metabolic dysfunction.",
+    blurb: "A liver enzyme often watched for fatty liver and metabolic dysfunction.",
     links: ["weight_loss", "low_fructose", "exercise", "berberine"],
     evidence: "5/5"
   },
@@ -743,7 +743,7 @@ const biomarkersCore = [
     organs: ["kidney", "joints", "vascular"],
     mechanisms: ["purine_metabolism", "oxidative_stress"],
     risks: ["gout", "kidney_stones", "hypertension", "metabolic_syndrome"],
-    blurb: "Often overlooked. High levels linked to hypertension, metabolic issues, and longevity.",
+    blurb: "Often overlooked. High levels are associated with hypertension, metabolic issues, and longevity outcomes in studies.",
     links: ["low_purine_diet", "vitamin_c", "hydration", "weight_loss"],
     evidence: "4/5"
   },
@@ -762,7 +762,7 @@ const biomarkersCore = [
     organs: ["systemic", "dna"],
     mechanisms: ["oxidative_dna_damage"],
     risks: ["dna_damage", "cancer_risk", "accelerated_aging"],
-    blurb: "Marker of oxidative stress and DNA damage. Urine test. Lower is better for longevity.",
+    blurb: "Marker of oxidative stress and DNA damage. Urine test. Lower values are the usual target in longevity discussions.",
     links: ["antioxidants", "sleep", "exercise", "reduce_toxin_exposure"],
     evidence: "4/5"
   },
@@ -802,7 +802,7 @@ const biomarkersCore = [
     organs: ["adrenal", "brain"],
     mechanisms: ["hpa_axis", "circadian_rhythm"],
     risks: ["insomnia", "visceral_fat", "immune_suppression"],
-    blurb: "Elevated evening salivary cortisol blunts sleep architecture and recovery. Useful companion to morning reading for diurnal slope.",
+    blurb: "Elevated evening salivary cortisol is studied for sleep architecture and recovery. Useful companion to the morning reading for diurnal slope.",
     links: ["sleep_hygiene", "magnesium", "dim_evening_light", "meditation"],
     evidence: "4/5"
   },
