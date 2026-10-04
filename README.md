@@ -77,39 +77,36 @@ npm run build   # output in dist/
 npm run preview
 ```
 
-## Deployment on GitHub Pages
+## Deployment
 
-This project is hosted on GitHub Pages at: **https://markmarvik.github.io/stackmap/**
+Build env (see `vite.config.js`). Dev always uses base `/`.
 
-The site uses a production `base` of `/stackmap/` so all JS, CSS, and asset URLs (including body PNG layers) are correct for the sub-path.
+- `BASE` — production asset prefix. Default `/`. Normalised with a leading and trailing slash.
+- `SITE_URL` — full public URL, including that base. Default `https://stackmap.pages.dev/`.
+
+**Cloudflare Pages** (domain root): build command `npm run build`, output directory `dist`, Node version from `.nvmrc`. Leave `BASE` and `SITE_URL` unset.
+
+**GitHub Pages** stays at **https://markmarvik.github.io/stackmap/** until cutover. That build needs:
+
+```bash
+BASE=/stackmap/ SITE_URL=https://markmarvik.github.io/stackmap/ npm run build
+```
 
 ### Requirements
-- **Node.js 24+** (enforced via `package.json#engines` and `.nvmrc`)
+- **Node.js 24+** (`package.json#engines` and `.nvmrc`)
 - `npm install`
 
 > **Note:** Do not open `index.html` directly. Use `npm run dev` or the built `dist/`.
 
-### Local production build
-```bash
-npm run build
-npm run preview
-```
-
-### GitHub Pages Deployment
-A GitHub Actions workflow builds the project with **Node 24** on every push to `main` and deploys only the `dist/` folder.
-
-- `vite.config.js` sets the correct base for the `/stackmap/` subpath.
-- `public/.nojekyll` is present to prevent Jekyll processing.
-- Workflow uses `actions/setup-node` (v24), `npm ci`, `npm run build`, and the official `actions/deploy-pages`.
+### GitHub Pages workflow
+A GitHub Actions workflow builds with **Node 24** on every push to `main` and deploys `dist/`. Pass the `BASE` and `SITE_URL` values above into that build. `public/.nojekyll` prevents Jekyll processing.
 
 **One-time setup in the GitHub repo UI (required):**
 1. Go to **Settings → Pages**
 2. Under "Build and deployment", set **Source** to **GitHub Actions** (not "Deploy from a branch")
 3. If Source is "Deploy from a branch" / `main` `/`, the live site serves raw `index.html` + `src/main.js` and looks like HTML-only — switch to Actions and re-run this workflow
 
-After the setting change, push to `main` (or run the workflow manually from the Actions tab). The site should update within a couple of minutes.
-
-All built assets (JS modules, CSS, body PNGs) are emitted under `/stackmap/assets/...`.
+JS, CSS, and body PNGs are emitted under `<BASE>assets/...` (`/assets/...` on Cloudflare, `/stackmap/assets/...` on GitHub Pages).
 
 
 ## Anatomy assets (Issue #16)
