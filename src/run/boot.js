@@ -3,6 +3,7 @@
  */
 
 import { AnatomyRenderer } from '../core/AnatomyRenderer.js';
+import { OrganDiagram } from '../components/OrganDiagram.js';
 import { readStorage, writeStorage } from '../core/persist.js';
 import {
   RUN_PRICE_LABEL,
@@ -52,9 +53,6 @@ function assetSrc(frame) {
   if (frame === 'body' || frame === 'after') {
     return anatomy.images.base.male?.src || '';
   }
-  if (frame === 'liver') {
-    return anatomy.images.organs.liver?.src || '';
-  }
   return '';
 }
 
@@ -69,12 +67,23 @@ function appendFrame(parent, frame) {
     return;
   }
 
+  if (frame === 'liver') {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'body-diagram';
+    frameEl.appendChild(svg);
+    parent.appendChild(frameEl);
+    const diagram = new OrganDiagram('body-diagram');
+    diagram.render(['liver']);
+    diagram.pulse('liver');
+    return;
+  }
+
   const plate = el('div', frame === 'after' ? 'run-plate after' : 'run-plate');
   const src = assetSrc(frame);
   if (src) {
     const img = document.createElement('img');
     img.src = src;
-    img.alt = frame === 'liver' ? 'Placeholder liver' : 'Placeholder body';
+    img.alt = 'Placeholder body';
     plate.appendChild(img);
   }
   frameEl.appendChild(plate);
