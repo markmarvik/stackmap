@@ -11,6 +11,7 @@
 import { BaseTree } from "./BaseTree.js";
 import { calcVitality } from "../core/ScoringEngine.js";
 import { AnatomyRenderer } from "../core/AnatomyRenderer.js";
+import { getBodyStage } from "../components/BodyStage.js";
 import {
   OrganExplodeController,
   ORGAN_EXPLODE_KEYS,
@@ -773,16 +774,7 @@ export class SupplementTree extends BaseTree {
       : rawHighlightOrgs;
     const isNegativeImpact = !organFilter && !!(selectedNodeForBody && (selectedNodeForBody.impact === 'negative' || selectedNodeForBody._isNegative));
 
-    // PNG body is the only version (layered via AnatomyRenderer — Issue #16).
-    if (this._bodyPngReady) {
-      this._drawCentralBodyPng(ctx, 0, 0, 3.15, highlightOrgs, isNegativeImpact);
-    } else if (!this._bodyPngWarned) {
-      // draw() runs every frame; one warning is enough until the PNGs arrive.
-      this._bodyPngWarned = true;
-      console.warn('[AETHERIS] Body PNGs not ready');
-    }
-
-    // PNG body is the only version. No toggle.
+    this._drawCentralBodyPng(ctx, 0, 0, 3.15, highlightOrgs, isNegativeImpact);
 
     // Culling + unified simplified node rendering (same for panning and static)
     // Removes shading (inner gradients) + inner circle for optimum mobile perf.
@@ -972,321 +964,96 @@ export class SupplementTree extends BaseTree {
     ctx.shadowBlur = 0;
   }
 
+
   /**
-   * PNG-based layered body + organs.
+   * 3D torso in place of the PNG body.
+   * Layer opacities, selection highlight, and explode targets stay.
    */
   _drawCentralBodyPng(ctx, cx, cy, s, highlightOrgs = [], isNegative = false) {
     const active = new Set(highlightOrgs);
-    const hasSelection = active.size > 0;
     const layerOp = this.anatomy?.opacity || { base: 1, skeleton: 0, muscles: 0, organs: 1 };
-    const layerVis = this.anatomy?.visible || { base: true, skeleton: false, muscles: false, organs: true };
-
-    const hx = (x) => cx + (x - 85) * s;
-    const hy = (y) => cy + (y - 100) * s;
-    const organCol = (key) => this.organColors[key] || '#d4af37';
-    const getHighlightColor = (key) => (isNegative && active.has(key)) ? '#ef4444' : organCol(key);
-
-    ctx.save();
-
-    const coreX = hx(85);
-    const coreY = hy(95);
-
-    // Shared body-frame rect (used by base / skeleton / muscles full-body layers)
-    const cfg = SupplementTree.PNG_BODY_CONFIG || {};
-    const bodyFrame = (() => {
-      const gender = this._getCurrentGender();
-      const bodyImg = this.bodyImages.base[gender] || this.bodyImages.base.male;
-      const imgW = (bodyImg && bodyImg.naturalWidth) || 360;
-      const imgH = (bodyImg && bodyImg.naturalHeight) || 780;
-      const bScale = (cfg.scale ?? 0.25) * s;
-      const dw = imgW * bScale;
-      const dh = imgH * bScale;
-      const bx = coreX + ((cfg.dx ?? 0) * s);
-      const by = coreY + ((cfg.dy ?? 0) * s) - dh * (0.48 + (cfg.vOffset ?? -0.03));
-      return { bodyImg, dw, dh, bx: bx - dw / 2, by, gender };
-    })();
-
-    // Ambient halo (cheap + pretty, keep from the old aesthetic)
-    const amb = ctx.createRadialGradient(coreX, coreY, 8 * s, coreX, coreY, 130 * s);
-    amb.addColorStop(0, active.has('skin') ? 'rgba(251, 191, 36, 0.14)' : 'rgba(103, 232, 249, 0.07)');
-    amb.addColorStop(0.45, 'rgba(167, 139, 250, 0.05)');
-    amb.addColorStop(1, 'transparent');
-    ctx.fillStyle = amb;
-    ctx.beginPath();
-    ctx.arc(coreX, coreY, 130 * s, 0, Math.PI * 2);
-    ctx.fill();
-
-    // --- Layer: base silhouette ---
-    if (layerVis.base && bodyFrame.bodyImg && bodyFrame.bodyImg.complete && bodyFrame.bodyImg.naturalWidth > 10) {
-      let alpha = layerOp.base;
-      if (hasSelection) {
-        alpha *= (SupplementTree.PNG_BODY_ALPHA_WITH_SELECTION ?? 0.82);
-      }
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(bodyFrame.bodyImg, bodyFrame.bx, bodyFrame.by, bodyFrame.dw, bodyFrame.dh);
-      ctx.globalAlpha = 1.0;
-    }
-
-    // --- Layer: skeleton (full-body overlay) ---
-    const skelImg = this.bodyImages.skeleton?.full;
-    if (layerVis.skeleton && skelImg && skelImg.complete && skelImg.naturalWidth > 10) {
-      ctx.globalAlpha = layerOp.skeleton;
-      ctx.drawImage(skelImg, bodyFrame.bx, bodyFrame.by, bodyFrame.dw, bodyFrame.dh);
-      ctx.globalAlpha = 1.0;
-    }
-
-    // --- Layer: muscles (anterior primary; posterior lightly if both loaded) ---
-    const muscAnt = this.bodyImages.muscles?.anterior;
-    const muscPost = this.bodyImages.muscles?.posterior;
-    if (layerVis.muscles) {
-      if (muscAnt && muscAnt.complete && muscAnt.naturalWidth > 10) {
-        ctx.globalAlpha = layerOp.muscles;
-        ctx.drawImage(muscAnt, bodyFrame.bx, bodyFrame.by, bodyFrame.dw, bodyFrame.dh);
-        ctx.globalAlpha = 1.0;
-      }
-      if (muscPost && muscPost.complete && muscPost.naturalWidth > 10 && layerOp.muscles > 0.5) {
-        ctx.globalAlpha = layerOp.muscles * 0.35;
-        ctx.drawImage(muscPost, bodyFrame.bx, bodyFrame.by, bodyFrame.dw, bodyFrame.dh);
-        ctx.globalAlpha = 1.0;
-      }
-    }
-
-    // --- Layer: organs ---
-    // Organ layer z-order (back to front). Includes Phase 1 placeholders (spine/kidneys/…).
-    const anchors = (typeof this._getOrganPositions === 'function') ? this._getOrganPositions() : {};
-    const organDrawOrder = [
-      'spine',
-      'lungs',
-      'kidneys',
-      'adrenals',
-      'liver',
-      'pancreas',
-      'stomach',
-      'gut',
-      'heart',
-      'mito',
-      'nerves',
-      'thyroid',
-      'brain',
-      'eyes'
-    ];
-
-    const globalOrganScale = SupplementTree.PNG_ORGAN_DRAW_SCALE;
-    const organCfg = SupplementTree.PNG_ORGAN_CONFIG || {};
-
     const explode = this.organExplode;
     const explodeP = explode ? explode.progress : 0;
+
+    this._placeBodyOverlay({
+      layers: layerOp,
+      highlights: active,
+      negative: isNegative,
+      explode: explodeP
+    });
+
+    const anchors = (typeof this._getOrganPositions === 'function') ? this._getOrganPositions() : {};
+    this._organDrawPositions = {};
     const filterKey = explode?.activeOrganFilter || null;
     const hoverOrg = explode?.hoveredOrgan || null;
-    // Cache draw positions for hit-testing (world space)
-    this._organDrawPositions = this._organDrawPositions || {};
 
-    for (const key of organDrawOrder) {
-      if (!layerVis.organs || layerOp.organs <= 0.01) break;
-
-      let img = this.bodyImages.organs[key];
-      if (!img || !img.complete || img.naturalWidth < 10) continue;
-
-      // Position in the current transformed world (anchors are already * BODY_SCALE)
-      const anchor = anchors[key] || { x: 0, y: 0 };
-      const cfg = organCfg[key] || {};
-
-      // dx/dy are in design units (the 85/26/92 etc. numbers), then multiplied by s
-      const homeX = anchor.x + ((cfg.dx ?? 0) * s);
-      const homeY = anchor.y + ((cfg.dy ?? 0) * s);
+    ctx.save();
+    for (const key of ORGAN_EXPLODE_KEYS) {
+      const anchor = anchors[key] || { x: cx, y: cy };
       const drawPos = (explode && explodeP > 0.001)
-        ? explode.getDrawPosition(key, homeX, homeY)
-        : { x: homeX, y: homeY };
-      const ax = drawPos.x;
-      const ay = drawPos.y;
-      this._organDrawPositions[key] = { x: ax, y: ay };
-
-      const thisScale = globalOrganScale * (cfg.scale ?? 1.0);
-      // Slight shrink when exploded — large PNG footprints clear neighbors better
-      // (hit targets stay generous via ORGAN_HIT_RADIUS).
-      const explodeBoost = 1 - explodeP * 0.06;
+        ? explode.getDrawPosition(key, anchor.x, anchor.y)
+        : { x: anchor.x, y: anchor.y };
+      this._organDrawPositions[key] = drawPos;
+      if (explodeP < 0.2) continue;
 
       const isFilter = filterKey === key;
-      const isHoverOrg = hoverOrg === key;
-      const isAct = active.has(key) || isFilter || (isHoverOrg && explodeP > 0.3);
-      const col = isFilter ? '#22c55e' : getHighlightColor(key);
+      const isHover = hoverOrg === key;
+      const hot = active.has(key) || isFilter || isHover;
+      const col = isFilter ? '#22c55e' : (this.organColors[key] || '#d4af37');
+      ctx.beginPath();
+      ctx.fillStyle = col;
+      ctx.globalAlpha = hot ? 0.95 : 0.62;
+      ctx.arc(drawPos.x, drawPos.y, (hot ? 9 : 6) * (s / 3.15), 0, Math.PI * 2);
+      ctx.fill();
 
-      const ow = img.naturalWidth * thisScale * explodeBoost;
-      const oh = img.naturalHeight * thisScale * explodeBoost;
-
-      if (isAct) {
-        // Skip expensive shaped shadows/glows entirely while panning
-        if (!this._isPanning) {
-          // --- Shaped glow that follows the PNG's actual outline (the important part) ---
-          // We draw the image itself with a shadow. The browser's shadow respects the PNG alpha,
-          // so the glow takes on the real shape of the organ instead of a round blob.
-          const shapedBlur = SupplementTree.PNG_GLOW_SHAPED_BLUR ?? 22;
-          const shapedAlpha = SupplementTree.PNG_GLOW_SHAPED_STRENGTH ?? 0.48;
-          const enlarge = SupplementTree.PNG_GLOW_SHAPED_ENLARGE ?? 1.12;
-
-          ctx.save();
-          ctx.shadowColor = col;
-          ctx.shadowBlur = shapedBlur;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.globalAlpha = shapedAlpha * layerOp.organs;
-
-          const gw = ow * enlarge;
-          const gh = oh * enlarge;
-          ctx.drawImage(img, ax - gw / 2, ay - gh / 2, gw, gh);
-          ctx.restore();
-
-          // Optional classic round "energy" halo on top of the shaped one (toggleable)
-          if (SupplementTree.PNG_GLOW_CIRCULAR) {
-            const glowR = Math.max(ow, oh) * 0.38;
-            this._drawOrganGlow(ctx, ax, ay, glowR, col, true);
-          }
-        }
-
-        // Still draw the actual organ PNG even while panning
-      }
-
-      // The actual organ PNG.
-      // When something is selected, non-active organs become quite transparent so the highlighted
-      // ones (and their shaped glow) really stand out.
-      // During explode, keep all organs readable (tap targets).
-      const idleAlpha = (explodeP > 0.15)
-        ? Math.max(0.72, SupplementTree.PNG_IDLE_ALPHA_NO_SELECTION ?? 0.78)
-        : (hasSelection
-          ? (SupplementTree.PNG_IDLE_ALPHA_WITH_SELECTION ?? 0.22)
-          : (SupplementTree.PNG_IDLE_ALPHA_NO_SELECTION ?? 0.78));
-
-      const organAlpha = (isAct
-        ? (SupplementTree.PNG_ACTIVE_ALPHA ?? 1.0)
-        : idleAlpha) * layerOp.organs;
-
-      ctx.globalAlpha = organAlpha;
-      ctx.drawImage(img, ax - ow / 2, ay - oh / 2, ow, oh);
-      ctx.globalAlpha = 1.0;
-
-      // Label when exploded (cheap text, no medical claims)
       if (explodeP > 0.45 && ORGAN_LABELS[key]) {
         const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.9;
-        ctx.save();
         ctx.globalAlpha = labelA;
         ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillStyle = isFilter ? '#86efac' : (isHoverOrg ? '#e2e8f0' : '#94a3b8');
-        ctx.fillText(ORGAN_LABELS[key], ax, ay + oh / 2 + 4);
-        ctx.restore();
+        ctx.fillStyle = isFilter ? '#86efac' : '#cbd5e1';
+        ctx.fillText(ORGAN_LABELS[key], drawPos.x, drawPos.y + 12);
       }
+      ctx.globalAlpha = 1;
     }
 
-    // Hint near body when an organ filter is active
     if (filterKey && explodeP > 0.2) {
-      ctx.save();
       ctx.globalAlpha = 0.85;
       ctx.font = '600 12px Inter, system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillStyle = '#a7f3d0';
-      const label = ORGAN_LABELS[filterKey] || filterKey;
-      ctx.fillText(`Nodes linked to ${label}`, coreX, bodyFrame.by - 8);
-      ctx.restore();
+      ctx.fillText(`Nodes linked to ${ORGAN_LABELS[filterKey] || filterKey}`, cx, cy - 250);
     }
-
-    // Optional debug anchors (super useful while tuning scales/offsets)
-    if (SupplementTree.PNG_DEBUG_ANCHORS) {
-      ctx.fillStyle = '#ff0000';
-      ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 1;
-      Object.entries(anchors).forEach(([k, a]) => {
-        const x = a.x;
-        const y = a.y;
-        ctx.beginPath();
-        ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y);
-        ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6);
-        ctx.stroke();
-        ctx.fillText(k, x + 8, y - 4);
-      });
-    }
-
-    // Fallback for organs we don't have PNGs for yet (e.g. immune)
-    if (active.has('immune') || (!this.bodyImages.organs.immune && active.has('immune'))) {
-      // Use the lightweight ellipse helper the old code already had for immune
-      this._drawOrganEllipse(ctx, hx, hy, 85, 58, 5, 4, s, getHighlightColor('immune'), active.has('immune'), 0.28);
-    }
-
-    // Keep a few cheap structural accents on top of the PNG body.
-    // These give nice "active" feedback on limbs/spine without requiring extra PNGs.
-    // (The body bases already provide the main silhouette + limbs.)
-
-    // Spine (subtle)
-    const spineActive = active.has('bones') || active.has('joints');
-    ctx.strokeStyle = spineActive ? '#e2e8f0' : '#475569';
-    ctx.lineWidth = (spineActive ? 2.0 : 1.1) * s;
-    ctx.globalAlpha = spineActive ? 0.6 : (hasSelection ? 0.12 : 0.25);
-    ctx.beginPath();
-    ctx.moveTo(hx(85), hy(40));
-    ctx.lineTo(hx(85), hy(120));
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // Arms (muscle)
-    const muscleCol = getHighlightColor('muscle');
-    const hasMuscle = active.has('muscle');
-    const drawArm = (x1, y1, cx1, cy1, x2, y2) => {
-      ctx.strokeStyle = hasMuscle ? muscleCol : '#3d4a5c';
-      ctx.lineWidth = (hasMuscle ? 4.8 : 3.6) * s;
-      ctx.lineCap = 'round';
-      ctx.globalAlpha = hasMuscle ? 0.85 : (hasSelection ? 0.18 : 0.35);
-      if (hasMuscle) {
-        ctx.shadowBlur = 7 * s;
-        ctx.shadowColor = muscleCol;
-      }
-      ctx.beginPath();
-      ctx.moveTo(hx(x1), hy(y1));
-      ctx.quadraticCurveTo(hx(cx1), hy(cy1), hx(x2), hy(y2));
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.globalAlpha = 1;
-    };
-    drawArm(68, 58, 52, 78, 55, 115);
-    drawArm(102, 58, 118, 78, 115, 115);
-
-    // Legs (bones)
-    const hasBones = active.has('bones');
-    const bonesActiveColor = (isNegative && hasBones) ? '#ef4444' : '#e2e8f0';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = hasBones ? bonesActiveColor : '#3d4a5c';
-    ctx.lineWidth = (hasBones ? 4.2 : 3.4) * s;
-    ctx.globalAlpha = hasBones ? 0.55 : (hasSelection ? 0.14 : 0.28);
-    ctx.beginPath();
-    ctx.moveTo(hx(77), hy(123));
-    ctx.quadraticCurveTo(hx(71), hy(155), hx(74), hy(177));
-    ctx.moveTo(hx(93), hy(123));
-    ctx.quadraticCurveTo(hx(99), hy(155), hx(96), hy(177));
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // Joint markers (shoulders + knees) — small colored dots when relevant
-    const jointCol = getHighlightColor('joints');
-    const boneCol = getHighlightColor('bones');
-    const hasJoints = active.has('joints');
-    [[68, 55, jointCol, hasJoints],
-     [102, 55, jointCol, hasJoints],
-     [74, 153, boneCol, hasBones || hasJoints],
-     [96, 153, boneCol, hasBones || hasJoints]]
-      .forEach(([sx, sy, color, isAct]) => {
-        const x = hx(sx);
-        const y = hy(sy);
-        if (isAct) this._drawOrganGlow(ctx, x, y, 4.5 * s, color, true);
-        ctx.fillStyle = isAct ? color : '#3d4a5c';
-        ctx.globalAlpha = isAct ? 0.85 : (hasSelection ? 0.16 : 0.32);
-        ctx.beginPath();
-        ctx.arc(x, y, (isAct ? 2.8 : 2.2) * s, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
-
     ctx.restore();
   }
+
+  _placeBodyOverlay(state) {
+    const stage = getBodyStage();
+    stage.setState(state);
+    const parent = this.canvas?.parentElement;
+    if (!parent) return;
+    if (stage.canvas.parentElement !== parent) parent.appendChild(stage.canvas);
+    const { width: w, height: h } = this.getLogicalSize();
+    const v = this.view || {};
+    const scale = v.scale || 1;
+    const panX = v.panX ?? v.scrollX ?? 0;
+    const panY = v.panY ?? v.scrollY ?? 0;
+    const worldX = -125;
+    const worldY = -240;
+    const worldW = 260;
+    const worldH = 370;
+    const el = stage.canvas;
+    el.style.position = 'absolute';
+    el.style.left = `${w / 2 + (worldX - panX) * scale}px`;
+    el.style.top = `${h / 2 + (worldY - panY) * scale}px`;
+    el.style.width = `${worldW * scale}px`;
+    el.style.height = `${worldH * scale}px`;
+    el.style.pointerEvents = 'none';
+    el.style.zIndex = '2';
+  }
+
 
   // -----------------------------------------------------------------
   // Organ explode: world conversion, body/organ hit tests, filter API
