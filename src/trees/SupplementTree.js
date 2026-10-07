@@ -687,10 +687,51 @@ export class SupplementTree extends BaseTree {
   }
 
   /**
-   * Draw centered vitality score inside node.
-   * Pass draw-space x/y (e.g. from organExplode.getNodeDrawPosition) so subclasses
-   * that override this method keep numbers glued to the circle during explode.
+   * Constellation mark: dim track, vitality arc, core. No per-node gradient.
    */
+  _drawNodeGlyph(ctx, x, y, r, color, vitality, flags) {
+    const p = Math.max(0.06, Math.min(1, (Number(vitality) || 0) / 100));
+    const ring = flags.ring || color;
+    const radius = Math.max(6, r - 0.6);
+    const t = (performance.now() / 1000);
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.72, 0, Math.PI * 2);
+    ctx.fillStyle = '#101624';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color.length === 7 ? color + '38' : color;
+    ctx.lineWidth = 1.35;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = ring;
+    ctx.lineWidth = flags.selected ? 3.1 : 2.35;
+    ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+
+    if (flags.selected || flags.hovered || flags.hot) {
+      const spin = t * (flags.selected ? 2.1 : 0.85);
+      ctx.beginPath();
+      ctx.strokeStyle = flags.selected ? '#f8fafc' : ring;
+      ctx.lineWidth = flags.selected ? 2 : 1.4;
+      ctx.arc(x, y, radius + 3.2, spin, spin + 0.7);
+      ctx.stroke();
+    }
+
+    if (flags.stacked) {
+      ctx.beginPath();
+      ctx.fillStyle = '#d4af37';
+      ctx.arc(x, y + radius - 1.5, 2.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /** Centered vitality score. x/y are the drawn position, including explode offset. */
   _drawNodeScore(ctx, node, r, { isDimmed, isSelected, isHighValue, x, y, scale = 1 }) {
     if (!isSelected && r * scale < 7) return;
     if (r < 8) return;
@@ -833,40 +874,19 @@ export class SupplementTree extends BaseTree {
         if (!organFilterMatch) isDimmed = true;
       }
 
-      // Unified simplified path (same when scrolling or not): dark fill + ring only.
-      // No shading gradients, no inner circle. Fast + consistent. Selected glows.
-      if (organFilter && organFilterMatch) {
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = organFilterNeg ? '#ef4444' : '#22c55e';
-      } else if (isSelected || isHighlighted || (inStack && stack?.highlightMode)) {
-        ctx.shadowBlur = isSelected || isHighlighted ? 22 : 14;
-        ctx.shadowColor = (inStack && stack?.highlightMode && !isSelected) ? '#d4af37' : groupColor;
-      } else if (isHovered) {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = groupColor;
-      } else {
-        ctx.shadowBlur = 0;
-      }
+      if (isDimmed) ctx.globalAlpha = 0.22;
 
-      if (isDimmed) ctx.globalAlpha = 0.18;
+      const ring = (organFilter && organFilterMatch)
+        ? (organFilterNeg ? '#ef4444' : '#22c55e')
+        : ((isSelected || isHighlighted) ? '#f4e9c8' : (inStack && stack?.highlightMode ? '#d4af37' : groupColor));
 
-      ctx.fillStyle = "#0f1424";
-      if (organFilter && organFilterMatch) {
-        ctx.strokeStyle = organFilterNeg ? '#ef4444' : '#22c55e';
-        ctx.lineWidth = isSelected ? 4.4 : 3.4;
-      } else {
-        ctx.strokeStyle = (isSelected || isHighlighted)
-          ? "#f4e9c8"
-          : (inStack && stack?.highlightMode ? '#d4af37' : groupColor);
-        ctx.lineWidth = isSelected ? 4.2 : (isHovered || (inStack && stack?.highlightMode) ? 3.0 : 2.2);
-      }
-
-      ctx.beginPath();
-      ctx.arc(nx, ny, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.shadowBlur = 0;
+      this._drawNodeGlyph(ctx, nx, ny, r, groupColor, node.vitality, {
+        ring,
+        selected: isSelected || isHighlighted,
+        hovered: isHovered,
+        hot: isHighValue && !isDimmed,
+        stacked: inStack && !isDimmed
+      });
 
       this._drawNodeScore(ctx, node, r, { isDimmed, isSelected, isHighValue, x: nx, y: ny, scale });
 
@@ -877,7 +897,7 @@ export class SupplementTree extends BaseTree {
         ctx.font = `${isSelected ? 700 : 600} ${labelSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
-        ctx.fillText(node.short, nx, ny - r - 4);
+        ctx.fillText(node.short, nx, ny - r - 8);
       }
 
       if (isDimmed) ctx.globalAlpha = 1;
