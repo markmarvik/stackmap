@@ -43,7 +43,9 @@
     html.is-run body { overflow: auto; height: auto; }
     html.is-run #loading-overlay,
     html.is-run #app-root,
-    html.is-run #app-footer { display: none !important; }
+    html.is-run #app-footer,
+    html.is-run #play-first-night { display: none !important; }
+    #app-root { padding-top: 3rem; box-sizing: border-box; }
     @keyframes popup-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
@@ -176,6 +178,11 @@
       </div>
     </div>
   </div>
+
+  <a id="play-first-night" href="%BASE_URL%run/1"
+     class="fixed top-0 inset-x-0 z-[500] flex items-center justify-center gap-2 min-h-12 px-4 bg-amber-400 text-[#1a1406] text-sm font-semibold">
+    Play first night
+  </a>
 
   <!-- Main App Shell: Left info column + full-height map (primary focus) -->
   <div id="app-root" class="flex h-screen w-full">
