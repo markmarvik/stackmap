@@ -16,7 +16,6 @@ import {
   OrganExplodeController,
   ORGAN_EXPLODE_KEYS,
   ORGAN_LABELS,
-  ORGAN_HIT_RADIUS,
   BODY_HIT_PAD,
   nodeMatchesOrgan,
   nodeIsNegativeImpact
@@ -979,49 +978,52 @@ export class SupplementTree extends BaseTree {
     stage.setState({
       layers: layerOp,
       highlights: active,
-      negative: isNegative
+      negative: isNegative,
+      explode: explodeP
     });
     if (!stage.onReady) stage.onReady = () => { if (this.canvas) this.draw(); };
     stage.render();
 
     ctx.save();
     if (stage.ready) {
-      const rx = SupplementTree.BODY_RX * 0.96;
-      const ry = SupplementTree.BODY_RY * 0.96;
-      ctx.drawImage(stage.canvas, cx - rx, cy - ry, rx * 2, ry * 2);
+      const frame = stage.frame || 360;
+      ctx.drawImage(stage.canvas, cx - frame, cy - frame, frame * 2, frame * 2);
     }
     const anchors = (typeof this._getOrganPositions === 'function') ? this._getOrganPositions() : {};
-    this._organDrawPositions = {};
+    this._organDrawPositions = { ...(stage.centers || {}) };
     const filterKey = explode?.activeOrganFilter || null;
     const hoverOrg = explode?.hoveredOrgan || null;
-    for (const key of ORGAN_EXPLODE_KEYS) {
-      const anchor = anchors[key] || { x: cx, y: cy };
-      const drawPos = (explode && explodeP > 0.001)
-        ? explode.getDrawPosition(key, anchor.x, anchor.y)
-        : { x: anchor.x, y: anchor.y };
-      this._organDrawPositions[key] = drawPos;
-      if (explodeP < 0.2) continue;
-
-      const isFilter = filterKey === key;
-      const isHover = hoverOrg === key;
-      const hot = active.has(key) || isFilter || isHover;
-      const col = isFilter ? '#22c55e' : (this.organColors[key] || '#d4af37');
-      ctx.beginPath();
-      ctx.fillStyle = col;
-      ctx.globalAlpha = hot ? 0.95 : 0.62;
-      ctx.arc(drawPos.x, drawPos.y, (hot ? 9 : 6) * (s / 3.15), 0, Math.PI * 2);
-      ctx.fill();
-
-      if (explodeP > 0.45 && ORGAN_LABELS[key]) {
-        const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.9;
+    const labels = {
+      ...ORGAN_LABELS,
+      tongue: 'Tongue',
+      teeth: 'Teeth',
+      spleen: 'Spleen',
+      bladder: 'Bladder',
+      glands: 'Glands'
+    };
+    if (explodeP > 0.45) {
+      Object.entries(this._organDrawPositions).forEach(([key, pos]) => {
+        if (!labels[key]) return;
+        const isFilter = filterKey === key;
+        const isHover = hoverOrg === key;
+        const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
         ctx.globalAlpha = labelA;
         ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillStyle = isFilter ? '#86efac' : '#cbd5e1';
-        ctx.fillText(ORGAN_LABELS[key], drawPos.x, drawPos.y + 12);
-      }
+        ctx.fillStyle = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
+        ctx.fillText(labels[key], pos.x, pos.y + 18);
+      });
       ctx.globalAlpha = 1;
+    }
+    // Seated organs still need a hit point before the mesh centers exist.
+    if (!stage.ready) {
+      for (const key of ORGAN_EXPLODE_KEYS) {
+        const anchor = anchors[key] || { x: cx, y: cy };
+        this._organDrawPositions[key] = (explode && explodeP > 0.001)
+          ? explode.getDrawPosition(key, anchor.x, anchor.y)
+          : { x: anchor.x, y: anchor.y };
+      }
     }
 
     if (filterKey && explodeP > 0.2) {
@@ -1072,10 +1074,10 @@ export class SupplementTree extends BaseTree {
     if (requireExploded && explode.progress < 0.35) return null;
 
     const positions = this._organDrawPositions || {};
-    const keys = ORGAN_EXPLODE_KEYS;
+    const keys = Object.keys(positions);
     let best = null;
     let bestD = Infinity;
-    const hitR = ORGAN_HIT_RADIUS * (0.85 + explode.progress * 0.35);
+    const hitR = 64 * (0.8 + explode.progress * 0.35);
 
     for (const key of keys) {
       const pos = positions[key];

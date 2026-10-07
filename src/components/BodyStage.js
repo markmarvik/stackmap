@@ -12,6 +12,7 @@ import {
   BufferGeometry,
   Color,
   DoubleSide,
+  Group,
   Mesh,
   OrthographicCamera,
   Scene,
@@ -52,6 +53,26 @@ void main() {
   gl_FragColor = vec4(col, uOpacity);
 }
 `;
+
+const EXPLODE = {
+  brain: { angle: -Math.PI / 2, r: 230 },
+  eyes: { angle: -1.1142, r: 190 },
+  tongue: { angle: -1.38, r: 255 },
+  teeth: { angle: -0.92, r: 262 },
+  nerves: { angle: -0.6903, r: 225 },
+  heart: { angle: -0.2663, r: 195 },
+  stomach: { angle: 0.1685, r: 235 },
+  spleen: { angle: 0.42, r: 285 },
+  pancreas: { angle: 0.9729, r: 228 },
+  gut: { angle: 1.3969, r: 205 },
+  bladder: { angle: 1.62, r: 275 },
+  kidneys: { angle: 1.8643, r: 240 },
+  adrenals: { angle: 2.2665, r: 188 },
+  liver: { angle: 3.234, r: 200 },
+  lungs: { angle: 3.7558, r: 268 },
+  glands: { angle: 4.02, r: 248 },
+  thyroid: { angle: 4.2558, r: 192 }
+};
 
 const LOOK = {
   muscles: { color: '#c98474', rim: '#f0c2b4', glow: 0.02, order: 0, role: 'muscles' },
@@ -137,14 +158,18 @@ class BodyStage {
     this.layers = { base: 1, skeleton: 0, muscles: 0, organs: 1 };
     this.highlights = new Set();
     this.negative = false;
+    this.explode = 0;
+    this.centers = {};
+    this.frame = 360;
     this.onReady = null;
     this._load();
   }
 
-  setState({ layers, highlights, negative }) {
+  setState({ layers, highlights, negative, explode }) {
     if (layers) this.layers = layers;
     this.highlights = highlights instanceof Set ? highlights : new Set(highlights || []);
     this.negative = !!negative;
+    if (typeof explode === 'number') this.explode = explode;
   }
 
   async _load() {
@@ -204,22 +229,35 @@ class BodyStage {
       mesh.renderOrder = look.order;
       mesh.userData.look = look;
       mesh.userData.base = new Color(look.color);
-      this.scene.add(mesh);
+      mesh.userData.cx = 0;
+      mesh.userData.cy = 0;
+      if (look.role === 'organ') {
+        let sx = 0;
+        let sy = 0;
+        let n = 0;
+        for (let i = 0; i < pos.length; i += 3) {
+          sx += pos[i];
+          sy += pos[i + 1];
+          n += 1;
+        }
+        mesh.userData.cx = sx / n;
+        mesh.userData.cy = sy / n;
+      }
       this.parts[group.name] = mesh;
     });
-    const padX = (maxX - minX) * 0.04;
-    const padY = (maxY - minY) * 0.035;
-    this.camera = new OrthographicCamera(
-      minX - padX, maxX + padX, maxY + padY, minY - padY,
-      -data.radius * 2, data.radius * 4
-    );
-    this.camera.position.set(0, 0, data.radius);
+    const meshH = Math.max(1, maxY - minY);
+    this.worldScale = (245 * 1.92) / meshH;
+    this.root = new Group();
+    this.root.scale.setScalar(this.worldScale);
+    Object.values(this.parts).forEach((mesh) => this.root.add(mesh));
+    this.scene.add(this.root);
+    const frame = this.frame;
+    this.camera = new OrthographicCamera(-frame, frame, frame, -frame, -4000, 4000);
+    this.camera.position.set(0, 0, 2000);
     this.camera.lookAt(0, 0, 0);
-    const width = (maxX - minX) + padX * 2;
-    const height = (maxY - minY) + padY * 2;
-    this.canvas.width = 560;
-    this.canvas.height = Math.max(560, Math.round(560 * height / width));
-    this.renderer.setSize(this.canvas.width, this.canvas.height, false);
+    this.canvas.width = 900;
+    this.canvas.height = 900;
+    this.renderer.setSize(900, 900, false);
   }
 
   render() {
@@ -234,17 +272,42 @@ class BodyStage {
     const organA = this.layers.organs ?? 1;
     const any = this.highlights.size > 0;
     const hot = new Color('#ef4444');
+    const progress = this.explode || 0;
+    const scale = this.worldScale || 1;
+    this.centers = {};
     Object.values(this.parts).forEach((mesh) => {
       const look = mesh.userData.look;
       const uniforms = mesh.material.uniforms;
       let opacity = look.role === 'bones' ? boneA : look.role === 'muscles' ? muscleA : organA;
+      if (look.role === 'muscles') opacity *= 1 - progress * 0.35;
       const lit = (look.keys || []).some((key) => this.highlights.has(key));
-      if (any && !lit && look.role === 'organ') opacity *= 0.2;
+      if (any && !lit && look.role === 'organ' && progress < 0.2) opacity *= 0.2;
       uniforms.uGlow.value = lit ? 0.72 : look.glow;
       if (lit && this.negative) uniforms.uColor.value.copy(hot);
       else uniforms.uColor.value.copy(mesh.userData.base);
       uniforms.uOpacity.value = opacity;
       mesh.visible = opacity > 0.03;
+      mesh.position.set(0, 0, 0);
+      mesh.scale.setScalar(1);
     });
+    Object.keys(EXPLODE).forEach((name) => {
+      const mesh = this.parts[name];
+      if (!mesh) return;
+      const slot = EXPLODE[name];
+      const homeX = mesh.userData.cx * scale;
+      const homeY = -mesh.userData.cy * scale;
+      const tx = Math.cos(slot.angle) * slot.r;
+      const ty = Math.sin(slot.angle) * slot.r;
+      const x = homeX + (tx - homeX) * progress;
+      const y = homeY + (ty - homeY) * progress;
+      mesh.position.set((x - homeX) / scale, -(y - homeY) / scale, progress * 80);
+      mesh.scale.setScalar(1 + progress * 0.35);
+      this.centers[name] = { x, y };
+    });
+    const heart = this.parts.heart;
+    if (this.parts.vessels && heart) {
+      this.parts.vessels.position.copy(heart.position);
+      this.parts.vessels.scale.copy(heart.scale);
+    }
   }
 }
