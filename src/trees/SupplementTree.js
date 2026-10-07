@@ -27,7 +27,7 @@ export class SupplementTree extends BaseTree {
   static BODY_RX = 105;
   static BODY_RY = 245;
   /** Extra clearance beyond node circle (labels + stroke) in layout space. */
-  static NODE_HALO = 7;
+  static NODE_HALO = 12;
   /** Safety margin on body ellipse so nodes never clip the silhouette. */
   static BODY_MARGIN = 1.12;
 
@@ -375,7 +375,7 @@ export class SupplementTree extends BaseTree {
     // Dynamic for dense constellations (e.g. 100+ foods): more padding/iterations but cap to avoid jank
     const settleCap = n > 80 ? 110 : 140;
     return {
-      collisionPadding: 14 + density * 7,
+      collisionPadding: 18 + density * 8,
       settleIterations: Math.min(settleCap, 55 + Math.floor(n * 2.8)),
       bodyPadding: 18 + density * 5,
       labelMargin: SupplementTree.NODE_HALO
@@ -502,6 +502,33 @@ export class SupplementTree extends BaseTree {
     return false;
   }
 
+  /** Push two nodes apart. Extra vertical room keeps the name above from crossing the next ring. */
+  _separatePair(a, b, pad, halo) {
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dist = Math.hypot(dx, dy);
+    if (dist < 0.01) {
+      dx = 1;
+      dy = 0.2;
+      dist = Math.hypot(dx, dy);
+    }
+    const minX = this._nodeHitRadius(a, halo) + this._nodeHitRadius(b, halo) + pad;
+    const minY = minX + 16;
+    const nx = dx / minX;
+    const ny = dy / minY;
+    const nlen = Math.hypot(nx, ny);
+    if (nlen >= 1) return false;
+    const gap = (1 - nlen) * Math.min(minX, minY);
+    const gx = dx / (minX * minX);
+    const gy = dy / (minY * minY);
+    const gl = Math.hypot(gx, gy) || 1;
+    a.x -= (gx / gl) * gap * 0.5;
+    a.y -= (gy / gl) * gap * 0.5;
+    b.x += (gx / gl) * gap * 0.5;
+    b.y += (gy / gl) * gap * 0.5;
+    return true;
+  }
+
   /**
    * Iterative settle: body constraint every step + node-node repulsion.
    * Outermost nodes absorb more separation force so clusters don't collapse inward.
@@ -521,38 +548,7 @@ export class SupplementTree extends BaseTree {
 
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i];
-          const b = nodes[j];
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let dist = Math.hypot(dx, dy);
-          if (dist < 0.01) {
-            const jitter = 0.5 + (iter % 7) * 0.05;
-            dx = jitter;
-            dy = 0;
-            dist = jitter;
-          }
-
-          const ra = this._nodeHitRadius(a, halo);
-          const rb = this._nodeHitRadius(b, halo);
-          const minDist = ra + rb + pad;
-
-          if (dist >= minDist) continue;
-
-          const overlap = minDist - dist;
-          const ux = dx / dist;
-          const uy = dy / dist;
-          const force = overlap * 0.52;
-
-          const aCenter = Math.hypot(a.x, a.y);
-          const bCenter = Math.hypot(b.x, b.y);
-          const aBias = aCenter >= bCenter ? 0.58 : 0.42;
-          const bBias = 1 - aBias;
-
-          a.x -= ux * force * aBias;
-          a.y -= uy * force * aBias;
-          b.x += ux * force * bBias;
-          b.y += uy * force * bBias;
+          this._separatePair(nodes[i], nodes[j], pad, halo);
         }
       }
     }
@@ -575,7 +571,7 @@ export class SupplementTree extends BaseTree {
     const bodyPad = spacing.bodyPadding;
     const halo = spacing.labelMargin ?? SupplementTree.NODE_HALO;
 
-    const maxAttempts = Math.min(38, 18 + Math.floor(nodes.length / 5));
+    const maxAttempts = Math.min(64, 28 + Math.floor(nodes.length / 4));
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       let fixed = false;
 
@@ -585,27 +581,7 @@ export class SupplementTree extends BaseTree {
 
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i];
-          const b = nodes[j];
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let dist = Math.hypot(dx, dy);
-          if (dist < 0.01) {
-            dx = 1;
-            dy = 0;
-            dist = 1;
-          }
-          const minDist = this._nodeHitRadius(a, halo) + this._nodeHitRadius(b, halo) + pad;
-          if (dist < minDist) {
-            const overlap = (minDist - dist) + 1;
-            const ux = dx / dist;
-            const uy = dy / dist;
-            a.x -= ux * overlap * 0.5;
-            a.y -= uy * overlap * 0.5;
-            b.x += ux * overlap * 0.5;
-            b.y += uy * overlap * 0.5;
-            fixed = true;
-          }
+          if (this._separatePair(nodes[i], nodes[j], pad, halo)) fixed = true;
         }
       }
 
@@ -646,7 +622,7 @@ export class SupplementTree extends BaseTree {
       const base = organPositions[organ] || { x: 0, y: 0 };
       const sectorAng = Math.atan2(base.y, base.x || 0.001);
       const edge = this._bodyEdgeRadius(sectorAng);
-      const spread = Math.min(1.15, 0.16 * group.length + 0.14);
+      const spread = Math.min(1.7, 0.24 * group.length + 0.22);
 
       group.forEach((node, i) => {
         const t = group.length > 1 ? i / (group.length - 1) : 0;
@@ -663,7 +639,7 @@ export class SupplementTree extends BaseTree {
         orbitDist = orbitDist * rankFactor;
 
         node.x = Math.cos(ang) * orbitDist;
-        node.y = Math.sin(ang) * orbitDist * 0.82;
+        node.y = Math.sin(ang) * orbitDist;
       });
     });
 
@@ -1029,14 +1005,21 @@ export class SupplementTree extends BaseTree {
         if (!labels[key]) return;
         const isFilter = filterKey === key;
         const isHover = hoverOrg === key;
+        const above = key === 'brain' || key === 'eyes' || key === 'teeth';
         const side = pos.x < 0 ? -1 : 1;
         const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
         ctx.globalAlpha = labelA;
         ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
-        ctx.textAlign = side < 0 ? 'right' : 'left';
-        ctx.textBaseline = 'middle';
         ctx.fillStyle = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
-        ctx.fillText(labels[key], pos.x + side * ((pos.hx || 16) + 10), pos.y);
+        if (above) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(labels[key], pos.x, pos.y - (pos.hy || 16) - 6);
+        } else {
+          ctx.textAlign = side < 0 ? 'right' : 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(labels[key], pos.x + side * ((pos.hx || 16) + 10), pos.y);
+        }
       });
       ctx.globalAlpha = 1;
     }

@@ -56,12 +56,12 @@ void main() {
 
 /** Exploded slots in map space. +x right, +y down. Clear of the body. */
 const SLOT = {
-  brain:    { x: -46,  y: -292 },
-  eyes:     { x: 128,  y: -268 },
-  teeth:    { x: 178,  y: -246 },
-  tongue:   { x: 128,  y: -228 },
-  thyroid:  { x: 168,  y: -198 },
-  nerves:   { x: 214,  y: -210 },
+  brain:    { x: -72, y: -278 },
+  eyes:     { x: -10, y: -278 },
+  teeth:    { x: 48,  y: -278 },
+  tongue:   { x: -158, y: -214 },
+  thyroid:  { x: 156, y: -214 },
+  nerves:   { x: 220, y: -214 },
   lungs:    { x: -158, y: -78 },
   heart:    { x: 164,  y: -118 },
   stomach:  { x: 170,  y: -60 },
