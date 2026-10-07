@@ -47,6 +47,38 @@
       background: #03050c; color: #e8eef2;
       font-family: Inter, system-ui, sans-serif;
     }
+    #loading-overlay .load-card {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+    }
+    #loading-overlay .load-mark {
+      width: 52px; height: 52px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #fbbf24, #d4a017);
+      color: #1a1406; font-size: 26px; font-weight: 700;
+      box-shadow: 0 0 28px rgba(251, 191, 36, 0.35);
+    }
+    #loading-overlay .load-name {
+      margin-top: 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.02em;
+    }
+    #loading-overlay .load-kicker {
+      margin-top: 6px; font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: rgba(251, 191, 36, 0.75);
+    }
+    #loading-overlay .load-track {
+      width: 168px; height: 3px; margin-top: 22px;
+      border-radius: 99px; overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    #loading-overlay .load-bar {
+      display: block; height: 100%; width: 42%; border-radius: inherit;
+      background: linear-gradient(90deg, transparent, #fbbf24 40%, #fff4cc 50%, #fbbf24 60%, transparent);
+      animation: load-slide 1.15s ease-in-out infinite;
+    }
+    @keyframes load-slide {
+      0% { transform: translateX(-130%); }
+      100% { transform: translateX(280%); }
+    }
     #play-first-night {
       position: fixed; top: 0; left: 0; right: 0; z-index: 600;
       display: flex; align-items: center; justify-content: center;
@@ -175,20 +207,12 @@
   <!-- Loading overlay (Issue #17): prevents white flash / skeleton before JS is ready -->
   <div id="loading-overlay"
        class="fixed inset-0 z-[999] flex items-center justify-center bg-[#03050c] transition-opacity duration-300">
-    <div class="flex flex-col items-center gap-y-4">
-      <!-- Infinity logo (matches main UI) -->
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.5)] ring-1 ring-inset ring-white/10">
-        <i class="fa-solid fa-infinity text-[#03050c] text-3xl font-black"></i>
-      </div>
-      <div class="text-center">
-        <div class="text-lg tracking-tight font-semibold text-white/90">StackMap</div>
-        <div class="text-[10px] uppercase tracking-[2px] text-amber-400/70 mt-0.5">Loading Longevity Constellation…</div>
-      </div>
-      <!-- Subtle animated dots -->
-      <div class="flex gap-1.5 mt-1">
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 0ms"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 150ms"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 300ms"></div>
+    <div class="load-card">
+      <div class="load-mark" aria-hidden="true">∞</div>
+      <div class="load-name">StackMap</div>
+      <div class="load-kicker">Loading</div>
+      <div class="load-track" role="progressbar" aria-label="Loading">
+        <span class="load-bar"></span>
       </div>
     </div>
   </div>
