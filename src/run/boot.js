@@ -3,7 +3,6 @@
  */
 
 import { AnatomyRenderer } from '../core/AnatomyRenderer.js';
-import { OrganDiagram } from '../components/OrganDiagram.js';
 import { readStorage, writeStorage } from '../core/persist.js';
 import {
   RUN_PRICE_LABEL,
@@ -68,13 +67,18 @@ function appendFrame(parent, frame) {
   }
 
   if (frame === 'liver') {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.id = 'body-diagram';
-    frameEl.appendChild(svg);
+    const holder = el('div', 'run-body3d');
+    holder.id = 'body-diagram';
+    holder.appendChild(el('p', 'run-body-label', 'alcohol load on a first heavy night'));
+    holder.appendChild(el('p', 'run-body-value', 'ALCOHOL LOAD'));
+    frameEl.appendChild(holder);
     parent.appendChild(frameEl);
-    const diagram = new OrganDiagram('body-diagram');
-    diagram.render(['liver']);
-    diagram.pulse('liver');
+    import('../components/OrganDiagram.js').then(({ OrganDiagram }) => {
+      if (!holder.isConnected) return;
+      const diagram = new OrganDiagram('body-diagram');
+      diagram.render(['liver']);
+      diagram.pulse('liver');
+    });
     return;
   }
 
