@@ -975,19 +975,25 @@ export class SupplementTree extends BaseTree {
     const explode = this.organExplode;
     const explodeP = explode ? explode.progress : 0;
 
-    this._placeBodyOverlay({
+    const stage = getBodyStage();
+    stage.setState({
       layers: layerOp,
       highlights: active,
-      negative: isNegative,
-      explode: explodeP
+      negative: isNegative
     });
+    if (!stage.onReady) stage.onReady = () => { if (this.canvas) this.draw(); };
+    stage.render();
 
+    ctx.save();
+    if (stage.ready) {
+      const rx = SupplementTree.BODY_RX * 0.96;
+      const ry = SupplementTree.BODY_RY * 0.96;
+      ctx.drawImage(stage.canvas, cx - rx, cy - ry, rx * 2, ry * 2);
+    }
     const anchors = (typeof this._getOrganPositions === 'function') ? this._getOrganPositions() : {};
     this._organDrawPositions = {};
     const filterKey = explode?.activeOrganFilter || null;
     const hoverOrg = explode?.hoveredOrgan || null;
-
-    ctx.save();
     for (const key of ORGAN_EXPLODE_KEYS) {
       const anchor = anchors[key] || { x: cx, y: cy };
       const drawPos = (explode && explodeP > 0.001)
@@ -1027,31 +1033,6 @@ export class SupplementTree extends BaseTree {
       ctx.fillText(`Nodes linked to ${ORGAN_LABELS[filterKey] || filterKey}`, cx, cy - 250);
     }
     ctx.restore();
-  }
-
-  _placeBodyOverlay(state) {
-    const stage = getBodyStage();
-    stage.setState(state);
-    const parent = this.canvas?.parentElement;
-    if (!parent) return;
-    if (stage.canvas.parentElement !== parent) parent.appendChild(stage.canvas);
-    const { width: w, height: h } = this.getLogicalSize();
-    const v = this.view || {};
-    const scale = v.scale || 1;
-    const panX = v.panX ?? v.scrollX ?? 0;
-    const panY = v.panY ?? v.scrollY ?? 0;
-    const worldX = -125;
-    const worldY = -240;
-    const worldW = 260;
-    const worldH = 370;
-    const el = stage.canvas;
-    el.style.position = 'absolute';
-    el.style.left = `${w / 2 + (worldX - panX) * scale}px`;
-    el.style.top = `${h / 2 + (worldY - panY) * scale}px`;
-    el.style.width = `${worldW * scale}px`;
-    el.style.height = `${worldH * scale}px`;
-    el.style.pointerEvents = 'none';
-    el.style.zIndex = '2';
   }
 
 
