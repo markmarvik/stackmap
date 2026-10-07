@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    if (/\/run\/\d+\/?$/.test(location.pathname)) document.documentElement.classList.add("is-run");
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StackMap • Longevity Constellation</title>
   <meta name="description" content="StackMap (formerly Aetheris) — interactive map of supplements, habits, exercises, foods, environment, and biomarkers. Educational only, not medical advice.">
@@ -37,6 +40,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
   <style>
+    html.is-run body { overflow: auto; height: auto; }
+    html.is-run #loading-overlay,
+    html.is-run #app-root,
+    html.is-run #app-footer { display: none !important; }
     @keyframes popup-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }

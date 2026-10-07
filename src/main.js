@@ -43,14 +43,13 @@ import { track, trackPageView, trackConstellation, initAnalytics } from "./core/
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
 import { readStorage, writeStorage } from "./core/persist.js";
+import { bootRun } from "./run/boot.js";
 
 // Import Tailwind + custom styles (processed by Vite)
 import './style.css';
 
 // Expose organ meta globally for components that need it
 window.AETHERIS_ORGAN_META = organMeta;
-
-console.log("%c[AETHERIS Modular] Bootstrapping Supplements tree...", "color:#64748b");
 
 // Lightweight runtime validation (no Zod, keeps deps zero). Warns on missing/inconsistent fields.
 function validateTreeData(data, label = 'data') {
@@ -79,6 +78,10 @@ function validateTreeData(data, label = 'data') {
 let treeInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (bootRun()) return;
+
+  console.log("%c[AETHERIS Modular] Bootstrapping Supplements tree...", "color:#64748b");
+
   const canvas = document.getElementById("tree-canvas");
   if (!canvas) {
     console.error("Tree canvas not found");
