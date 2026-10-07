@@ -54,25 +54,33 @@ void main() {
 }
 `;
 
-const EXPLODE = {
-  brain: { angle: -Math.PI / 2, r: 230 },
-  eyes: { angle: -1.1142, r: 190 },
-  tongue: { angle: -1.38, r: 255 },
-  teeth: { angle: -0.92, r: 262 },
-  nerves: { angle: -0.6903, r: 225 },
-  heart: { angle: -0.2663, r: 195 },
-  stomach: { angle: 0.1685, r: 235 },
-  spleen: { angle: 0.42, r: 285 },
-  pancreas: { angle: 0.9729, r: 228 },
-  gut: { angle: 1.3969, r: 205 },
-  bladder: { angle: 1.62, r: 275 },
-  kidneys: { angle: 1.8643, r: 240 },
-  adrenals: { angle: 2.2665, r: 188 },
-  liver: { angle: 3.234, r: 200 },
-  lungs: { angle: 3.7558, r: 268 },
-  glands: { angle: 4.02, r: 248 },
-  thyroid: { angle: 4.2558, r: 192 }
+/** Exploded slots in map space. +x right, +y down. Clear of the body. */
+const SLOT = {
+  brain:    { x: -46,  y: -292 },
+  eyes:     { x: 128,  y: -268 },
+  teeth:    { x: 178,  y: -246 },
+  tongue:   { x: 128,  y: -228 },
+  thyroid:  { x: 168,  y: -198 },
+  nerves:   { x: 214,  y: -210 },
+  lungs:    { x: -158, y: -78 },
+  heart:    { x: 164,  y: -118 },
+  stomach:  { x: 170,  y: -60 },
+  spleen:   { x: 222,  y: -26 },
+  pancreas: { x: 170,  y: 10 },
+  adrenals: { x: 178,  y: 50 },
+  kidneys:  { x: 152,  y: 104 },
+  liver:    { x: -160, y: 10 },
+  gut:      { x: -164, y: 112 },
+  bladder:  { x: -148, y: 180 }
 };
+
+const SLOT_ORDER = Object.keys(SLOT);
+
+function easeOutBack(t) {
+  const c1 = 0.7;
+  const c3 = c1 + 1;
+  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
+}
 
 const LOOK = {
   muscles: { color: '#c98474', rim: '#f0c2b4', glow: 0.02, order: 0, role: 'muscles' },
@@ -226,22 +234,35 @@ class BodyStage {
         toneMapped: false
       });
       const mesh = new Mesh(geo, material);
+      mesh.name = group.name;
       mesh.renderOrder = look.order;
       mesh.userData.look = look;
       mesh.userData.base = new Color(look.color);
       mesh.userData.cx = 0;
       mesh.userData.cy = 0;
+      mesh.userData.hw = 0;
+      mesh.userData.hh = 0;
       if (look.role === 'organ') {
         let sx = 0;
         let sy = 0;
         let n = 0;
+        let x0 = Infinity;
+        let x1 = -Infinity;
+        let y0 = Infinity;
+        let y1 = -Infinity;
         for (let i = 0; i < pos.length; i += 3) {
           sx += pos[i];
           sy += pos[i + 1];
+          x0 = Math.min(x0, pos[i]);
+          x1 = Math.max(x1, pos[i]);
+          y0 = Math.min(y0, pos[i + 1]);
+          y1 = Math.max(y1, pos[i + 1]);
           n += 1;
         }
         mesh.userData.cx = sx / n;
         mesh.userData.cy = sy / n;
+        mesh.userData.hw = (x1 - x0) / 2;
+        mesh.userData.hh = (y1 - y0) / 2;
       }
       this.parts[group.name] = mesh;
     });
@@ -260,6 +281,25 @@ class BodyStage {
     this.renderer.setSize(900, 900, false);
   }
 
+  /** One shared clock. The visible tree redraws; idle ticks stay slow. */
+  start(onFrame) {
+    this.onFrame = onFrame;
+    if (this._loop) return;
+    this._loop = true;
+    let last = 0;
+    const tick = (now) => {
+      const moving = (this.explode || 0) > 0.02;
+      const min = moving ? 32 : 50;
+      if (!document.hidden && now - last >= min) {
+        last = now;
+        this._time = now;
+        if (this.onFrame) this.onFrame();
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
   render() {
     if (!this.ready) return;
     this._apply();
@@ -274,40 +314,55 @@ class BodyStage {
     const hot = new Color('#ef4444');
     const progress = this.explode || 0;
     const scale = this.worldScale || 1;
+    const time = (this._time || performance.now()) / 1000;
+    const breath = Math.sin(time * 1.4) * 0.012 * (1 - progress);
+    const beat = Math.pow(Math.max(0, Math.sin(time * 7.3)), 10);
     this.centers = {};
     Object.values(this.parts).forEach((mesh) => {
       const look = mesh.userData.look;
       const uniforms = mesh.material.uniforms;
       let opacity = look.role === 'bones' ? boneA : look.role === 'muscles' ? muscleA : organA;
-      if (look.role === 'muscles') opacity *= 1 - progress * 0.35;
+      if (look.role === 'muscles') opacity *= 1 - progress * 0.28;
       const lit = (look.keys || []).some((key) => this.highlights.has(key));
-      if (any && !lit && look.role === 'organ' && progress < 0.2) opacity *= 0.2;
-      uniforms.uGlow.value = lit ? 0.72 : look.glow;
+      if (any && !lit && look.role === 'organ' && progress < 0.15) opacity *= 0.22;
+      let glow = lit ? 0.72 : look.glow;
+      if (mesh.name === 'heart') glow += beat * 0.6;
+      if (mesh.name === 'lungs') glow += Math.max(0, breath) * 4;
+      uniforms.uGlow.value = glow;
       if (lit && this.negative) uniforms.uColor.value.copy(hot);
       else uniforms.uColor.value.copy(mesh.userData.base);
       uniforms.uOpacity.value = opacity;
       mesh.visible = opacity > 0.03;
       mesh.position.set(0, 0, 0);
-      mesh.scale.setScalar(1);
+      mesh.rotation.set(0, 0, 0);
+      const breathe = look.role === 'muscles' || mesh.name === 'lungs';
+      mesh.scale.set(1, breathe ? 1 + breath : 1, 1);
     });
-    Object.keys(EXPLODE).forEach((name) => {
+    SLOT_ORDER.forEach((name, index) => {
       const mesh = this.parts[name];
-      if (!mesh) return;
-      const slot = EXPLODE[name];
+      const slot = SLOT[name];
+      if (!mesh || !slot) return;
+      const delay = (index / SLOT_ORDER.length) * 0.28;
+      const local = Math.min(1, Math.max(0, (progress - delay) / 0.72));
+      const eased = easeOutBack(local);
       const homeX = mesh.userData.cx * scale;
       const homeY = -mesh.userData.cy * scale;
-      const tx = Math.cos(slot.angle) * slot.r;
-      const ty = Math.sin(slot.angle) * slot.r;
-      const x = homeX + (tx - homeX) * progress;
-      const y = homeY + (ty - homeY) * progress;
-      mesh.position.set((x - homeX) / scale, -(y - homeY) / scale, progress * 80);
-      mesh.scale.setScalar(1 + progress * 0.35);
-      this.centers[name] = { x, y };
+      const bob = Math.sin(time * 1.7 + index * 0.7) * 3.5 * local;
+      const x = homeX + (slot.x - homeX) * eased;
+      const y = homeY + (slot.y - homeY) * eased + bob;
+      mesh.position.set((x - homeX) / scale, -(y - homeY) / scale, local * 60);
+      const grow = name === 'eyes' || name === 'tongue' || name === 'thyroid' || name === 'teeth' || name === 'bladder' || name === 'nerves'
+        ? 1 + local * 0.45
+        : 1 + local * 0.04;
+      const pulse = name === 'heart' ? 1 + beat * 0.07 : 1;
+      mesh.scale.set(grow * pulse, grow * pulse * (name === 'lungs' ? 1 + breath : 1), 1);
+      mesh.rotation.z = (slot.x < 0 ? 0.18 : -0.18) * (1 - local);
+      this.centers[name] = {
+        x,
+        y,
+        hx: mesh.userData.hw * scale * grow,
+        hy: mesh.userData.hh * scale * grow
+      };
     });
-    const heart = this.parts.heart;
-    if (this.parts.vessels && heart) {
-      this.parts.vessels.position.copy(heart.position);
-      this.parts.vessels.scale.copy(heart.scale);
-    }
   }
 }

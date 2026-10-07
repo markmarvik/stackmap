@@ -981,7 +981,10 @@ export class SupplementTree extends BaseTree {
       negative: isNegative,
       explode: explodeP
     });
-    if (!stage.onReady) stage.onReady = () => { if (this.canvas) this.draw(); };
+    if (!stage.onReady) {
+      stage.onReady = () => { if (this.canvas) this.draw(); };
+      stage.start(() => { if (this.canvas?.isConnected) this.draw(); });
+    }
     stage.render();
 
     ctx.save();
@@ -1006,13 +1009,14 @@ export class SupplementTree extends BaseTree {
         if (!labels[key]) return;
         const isFilter = filterKey === key;
         const isHover = hoverOrg === key;
+        const side = pos.x < 0 ? -1 : 1;
         const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
         ctx.globalAlpha = labelA;
         ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
+        ctx.textAlign = side < 0 ? 'right' : 'left';
+        ctx.textBaseline = 'middle';
         ctx.fillStyle = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
-        ctx.fillText(labels[key], pos.x, pos.y + 18);
+        ctx.fillText(labels[key], pos.x + side * ((pos.hx || 16) + 10), pos.y);
       });
       ctx.globalAlpha = 1;
     }
