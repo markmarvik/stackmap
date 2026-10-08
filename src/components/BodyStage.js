@@ -261,8 +261,12 @@ class BodyStage {
         }
         mesh.userData.cx = sx / n;
         mesh.userData.cy = sy / n;
-        mesh.userData.hw = (x1 - x0) / 2;
-        mesh.userData.hh = (y1 - y0) / 2;
+        mesh.userData.exL = mesh.userData.cx - x0;
+        mesh.userData.exR = x1 - mesh.userData.cx;
+        mesh.userData.eyU = mesh.userData.cy - y0;
+        mesh.userData.eyD = y1 - mesh.userData.cy;
+        mesh.userData.hw = (mesh.userData.exL + mesh.userData.exR) / 2;
+        mesh.userData.hh = (mesh.userData.eyU + mesh.userData.eyD) / 2;
       }
       this.parts[group.name] = mesh;
     });
@@ -279,6 +283,59 @@ class BodyStage {
     this.canvas.width = 900;
     this.canvas.height = 900;
     this.renderer.setSize(900, 900, false);
+    this._layoutSlots();
+  }
+
+  /** Park each organ outside the body, using its real extent so boxes cannot overlap. */
+  _layoutSlots() {
+    const s = this.worldScale || 1;
+    const gap = 34;
+    const bodyL = -108;
+    const bodyR = 108;
+    const bodyT = -250;
+    const ext = (name, shrink) => {
+      const mesh = this.parts[name];
+      if (!mesh) return null;
+      return {
+        name,
+        shrink,
+        l: (mesh.userData.exL || 0) * s * shrink,
+        r: (mesh.userData.exR || 0) * s * shrink,
+        u: (mesh.userData.eyU || 0) * s * shrink,
+        d: (mesh.userData.eyD || 0) * s * shrink
+      };
+    };
+    const slots = {};
+    const headShrink = { brain: 0.82, eyes: 1.55, teeth: 1.55 };
+    let x = -230;
+    const headBottom = bodyT - gap;
+    ['brain', 'eyes', 'teeth'].forEach((name) => {
+      const it = ext(name, headShrink[name]);
+      if (!it) return;
+      const cx = x + it.l;
+      slots[name] = { x: cx, y: headBottom - it.d, shrink: it.shrink };
+      x = cx + it.r + gap + 8;
+    });
+    const column = (names, shrinks, side, startY) => {
+      let top = startY;
+      names.forEach((name, i) => {
+        const it = ext(name, shrinks[i]);
+        if (!it) return;
+        const cy = top + it.u;
+        const cx = side < 0 ? bodyL - gap - it.r : bodyR + gap + it.l;
+        slots[name] = { x: cx, y: cy, shrink: it.shrink };
+        top = cy + it.d + gap;
+      });
+    };
+    column(['lungs', 'liver', 'gut', 'bladder'], [0.52, 0.72, 0.46, 1.2], -1, -150);
+    column(['heart', 'stomach', 'spleen', 'pancreas', 'adrenals', 'kidneys'], [0.95, 0.82, 0.95, 0.95, 0.8, 0.78], 1, -160);
+    const tongue = ext('tongue', 1.45);
+    const thyroid = ext('thyroid', 1.45);
+    const nerves = ext('nerves', 1.7);
+    if (tongue) slots.tongue = { x: bodyL - gap - tongue.r - 8, y: -205, shrink: tongue.shrink };
+    if (thyroid) slots.thyroid = { x: bodyR + gap + thyroid.l, y: -205, shrink: thyroid.shrink };
+    if (nerves && thyroid) slots.nerves = { x: slots.thyroid.x + thyroid.r + gap + nerves.l, y: -205, shrink: nerves.shrink };
+    this.slots = slots;
   }
 
   /** One shared clock. The visible tree redraws; idle ticks stay slow. */
@@ -322,7 +379,8 @@ class BodyStage {
       const look = mesh.userData.look;
       const uniforms = mesh.material.uniforms;
       let opacity = look.role === 'bones' ? boneA : look.role === 'muscles' ? muscleA : organA;
-      if (look.role === 'muscles') opacity *= 1 - progress * 0.28;
+      if (look.role === 'muscles') opacity *= 1 - progress * 0.62;
+      if (mesh.name === 'vessels') opacity *= 1 - progress * 0.75;
       const lit = (look.keys || []).some((key) => this.highlights.has(key));
       if (any && !lit && look.role === 'organ' && progress < 0.15) opacity *= 0.22;
       let glow = lit ? 0.72 : look.glow;
@@ -340,7 +398,7 @@ class BodyStage {
     });
     SLOT_ORDER.forEach((name, index) => {
       const mesh = this.parts[name];
-      const slot = SLOT[name];
+      const slot = (this.slots && this.slots[name]) || SLOT[name];
       if (!mesh || !slot) return;
       const delay = (index / SLOT_ORDER.length) * 0.28;
       const local = Math.min(1, Math.max(0, (progress - delay) / 0.72));
@@ -350,18 +408,19 @@ class BodyStage {
       const bob = Math.sin(time * 1.7 + index * 0.7) * 3.5 * local;
       const x = homeX + (slot.x - homeX) * eased;
       const y = homeY + (slot.y - homeY) * eased + bob;
-      mesh.position.set((x - homeX) / scale, -(y - homeY) / scale, local * 60);
-      const grow = name === 'eyes' || name === 'tongue' || name === 'thyroid' || name === 'teeth' || name === 'bladder' || name === 'nerves'
-        ? 1 + local * 0.45
-        : 1 + local * 0.04;
+      const shrink = slot.shrink || 1;
+      const grow = 1 + (shrink - 1) * local;
       const pulse = name === 'heart' ? 1 + beat * 0.07 : 1;
-      mesh.scale.set(grow * pulse, grow * pulse * (name === 'lungs' ? 1 + breath : 1), 1);
-      mesh.rotation.z = (slot.x < 0 ? 0.18 : -0.18) * (1 - local);
+      const g = grow * pulse;
+      mesh.position.set(x / scale - mesh.userData.cx * g, -y / scale - mesh.userData.cy * g, local * 60);
+      const breathY = name === 'lungs' ? 1 + breath : 1;
+      mesh.scale.set(g, g * breathY, 1);
+      mesh.rotation.z = ((slot.x || 0) < 0 ? 0.12 : -0.12) * (1 - local);
       this.centers[name] = {
         x,
         y,
-        hx: mesh.userData.hw * scale * grow,
-        hy: mesh.userData.hh * scale * grow
+        hx: Math.max(mesh.userData.exL || 0, mesh.userData.exR || 0) * scale * g,
+        hy: Math.max(mesh.userData.eyU || 0, mesh.userData.eyD || 0) * scale * g
       };
     });
   }
