@@ -32,10 +32,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build for production (uses /stackmap/ base)
+      - name: Build for the GitHub Pages mirror
         run: npm run build
         env:
-          # GitHub Pages serves under /stackmap/ until the Cloudflare cutover (vite defaults to / for Cloudflare)
+          # Public site is Cloudflare Pages (base /). This job is the /stackmap/ mirror only.
           BASE: /stackmap/
           SITE_URL: https://markmarvik.github.io/stackmap/
 
