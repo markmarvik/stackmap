@@ -227,11 +227,22 @@ export class SupplementTree extends BaseTree {
     this.anatomy = new AnatomyRenderer();
     this.anatomy.applyPreset('organs');
     this.anatomy.subscribe(() => {
-      if (this.canvas && typeof this.draw === 'function') this.draw();
+      if (this._disposed || !this.canvas) return;
+      this.draw();
     });
     // Organ explode + organ→node filter (hover/tap body)
     this.organExplode = new OrganExplodeController();
     this._loadBodyAssets();
+  }
+
+  dispose() {
+    this._disposed = true;
+    this._rafPending = false;
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
+    super.dispose();
   }
 
   loadData(supplementsArray) {
@@ -449,9 +460,10 @@ export class SupplementTree extends BaseTree {
       this.bodyImages.skeleton = this.anatomy.images.skeleton;
       this.bodyImages.muscles = this.anatomy.images.muscles;
       this._bodyPngReady = true;
-      if (this.canvas && typeof this.draw === 'function') {
-        requestAnimationFrame(() => this.draw());
-      }
+      if (this._disposed || !this.canvas) return;
+      requestAnimationFrame(() => {
+        if (!this._disposed) this.draw();
+      });
     });
   }
 
@@ -729,7 +741,7 @@ export class SupplementTree extends BaseTree {
   }
 
   draw(highlightIds = []) {
-    if (!this.ctx) return;
+    if (this._disposed || !this.ctx) return;
 
     // Advance organ explode animation; keep RAF going while in flight
     if (this.organExplode && this.organExplode.update()) {
@@ -983,10 +995,14 @@ export class SupplementTree extends BaseTree {
       explode: explodeP,
       isolate
     });
-    if (!stage.onReady) {
-      stage.onReady = () => { if (this.canvas) this.draw(); };
-      stage.start(() => { if (this.canvas?.isConnected) this.draw(); });
-    }
+    // One shared WebGL body. The boot tree is disposed when the map switches,
+    // but it used to keep this callback and paint explode 0 after the animation.
+    const redraw = () => {
+      if (this._disposed || !this.canvas?.isConnected) return;
+      this.draw();
+    };
+    stage.onReady = redraw;
+    stage.start(redraw);
     stage.render();
 
     ctx.save();
