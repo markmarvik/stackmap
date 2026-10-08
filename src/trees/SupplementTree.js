@@ -974,6 +974,7 @@ export class SupplementTree extends BaseTree {
     const explodeP = explode ? explode.progress : 0;
 
     const stage = getBodyStage();
+    stage.acting = !!this.bodyFocus && explodeP < 0.04;
     stage.setState({
       layers: layerOp,
       highlights: active,

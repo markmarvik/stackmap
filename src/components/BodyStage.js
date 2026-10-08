@@ -8,6 +8,8 @@
  */
 
 import {
+  AnimationMixer,
+  Box3,
   BufferAttribute,
   BufferGeometry,
   Color,
@@ -20,6 +22,7 @@ import {
   SRGBColorSpace,
   WebGLRenderer
 } from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 const VERT = `
 varying vec3 vN;
@@ -172,6 +175,9 @@ class BodyStage {
     this.centers = {};
     this.frame = 360;
     this.onReady = null;
+    this.acting = false;
+    this.player = null;
+    this.mixer = null;
     this._load();
   }
 
@@ -274,6 +280,8 @@ class BodyStage {
     });
     const meshH = Math.max(1, maxY - minY);
     this.worldScale = (245 * 1.92) / meshH;
+    this._span = meshH;
+    this._floorY = minY;
     this.root = new Group();
     this.root.scale.setScalar(this.worldScale);
     Object.values(this.parts).forEach((mesh) => this.root.add(mesh));
@@ -286,6 +294,42 @@ class BodyStage {
     this.canvas.height = 900;
     this.renderer.setSize(900, 900, false);
     this._layoutSlots();
+    this._loadPlayer();
+  }
+
+  /** Kenney Animated Characters, CC0. Idle clip on a player rig. */
+  async _loadPlayer() {
+    try {
+      const base = import.meta.env.BASE_URL || '/';
+      const loader = new FBXLoader();
+      const model = await loader.loadAsync(`${base}assets/body/player/characterMedium.fbx`);
+      const anim = await loader.loadAsync(`${base}assets/body/player/idle.fbx`);
+      const clip = anim.animations && anim.animations[0];
+      if (!clip) return;
+      model.traverse((obj) => {
+        if (!obj.isMesh) return;
+        const material = obj.material;
+        if (!material) return;
+        material.transparent = true;
+        material.opacity = 0.62;
+        material.depthWrite = false;
+      });
+      const box = new Box3().setFromObject(model);
+      const height = Math.max(0.001, box.max.y - box.min.y);
+      const fit = (this._span || 1) / height;
+      const cx = (box.min.x + box.max.x) / 2;
+      const cz = (box.min.z + box.max.z) / 2;
+      model.scale.setScalar(fit);
+      model.position.set(-cx * fit, (this._floorY || 0) - box.min.y * fit, -cz * fit);
+      model.visible = false;
+      this.root.add(model);
+      this.player = model;
+      this.mixer = new AnimationMixer(model);
+      this.mixer.clipAction(clip).play();
+      if (this.onReady) this.onReady();
+    } catch (error) {
+      console.warn('[body] player', error);
+    }
   }
 
   /** Park each organ outside the body, using its real extent so boxes cannot overlap. */
@@ -357,7 +401,7 @@ class BodyStage {
     let last = 0;
     let wasMoving = false;
     const tick = (now) => {
-      const moving = (this.explode || 0) > 0.001;
+      const moving = (this.explode || 0) > 0.001 || this.acting;
       if ((moving || wasMoving) && !document.hidden && now - last >= 32) {
         last = now;
         this._time = now;
@@ -372,7 +416,15 @@ class BodyStage {
   render() {
     if (!this.ready) return;
     this._apply();
-    this.renderer.render(this.scene, this.camera);
+    if (this.mixer && this.player && this.player.visible) {
+      const now = this._time || performance.now();
+      const dt = Math.min(0.05, Math.max(0.016, (now - (this._mixerT || now)) / 1000));
+      this._mixerT = now;
+      try { this.mixer.update(dt); }
+      catch { this.player.visible = false; }
+    }
+    try { this.renderer.render(this.scene, this.camera); }
+    catch { /* a bad clip frame should not blank the body */ }
   }
 
   _apply() {
@@ -389,12 +441,14 @@ class BodyStage {
     const time = (this._time || performance.now()) / 1000;
     const breath = Math.sin(time * 1.4) * 0.012 * (1 - progress);
     const beat = Math.pow(Math.max(0, Math.sin(time * 7.3)), 10);
+    const showPlayer = !!(this.player && this.acting && progress < 0.04);
+    if (this.player) this.player.visible = showPlayer;
     this.centers = {};
     Object.values(this.parts).forEach((mesh) => {
       const look = mesh.userData.look;
       const uniforms = mesh.material.uniforms;
       let opacity = look.role === 'bones' ? boneA : look.role === 'muscles' ? muscleA : organA;
-      if (look.role === 'muscles') opacity *= 1 - progress * 0.62;
+      if (look.role === 'muscles') opacity *= showPlayer ? 0.12 : (1 - progress * 0.62);
       if (mesh.name === 'vessels') opacity *= 1 - progress * 0.75;
       const lit = (look.keys || []).some((key) => this.highlights.has(key));
       if (any && !lit && look.role === 'organ' && progress < 0.15) opacity *= 0.22;
