@@ -128,6 +128,8 @@ export class OrganExplodeController {
     this.activeOrganFilter = null;
     /** @type {string|null} organ under pointer (for hover affordance) */
     this.hoveredOrgan = null;
+    /** Click/tap holds the explode open. Hover must not close it. */
+    this.pinned = false;
     this._animStart = 0;
     this._from = 0;
     this._to = 0;
@@ -184,8 +186,9 @@ export class OrganExplodeController {
     this.activeOrganFilter = null;
   }
 
-  /** Collapse organs + clear filter (Esc / empty map / body background). */
+  /** Collapse organs + clear filter (Esc / empty map / second body tap). */
   collapseAll() {
+    this.pinned = false;
     this.clearFilter();
     this.hoveredOrgan = null;
     return this.setExpanded(false);
