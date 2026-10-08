@@ -172,6 +172,7 @@ class BodyStage {
     this.highlights = new Set();
     this.negative = false;
     this.explode = 0;
+    this.isolate = false;
     this.centers = {};
     this.frame = 360;
     this.onReady = null;
@@ -181,11 +182,12 @@ class BodyStage {
     this._load();
   }
 
-  setState({ layers, highlights, negative, explode }) {
+  setState({ layers, highlights, negative, explode, isolate }) {
     if (layers) this.layers = layers;
     this.highlights = highlights instanceof Set ? highlights : new Set(highlights || []);
     this.negative = !!negative;
     if (typeof explode === 'number') this.explode = explode;
+    this.isolate = !!isolate;
   }
 
   async _load() {
@@ -451,7 +453,7 @@ class BodyStage {
       if (look.role === 'muscles') opacity *= showPlayer ? 0.12 : (1 - progress * 0.62);
       if (mesh.name === 'vessels') opacity *= 1 - progress * 0.75;
       const lit = (look.keys || []).some((key) => this.highlights.has(key));
-      if (any && !lit && look.role === 'organ' && progress < 0.15) opacity *= 0.22;
+      if (this.isolate && !lit && look.role === 'organ') opacity *= 0.06;
       let glow = lit ? 0.72 : look.glow;
       if (mesh.name === 'heart') glow += beat * 0.6;
       if (mesh.name === 'lungs') glow += Math.max(0, breath) * 4;
@@ -484,7 +486,6 @@ class BodyStage {
       mesh.position.set(x / scale - mesh.userData.cx * g, -y / scale - mesh.userData.cy * g, local * 60);
       const breathY = name === 'lungs' ? 1 + breath : 1;
       mesh.scale.set(g, g * breathY, 1);
-      mesh.rotation.z = ((slot.x || 0) < 0 ? 0.12 : -0.12) * (1 - local);
       this.centers[name] = {
         x,
         y,

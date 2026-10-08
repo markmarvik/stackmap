@@ -2588,7 +2588,7 @@ document.addEventListener("DOMContentLoaded", () => {
   canvas.addEventListener("mouseleave", () => {
     hoverPopup.hide();
     // Collapse organs on leave unless an organ filter is pinning the explode state
-    if (treeInstance?.organExplode && !treeInstance.organExplode.activeOrganFilter) {
+    if (treeInstance?.organExplode && !treeInstance.organExplode.activeOrganFilter && !treeInstance.organExplode.pinned) {
       if (treeInstance.organExplode.setExpanded(false)) treeInstance._scheduleDraw();
     }
     if (treeInstance?.organExplode) treeInstance.organExplode.hoveredOrgan = null;

@@ -778,8 +778,8 @@ export class SupplementTree extends BaseTree {
     let rawHighlightOrgs = organFilter
       ? [organFilter]
       : (selectedNodeForBody ? (selectedNodeForBody.organs || []) : []);
-    // When nothing selected / no organ filter, lightly show My Stack organ coverage
-    if ((!rawHighlightOrgs || !rawHighlightOrgs.length) && typeof window !== 'undefined') {
+    // Stack coverage is a quiet glow only. It must not dim every other organ.
+    if (!organFilter && !selectedNodeForBody && (!rawHighlightOrgs || !rawHighlightOrgs.length) && typeof window !== 'undefined') {
       const os = window.AETHERIS && window.AETHERIS.organSystem;
       if (os && typeof os.getTopOrgans === 'function') {
         const stackOrgans = os.getTopOrgans(6);
@@ -790,8 +790,9 @@ export class SupplementTree extends BaseTree {
       ? [...this.anatomy.expandHighlights(rawHighlightOrgs)]
       : rawHighlightOrgs;
     const isNegativeImpact = !organFilter && !!(selectedNodeForBody && (selectedNodeForBody.impact === 'negative' || selectedNodeForBody._isNegative));
+    const isolate = !!(selectedNodeForBody || organFilter);
 
-    this._drawCentralBodyPng(ctx, 0, 0, 3.15, highlightOrgs, isNegativeImpact);
+    this._drawCentralBodyPng(ctx, 0, 0, 3.15, highlightOrgs, isNegativeImpact, isolate);
 
     // Culling + unified simplified node rendering (same for panning and static)
     // Removes shading (inner gradients) + inner circle for optimum mobile perf.
@@ -967,7 +968,7 @@ export class SupplementTree extends BaseTree {
    * 3D torso in place of the PNG body.
    * Layer opacities, selection highlight, and explode targets stay.
    */
-  _drawCentralBodyPng(ctx, cx, cy, s, highlightOrgs = [], isNegative = false) {
+  _drawCentralBodyPng(ctx, cx, cy, s, highlightOrgs = [], isNegative = false, isolate = false) {
     const active = new Set(highlightOrgs);
     const layerOp = this.anatomy?.opacity || { base: 1, skeleton: 0, muscles: 0, organs: 1 };
     const explode = this.organExplode;
@@ -979,7 +980,8 @@ export class SupplementTree extends BaseTree {
       layers: layerOp,
       highlights: active,
       negative: isNegative,
-      explode: explodeP
+      explode: explodeP,
+      isolate
     });
     if (!stage.onReady) {
       stage.onReady = () => { if (this.canvas) this.draw(); };
@@ -1126,7 +1128,7 @@ export class SupplementTree extends BaseTree {
     let dirty = false;
 
     if (over) {
-      if (explode.setExpanded(true)) dirty = true;
+      if (!explode.pinned && explode.setExpanded(true)) dirty = true;
       const org = explode.progress > 0.3
         ? this.hitTestOrgan(x, y, { requireExploded: false })
         : null;
@@ -1139,8 +1141,8 @@ export class SupplementTree extends BaseTree {
         explode.hoveredOrgan = null;
         dirty = true;
       }
-      // Keep exploded while a filter is active so user can inspect green/red nodes
-      if (!explode.activeOrganFilter) {
+      // Hover preview closes on leave. A click-pinned explode stays put.
+      if (!explode.pinned && !explode.activeOrganFilter) {
         if (explode.setExpanded(false)) dirty = true;
       }
     }
@@ -1182,9 +1184,12 @@ export class SupplementTree extends BaseTree {
     const { x, y } = this.screenToWorld(screenX, screenY);
     if (!this.hitTestBody(x, y)) return false;
     const explode = this.organExplode;
-    if (explode.isExploded && explode.progress > 0.5) {
+    // First tap pins the explode open and leaves pan/zoom alone.
+    // A second tap on the body collapses. Do not refit the camera.
+    if (explode.pinned) {
       explode.collapseAll();
     } else {
+      explode.pinned = true;
       explode.setExpanded(true);
     }
     this._scheduleDraw();
