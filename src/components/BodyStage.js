@@ -74,6 +74,8 @@ const SLOT = {
   bladder:  { x: -148, y: 180 }
 };
 
+const HOT = new Color('#ef4444');
+
 const SLOT_ORDER = Object.keys(SLOT);
 
 function easeOutBack(t) {
@@ -307,15 +309,24 @@ class BodyStage {
     };
     const slots = {};
     const headShrink = { brain: 0.82, eyes: 1.55, teeth: 1.55 };
-    let x = -230;
+    let x = 0;
     const headBottom = bodyT - gap;
+    const row = [];
     ['brain', 'eyes', 'teeth'].forEach((name) => {
       const it = ext(name, headShrink[name]);
       if (!it) return;
       const cx = x + it.l;
-      slots[name] = { x: cx, y: headBottom - it.d, shrink: it.shrink };
+      row.push({ name, cx, y: headBottom - it.d, shrink: it.shrink, l: it.l, r: it.r });
       x = cx + it.r + gap + 8;
     });
+    if (row.length) {
+      const left = row[0].cx - row[0].l;
+      const right = row[row.length - 1].cx + row[row.length - 1].r;
+      const shift = -((left + right) / 2);
+      row.forEach((it) => {
+        slots[it.name] = { x: it.cx + shift, y: it.y, shrink: it.shrink };
+      });
+    }
     const column = (names, shrinks, side, startY) => {
       let top = startY;
       names.forEach((name, i) => {
@@ -344,14 +355,15 @@ class BodyStage {
     if (this._loop) return;
     this._loop = true;
     let last = 0;
+    let wasMoving = false;
     const tick = (now) => {
-      const moving = (this.explode || 0) > 0.02;
-      const min = moving ? 32 : 50;
-      if (!document.hidden && now - last >= min) {
+      const moving = (this.explode || 0) > 0.001;
+      if ((moving || wasMoving) && !document.hidden && now - last >= 32) {
         last = now;
         this._time = now;
         if (this.onFrame) this.onFrame();
       }
+      wasMoving = moving;
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -368,7 +380,7 @@ class BodyStage {
     const muscleA = Math.min(1, (this.layers.muscles || 0) + (this.layers.base || 0) * 0.26);
     const organA = this.layers.organs ?? 1;
     const any = this.highlights.size > 0;
-    const hot = new Color('#ef4444');
+    const hot = HOT;
     const progress = this.explode || 0;
     const scale = this.worldScale || 1;
     const time = (this._time || performance.now()) / 1000;

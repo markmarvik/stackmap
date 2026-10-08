@@ -1210,6 +1210,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (envBtn) envBtn.onclick = () => pickConstellation('environment');
   if (biomarkersBtn) biomarkersBtn.onclick = () => pickConstellation('biomarkers');
 
+  const closeInspector = document.getElementById('inspector-close');
+  if (closeInspector && !closeInspector._wired) {
+    closeInspector._wired = true;
+    closeInspector.onclick = () => {
+      const side = document.getElementById('left-sidebar');
+      if (side) side.dataset.pin = '';
+      handleNodeSelection(null);
+    };
+  }
+
   const youBtn = document.getElementById('open-you');
   if (youBtn && !youBtn._wired) {
     youBtn._wired = true;
@@ -1558,7 +1568,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setInspectorOpen(open) {
     const side = document.getElementById('left-sidebar');
-    if (!side || isMobileViewport()) return;
+    if (!side) return;
+    if (isMobileViewport() && side.dataset.pin !== 'you') {
+      side.classList.remove('is-open');
+      return;
+    }
     side.classList.toggle('is-open', !!open);
   }
 

@@ -235,8 +235,9 @@
     <!-- Left Info / Detail Column (now primary sidebar on left) -->
     <!-- On mobile (< md) we hide this entirely and use the expandable bottom sheet (Issue #1) for node inspector + progressive disclosure -->
     <div id="left-sidebar" class="is-drawer hidden flex-col border border-white/10 bg-[#020408]/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl">
-      <div class="px-1 mb-2">
+      <div class="px-1 mb-2 flex items-center justify-between">
         <div class="text-[10px] uppercase tracking-[2px] text-white/35">INSPECTOR</div>
+        <button type="button" id="inspector-close" class="text-white/45 hover:text-white text-xl leading-none px-1" aria-label="Close">×</button>
       </div>
       <div id="detail-panel" class="aaa-panel rounded-3xl border border-white/10 p-5 flex-1 flex flex-col overflow-y-auto min-h-0">
         <div class="text-white/60 text-sm">Select a node on the map to inspect</div>

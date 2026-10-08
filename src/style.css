@@ -49,6 +49,16 @@
 }
 @media (max-width: 767px) {
   #left-sidebar.is-open { display: none; }
+  #left-sidebar.is-open[data-pin="you"] {
+    display: flex;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: min(70vh, 520px);
+    border-radius: 1.5rem 1.5rem 0 0;
+  }
 }
 @media (min-width: 768px) {
   #app-footer { bottom: 3.4rem; }
