@@ -1088,29 +1088,53 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function fillBodyStatus() {
+    const line = document.getElementById('body-status-line');
+    const organs = document.getElementById('body-status-organs');
+    if (line) {
+      const p = personalData || {};
+      const bits = [];
+      if (p.age) bits.push(`${p.age} years`);
+      if (p.weight && p.height) {
+        const bmi = p.weight / ((p.height / 100) ** 2);
+        bits.push(`BMI ${bmi.toFixed(1)}`);
+      }
+      line.textContent = bits.length
+        ? bits.join(' · ')
+        : 'Add your stats with You. The glow on the body is what your stack touches.';
+    }
+    if (organs) organs.innerHTML = organImpactStripHtml(8);
+  }
+
+  function applyViewMode(next) {
+    const body = next === 'body';
+    document.body.classList.toggle('mode-body', body);
+    const status = document.getElementById('body-status');
+    if (status) status.classList.toggle('hidden', !body);
+    if (!treeInstance) return;
+    treeInstance.bodyFocus = body;
+    if (body) {
+      treeInstance.view.panX = 0;
+      treeInstance.view.panY = 10;
+      treeInstance.view.scale = 1.05;
+      fillBodyStatus();
+    } else if (typeof treeInstance.fitToNodes === 'function') {
+      treeInstance.fitToNodes();
+    }
+    treeInstance.draw();
+  }
+
   function setRailMode(mode) {
     const root = document.getElementById('right-map-controls');
     if (!root) return;
-    const next = mode === 'body' || mode === 'stack' ? mode : 'map';
+    const next = mode === 'body' ? 'body' : 'map';
     root.dataset.rail = next;
     root.querySelectorAll('[data-rail-btn]').forEach((btn) => {
       const on = btn.dataset.railBtn === next;
       btn.classList.toggle('active', on);
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    if (isMobileViewport()) return;
-    setAnatomyPanelOpen(next === 'body');
-    const panel = document.getElementById('mystack-panel');
-    const icon = document.getElementById('mystack-panel-icon');
-    if (panel) {
-      const open = next === 'stack';
-      panel.classList.toggle('hidden', !open);
-      if (icon) {
-        icon.className = open
-          ? 'fa-solid fa-chevron-up text-[9px]'
-          : 'fa-solid fa-chevron-down text-[9px]';
-      }
-    }
+    applyViewMode(next);
   }
 
   function wireRailModes() {
@@ -1255,12 +1279,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Shareable constellation deep-link: ?c=supplements|habits|exercises|foods|environment|biomarkers
   const deepLinkConstellation = parseConstellationDeepLink();
-  if (deepLinkConstellation && deepLinkConstellation !== 'supplements') {
+  if (deepLinkConstellation && deepLinkConstellation !== 'all') {
     switchConstellation(deepLinkConstellation, { fromDeepLink: true });
   } else {
-    syncConstellationQuery(currentTreeType);
-    // Default map skips switchConstellation, so wire Map/Body/Stack tabs here too (guarded, idempotent).
-    wireAnatomyControls();
+    switchConstellation('all');
   }
 
   // Wire mobile-only expandable vertical filters toggle (right column under selector)

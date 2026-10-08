@@ -32,7 +32,19 @@
   color: #f4e9c8;
 }
 
-/* Map list stays collapsed until the current-map row is opened. */
+/* Two modes only. Map lists and the third rail stay out of the way. */
+#constellation-picker,
+#anatomy-controls,
+#mystack-controls,
+#mobile-map-extra,
+#node-limit-control,
+#mobile-node-limit-control {
+  display: none !important;
+}
+body.mode-body #bottom-controls,
+body.mode-body #node-search {
+  display: none !important;
+}
 #constellation-picker-list.is-collapsed {
   display: none;
 }

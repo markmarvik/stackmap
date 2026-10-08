@@ -309,10 +309,9 @@
             </button>
           </div>
 
-          <div id="rail-modes" class="hidden md:grid grid-cols-3 gap-0.5 bg-[#0a0d1a]/95 border border-white/15 rounded-2xl p-1 backdrop-blur-md w-full" role="tablist" aria-label="Map tools">
+          <div id="rail-modes" class="grid grid-cols-2 gap-0.5 bg-[#0a0d1a]/95 border border-white/15 rounded-2xl p-1 backdrop-blur-md w-full" role="tablist" aria-label="View">
             <button type="button" data-rail-btn="map" class="rail-mode active" role="tab" aria-selected="true">Map</button>
             <button type="button" data-rail-btn="body" class="rail-mode" role="tab" aria-selected="false">Body</button>
-            <button type="button" data-rail-btn="stack" class="rail-mode" role="tab" aria-selected="false">Stack</button>
           </div>
 
           <!-- Map / Constellation Selector (primary on right).
@@ -548,10 +547,14 @@
           </div>
         </div>
 
-        <!-- Bottom bar (desktop only): Node Limit slider + horizontal-scrollable group filter chips.
-             On mobile these live in the right column under the selector (vertical). -->
+        <div id="body-status" class="hidden absolute bottom-14 left-3 z-[70] w-[min(20rem,calc(100%-7.5rem))] rounded-2xl border border-cyan-400/20 bg-[#0a0d1a]/92 backdrop-blur-md p-3">
+          <div class="text-[10px] uppercase tracking-[2px] text-cyan-300/80">Your body</div>
+          <div id="body-status-line" class="text-xs text-white/80 mt-1 leading-snug"></div>
+          <div id="body-status-organs" class="mt-2"></div>
+          <p class="mt-2 text-[10px] text-white/40 leading-snug">Tap the body to open it. Scores are from your stack, not a diagnosis.</p>
+        </div>
         <div id="bottom-controls"
-             class="absolute bottom-0 left-0 right-0 z-[95] pointer-events-auto hidden md:flex flex-col gap-0.5 px-2 py-1 text-[10px] border-t border-white/10 bg-[#05070f]/95 backdrop-blur">
+             class="absolute bottom-0 left-0 right-0 z-[95] pointer-events-auto flex flex-col gap-0.5 px-2 py-1 text-[10px] border-t border-white/10 bg-[#05070f]/95 backdrop-blur">
           <div id="node-limit-control" class="flex items-center gap-2 text-[10px]"></div>
           <div id="group-filters"
                class="flex items-center gap-1 overflow-x-auto whitespace-nowrap px-0.5 py-0.5"></div>

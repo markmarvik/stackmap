@@ -279,6 +279,7 @@ export class SupplementTree extends BaseTree {
    * Layout still uses _getVisibleNodes so the remaining nodes do not move.
    */
   _getShownNodes() {
+    if (this.bodyFocus) return [];
     const vis = this._getVisibleNodes();
     const stack = (typeof window !== 'undefined' && window.AETHERIS && window.AETHERIS.myStack) || null;
     if (!stack || stack.viewMode !== 'active' || typeof stack.shouldHide !== 'function') return vis;
@@ -896,6 +897,8 @@ export class SupplementTree extends BaseTree {
         ctx.fillText('!', wx, wy + warnSize * 0.15);
       }
     });
+
+    if (typeof this._drawMapGuides === 'function') this._drawMapGuides(ctx);
 
     ctx.restore(); // end map layer (pannable constellation)
     ctx.restore(); // end master save (fixed bg + map)
