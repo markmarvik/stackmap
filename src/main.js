@@ -329,7 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function collapseMobileConstellationPicker() {
-    if (!isMobileViewport()) return;
     setMobileConstellationListOpen(false);
   }
 
@@ -1211,6 +1210,25 @@ document.addEventListener("DOMContentLoaded", () => {
   if (envBtn) envBtn.onclick = () => pickConstellation('environment');
   if (biomarkersBtn) biomarkersBtn.onclick = () => pickConstellation('biomarkers');
 
+  const youBtn = document.getElementById('open-you');
+  if (youBtn && !youBtn._wired) {
+    youBtn._wired = true;
+    youBtn.onclick = () => {
+      const side = document.getElementById('left-sidebar');
+      const panel = document.getElementById('personal-panel');
+      if (!side) return;
+      const open = side.classList.contains('is-open') && side.dataset.pin === 'you';
+      if (open) {
+        side.dataset.pin = '';
+        setInspectorOpen(false);
+        return;
+      }
+      side.dataset.pin = 'you';
+      if (panel) panel.classList.remove('hidden');
+      setInspectorOpen(true);
+    };
+  }
+
   const pickerToggle = document.getElementById('constellation-picker-toggle');
   if (pickerToggle && !pickerToggle._wired) {
     pickerToggle._wired = true;
@@ -1538,15 +1556,25 @@ document.addEventListener("DOMContentLoaded", () => {
     try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
   }
 
+  function setInspectorOpen(open) {
+    const side = document.getElementById('left-sidebar');
+    if (!side || isMobileViewport()) return;
+    side.classList.toggle('is-open', !!open);
+  }
+
   // Desktop path kept for wide screens. Mobile routes to bottom sheet instead.
   function updateDetail(node) {
+    const side = document.getElementById('left-sidebar');
     if (!detailPanel) return;
     if (!node) {
+      if (!side || side.dataset.pin !== 'you') setInspectorOpen(false);
       const label = currentTreeType === 'all' ? 'full' : (currentTreeType === 'biomarkers' ? 'biomarkers' : (currentTreeType === 'environment' ? 'environment' : (currentTreeType === 'habits' ? 'habits' : (currentTreeType === 'exercises' ? 'exercises' : (currentTreeType === 'foods' ? 'foods' : 'supplements')))));
       detailPanel.innerHTML = `<div class="text-white/60 mb-3">Select a node on the ${label} map</div><div id="organ-impact-inspector" class="mt-2"></div>`;
       try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
       return;
     }
+    if (side) side.dataset.pin = '';
+    setInspectorOpen(true);
     populateInspector(detailPanel, node);
   }
 
@@ -1886,9 +1914,8 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => { if (note.parentNode) note.parentNode.removeChild(note); }, 8000);
     }
 
-    // Start open (not collapsed) so the form/inputs are immediately visible and not "empty".
-    // User can click the header to collapse the details if desired. (Still fully collapsible.)
-    let isCollapsed = false;
+    // Collapsed until You, or the header, is opened. The node card stays the first thing you see.
+    let isCollapsed = true;
 
     function toggleCollapse(forceOpen = false) {
       isCollapsed = forceOpen ? false : !isCollapsed;
