@@ -85,7 +85,7 @@ function easeOutBack(t) {
 }
 
 const LOOK = {
-  muscles: { color: '#c98474', rim: '#f0c2b4', glow: 0.02, order: 0, role: 'muscles' },
+  muscles: { color: '#c98474', rim: '#f0c2b4', glow: 0.02, order: 0, role: 'muscles', keys: ['muscle', 'muscles'] },
   bones: { color: '#d5dde4', rim: '#ffffff', glow: 0.04, order: 1, role: 'bones' },
   nerves: { color: '#e6c85a', rim: '#fff1b0', glow: 0.08, order: 2, role: 'organ', keys: ['nerves'] },
   brain: { color: '#e7b7c4', rim: '#ffd5e0', glow: 0.08, order: 3, role: 'organ', keys: ['brain', 'sleep', 'mind'] },
@@ -377,9 +377,12 @@ class BodyStage {
 
   _apply() {
     const boneA = Math.min(1, (this.layers.skeleton || 0) + (this.layers.base || 0) * 0.16);
-    const muscleA = Math.min(1, (this.layers.muscles || 0) + (this.layers.base || 0) * 0.26);
-    const organA = this.layers.organs ?? 1;
+    const muscleLit = ['muscle', 'muscles'].some((key) => this.highlights.has(key));
     const any = this.highlights.size > 0;
+    const muscleA = muscleLit
+      ? Math.max(this.layers.muscles || 0, 0.78)
+      : Math.min(this.layers.muscles || 0, 0.22) + (this.layers.base || 0) * (any ? 0.045 : 0.08);
+    const organA = this.layers.organs ?? 1;
     const hot = HOT;
     const progress = this.explode || 0;
     const scale = this.worldScale || 1;
