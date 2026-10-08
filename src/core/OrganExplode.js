@@ -31,7 +31,7 @@ export const ORGAN_EXPLODE_KEYS = [
 ];
 
 /** Snappy explode / collapse duration (ms). */
-export const EXPLODE_MS = 280;
+export const EXPLODE_MS = 720;
 
 /**
  * Target positions in world space (body center = 0,0) for exploded layout.
@@ -86,10 +86,10 @@ export const BODY_HIT_PAD = 1.08;
  * Inner-ring nodes (~body edge) push farther so organs don't sit on them;
  * distant nodes push less. Tuned against EXPLODE_LAYOUT radii (~185–278).
  */
-export const NODE_SPREAD_INNER = 140;
-export const NODE_SPREAD_OUTER = 420;
-export const NODE_SPREAD_PUSH_INNER = 165;
-export const NODE_SPREAD_PUSH_OUTER = 36;
+export const NODE_SPREAD_INNER = 280;
+export const NODE_SPREAD_OUTER = 460;
+export const NODE_SPREAD_PUSH_INNER = 200;
+export const NODE_SPREAD_PUSH_OUTER = 28;
 
 /**
  * Whether a node should light up for the given organ filter.

@@ -43,14 +43,13 @@ import { track, trackPageView, trackConstellation, initAnalytics } from "./core/
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
 import { readStorage, writeStorage } from "./core/persist.js";
+import { bootRun } from "./run/boot.js";
 
 // Import Tailwind + custom styles (processed by Vite)
 import './style.css';
 
 // Expose organ meta globally for components that need it
 window.AETHERIS_ORGAN_META = organMeta;
-
-console.log("%c[AETHERIS Modular] Bootstrapping Supplements tree...", "color:#64748b");
 
 // Lightweight runtime validation (no Zod, keeps deps zero). Warns on missing/inconsistent fields.
 function validateTreeData(data, label = 'data') {
@@ -79,6 +78,10 @@ function validateTreeData(data, label = 'data') {
 let treeInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (bootRun()) return;
+
+  console.log("%c[AETHERIS Modular] Bootstrapping Supplements tree...", "color:#64748b");
+
   const canvas = document.getElementById("tree-canvas");
   if (!canvas) {
     console.error("Tree canvas not found");
@@ -326,7 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function collapseMobileConstellationPicker() {
-    if (!isMobileViewport()) return;
     setMobileConstellationListOpen(false);
   }
 
@@ -1086,29 +1088,53 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function fillBodyStatus() {
+    const line = document.getElementById('body-status-line');
+    const organs = document.getElementById('body-status-organs');
+    if (line) {
+      const p = personalData || {};
+      const bits = [];
+      if (p.age) bits.push(`${p.age} years`);
+      if (p.weight && p.height) {
+        const bmi = p.weight / ((p.height / 100) ** 2);
+        bits.push(`BMI ${bmi.toFixed(1)}`);
+      }
+      line.textContent = bits.length
+        ? bits.join(' · ')
+        : 'Add your stats with You. The glow on the body is what your stack touches.';
+    }
+    if (organs) organs.innerHTML = organImpactStripHtml(8);
+  }
+
+  function applyViewMode(next) {
+    const body = next === 'body';
+    document.body.classList.toggle('mode-body', body);
+    const status = document.getElementById('body-status');
+    if (status) status.classList.toggle('hidden', !body);
+    if (!treeInstance) return;
+    treeInstance.bodyFocus = body;
+    if (body) {
+      treeInstance.view.panX = 0;
+      treeInstance.view.panY = 10;
+      treeInstance.view.scale = 1.05;
+      fillBodyStatus();
+    } else if (typeof treeInstance.fitToNodes === 'function') {
+      treeInstance.fitToNodes();
+    }
+    treeInstance.draw();
+  }
+
   function setRailMode(mode) {
     const root = document.getElementById('right-map-controls');
     if (!root) return;
-    const next = mode === 'body' || mode === 'stack' ? mode : 'map';
+    const next = mode === 'body' ? 'body' : 'map';
     root.dataset.rail = next;
     root.querySelectorAll('[data-rail-btn]').forEach((btn) => {
       const on = btn.dataset.railBtn === next;
       btn.classList.toggle('active', on);
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    if (isMobileViewport()) return;
-    setAnatomyPanelOpen(next === 'body');
-    const panel = document.getElementById('mystack-panel');
-    const icon = document.getElementById('mystack-panel-icon');
-    if (panel) {
-      const open = next === 'stack';
-      panel.classList.toggle('hidden', !open);
-      if (icon) {
-        icon.className = open
-          ? 'fa-solid fa-chevron-up text-[9px]'
-          : 'fa-solid fa-chevron-down text-[9px]';
-      }
-    }
+    applyViewMode(next);
   }
 
   function wireRailModes() {
@@ -1208,6 +1234,35 @@ document.addEventListener("DOMContentLoaded", () => {
   if (envBtn) envBtn.onclick = () => pickConstellation('environment');
   if (biomarkersBtn) biomarkersBtn.onclick = () => pickConstellation('biomarkers');
 
+  const closeInspector = document.getElementById('inspector-close');
+  if (closeInspector && !closeInspector._wired) {
+    closeInspector._wired = true;
+    closeInspector.onclick = () => {
+      const side = document.getElementById('left-sidebar');
+      if (side) side.dataset.pin = '';
+      handleNodeSelection(null);
+    };
+  }
+
+  const youBtn = document.getElementById('open-you');
+  if (youBtn && !youBtn._wired) {
+    youBtn._wired = true;
+    youBtn.onclick = () => {
+      const side = document.getElementById('left-sidebar');
+      const panel = document.getElementById('personal-panel');
+      if (!side) return;
+      const open = side.classList.contains('is-open') && side.dataset.pin === 'you';
+      if (open) {
+        side.dataset.pin = '';
+        setInspectorOpen(false);
+        return;
+      }
+      side.dataset.pin = 'you';
+      if (panel) panel.classList.remove('hidden');
+      setInspectorOpen(true);
+    };
+  }
+
   const pickerToggle = document.getElementById('constellation-picker-toggle');
   if (pickerToggle && !pickerToggle._wired) {
     pickerToggle._wired = true;
@@ -1224,12 +1279,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Shareable constellation deep-link: ?c=supplements|habits|exercises|foods|environment|biomarkers
   const deepLinkConstellation = parseConstellationDeepLink();
-  if (deepLinkConstellation && deepLinkConstellation !== 'supplements') {
+  if (deepLinkConstellation && deepLinkConstellation !== 'all') {
     switchConstellation(deepLinkConstellation, { fromDeepLink: true });
   } else {
-    syncConstellationQuery(currentTreeType);
-    // Default map skips switchConstellation, so wire Map/Body/Stack tabs here too (guarded, idempotent).
-    wireAnatomyControls();
+    switchConstellation('all');
   }
 
   // Wire mobile-only expandable vertical filters toggle (right column under selector)
@@ -1535,15 +1588,29 @@ document.addEventListener("DOMContentLoaded", () => {
     try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
   }
 
+  function setInspectorOpen(open) {
+    const side = document.getElementById('left-sidebar');
+    if (!side) return;
+    if (isMobileViewport() && side.dataset.pin !== 'you') {
+      side.classList.remove('is-open');
+      return;
+    }
+    side.classList.toggle('is-open', !!open);
+  }
+
   // Desktop path kept for wide screens. Mobile routes to bottom sheet instead.
   function updateDetail(node) {
+    const side = document.getElementById('left-sidebar');
     if (!detailPanel) return;
     if (!node) {
+      if (!side || side.dataset.pin !== 'you') setInspectorOpen(false);
       const label = currentTreeType === 'all' ? 'full' : (currentTreeType === 'biomarkers' ? 'biomarkers' : (currentTreeType === 'environment' ? 'environment' : (currentTreeType === 'habits' ? 'habits' : (currentTreeType === 'exercises' ? 'exercises' : (currentTreeType === 'foods' ? 'foods' : 'supplements')))));
       detailPanel.innerHTML = `<div class="text-white/60 mb-3">Select a node on the ${label} map</div><div id="organ-impact-inspector" class="mt-2"></div>`;
       try { renderOrganImpactUI(); } catch { /* panel may be unmounted */ }
       return;
     }
+    if (side) side.dataset.pin = '';
+    setInspectorOpen(true);
     populateInspector(detailPanel, node);
   }
 
@@ -1883,9 +1950,8 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => { if (note.parentNode) note.parentNode.removeChild(note); }, 8000);
     }
 
-    // Start open (not collapsed) so the form/inputs are immediately visible and not "empty".
-    // User can click the header to collapse the details if desired. (Still fully collapsible.)
-    let isCollapsed = false;
+    // Collapsed until You, or the header, is opened. The node card stays the first thing you see.
+    let isCollapsed = true;
 
     function toggleCollapse(forceOpen = false) {
       isCollapsed = forceOpen ? false : !isCollapsed;

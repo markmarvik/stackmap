@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    if (/\/run\/\d+\/?$/.test(location.pathname)) document.documentElement.classList.add("is-run");
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StackMap • Longevity Constellation</title>
   <meta name="description" content="StackMap (formerly Aetheris) — interactive map of supplements, habits, exercises, foods, environment, and biomarkers. Educational only, not medical advice.">
@@ -37,6 +40,66 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
   <style>
+    html, body { margin: 0; background: #03050c; color: #e8eef2; }
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 400;
+      display: flex; align-items: center; justify-content: center;
+      background: #03050c; color: #e8eef2;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    #loading-overlay .load-card {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+    }
+    #loading-overlay .load-mark {
+      width: 52px; height: 52px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #fbbf24, #d4a017);
+      color: #1a1406; font-size: 26px; font-weight: 700;
+      box-shadow: 0 0 28px rgba(251, 191, 36, 0.35);
+    }
+    #loading-overlay .load-name {
+      margin-top: 16px; font-size: 18px; font-weight: 600; letter-spacing: -0.02em;
+    }
+    #loading-overlay .load-kicker {
+      margin-top: 6px; font-size: 10px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: rgba(251, 191, 36, 0.75);
+    }
+    #loading-overlay .load-track {
+      width: 168px; height: 3px; margin-top: 22px;
+      border-radius: 99px; overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    #loading-overlay .load-bar {
+      display: block; height: 100%; width: 42%; border-radius: inherit;
+      background: linear-gradient(90deg, transparent, #fbbf24 40%, #fff4cc 50%, #fbbf24 60%, transparent);
+      animation: load-slide 1.15s ease-in-out infinite;
+    }
+    @keyframes load-slide {
+      0% { transform: translateX(-130%); }
+      100% { transform: translateX(280%); }
+    }
+    #play-first-night {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 600;
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 32px; padding: 0 14px; border-radius: 999px;
+      background: #fbbf24; color: #1a1406;
+      font: 600 12px/1 Inter, system-ui, sans-serif;
+      text-decoration: none; white-space: nowrap;
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+    }
+    @media (max-width: 767px) {
+      #play-first-night {
+        top: auto;
+        bottom: max(52px, calc(env(safe-area-inset-bottom) + 46px));
+      }
+    }
+    html.is-run body { overflow: auto; height: auto; }
+    html.is-run #loading-overlay,
+    html.is-run #app-root,
+    html.is-run #app-footer,
+    html.is-run #play-first-night { display: none !important; }
+    #app-root { box-sizing: border-box; }
     @keyframes popup-blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
@@ -152,32 +215,29 @@
   <!-- Loading overlay (Issue #17): prevents white flash / skeleton before JS is ready -->
   <div id="loading-overlay"
        class="fixed inset-0 z-[999] flex items-center justify-center bg-[#03050c] transition-opacity duration-300">
-    <div class="flex flex-col items-center gap-y-4">
-      <!-- Infinity logo (matches main UI) -->
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.5)] ring-1 ring-inset ring-white/10">
-        <i class="fa-solid fa-infinity text-[#03050c] text-3xl font-black"></i>
-      </div>
-      <div class="text-center">
-        <div class="text-lg tracking-tight font-semibold text-white/90">StackMap</div>
-        <div class="text-[10px] uppercase tracking-[2px] text-amber-400/70 mt-0.5">Loading Longevity Constellation…</div>
-      </div>
-      <!-- Subtle animated dots -->
-      <div class="flex gap-1.5 mt-1">
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 0ms"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 150ms"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-amber-400/60 animate-pulse" style="animation-delay: 300ms"></div>
+    <div class="load-card">
+      <div class="load-mark" aria-hidden="true">∞</div>
+      <div class="load-name">StackMap</div>
+      <div class="load-kicker">Loading</div>
+      <div class="load-track" role="progressbar" aria-label="Loading">
+        <span class="load-bar"></span>
       </div>
     </div>
   </div>
+
+  <a id="play-first-night" href="%BASE_URL%run/1">
+    Play first night
+  </a>
 
   <!-- Main App Shell: Left info column + full-height map (primary focus) -->
   <div id="app-root" class="flex h-screen w-full">
 
     <!-- Left Info / Detail Column (now primary sidebar on left) -->
     <!-- On mobile (< md) we hide this entirely and use the expandable bottom sheet (Issue #1) for node inspector + progressive disclosure -->
-    <div id="left-sidebar" class="hidden md:flex md:w-80 md:shrink-0 flex-col border-r border-white/10 bg-[#020408] p-4 md:pb-[4.75rem]">
-      <div class="px-1 mb-2">
+    <div id="left-sidebar" class="is-drawer hidden flex-col border border-white/10 bg-[#020408]/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl">
+      <div class="px-1 mb-2 flex items-center justify-between">
         <div class="text-[10px] uppercase tracking-[2px] text-white/35">INSPECTOR</div>
+        <button type="button" id="inspector-close" class="text-white/45 hover:text-white text-xl leading-none px-1" aria-label="Close">×</button>
       </div>
       <div id="detail-panel" class="aaa-panel rounded-3xl border border-white/10 p-5 flex-1 flex flex-col overflow-y-auto min-h-0">
         <div class="text-white/60 text-sm">Select a node on the map to inspect</div>
@@ -205,24 +265,26 @@
           No active consumed nodes
         </div>
         
-        <!-- Logo placed in top-left of the map (subtle, inside the frame) -->
-        <div class="absolute top-4 left-4 z-[60] flex items-center gap-x-2.5 pointer-events-none select-none">
-          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.45)] ring-1 ring-inset ring-white/10">
-            <i class="fa-solid fa-infinity text-[#03050c] text-2xl font-black"></i>
+        <div class="absolute top-3 left-3 z-[60] flex items-center gap-2 max-w-[calc(100%-11rem)]">
+          <div class="flex items-center gap-2 pointer-events-none select-none shrink-0">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-[0_0_16px_rgba(212,175,55,0.4)]">
+              <i class="fa-solid fa-infinity text-[#03050c] text-lg font-black"></i>
+            </div>
+            <div class="leading-none hidden sm:block">
+              <div class="title-font text-lg tracking-tight font-bold text-white/95">StackMap</div>
+            </div>
           </div>
-          <div class="leading-none">
-            <div class="title-font text-2xl tracking-tighter font-bold text-white/95 drop-shadow">StackMap</div>
-            <div class="text-[9px] text-amber-400/70 -mt-0.5 tracking-[2px] font-semibold">LONGEVITY CONSTELLATION</div>
-            <div class="text-[8px] text-white/35 tracking-wide mt-0.5">formerly Aetheris</div>
+          <div id="node-search" class="pointer-events-auto min-w-0 flex-1 max-w-[16rem]">
+            <input id="node-search-input" type="search" enterkeyhint="search" autocomplete="off"
+                   aria-label="Find a node"
+                   placeholder="Find a node"
+                   class="w-full px-3 py-1.5 rounded-2xl bg-[#0a0d1a]/90 border border-white/15 text-xs text-white/90 placeholder:text-white/35 backdrop-blur-md outline-none focus:border-amber-400/50" />
+            <div id="node-search-results" class="hidden mt-1 max-h-64 overflow-y-auto rounded-2xl border border-white/15 bg-[#0a0d1a]/95 backdrop-blur-md shadow-xl"></div>
           </div>
-        </div>
-
-        <div id="node-search" class="absolute top-[4.6rem] left-4 z-[65] w-[min(18rem,calc(100%-10.5rem))] pointer-events-auto">
-          <input id="node-search-input" type="search" enterkeyhint="search" autocomplete="off"
-                 aria-label="Find a node"
-                 placeholder="Find a node  /"
-                 class="w-full px-3 py-1.5 rounded-2xl bg-[#0a0d1a]/90 border border-white/15 text-xs text-white/90 placeholder:text-white/35 backdrop-blur-md outline-none focus:border-amber-400/50" />
-          <div id="node-search-results" class="hidden mt-1 max-h-64 overflow-y-auto rounded-2xl border border-white/15 bg-[#0a0d1a]/95 backdrop-blur-md shadow-xl"></div>
+          <button type="button" id="open-you"
+                  class="pointer-events-auto shrink-0 h-8 px-2.5 rounded-2xl bg-[#0a0d1a]/90 border border-white/15 text-[11px] text-white/80 hover:text-amber-200 hover:border-amber-400/40">
+            You
+          </button>
         </div>
         
         <!-- Right-side Map Controls: Constellation selector first, then horizontal zooms underneath (matching width).
@@ -247,10 +309,9 @@
             </button>
           </div>
 
-          <div id="rail-modes" class="hidden md:grid grid-cols-3 gap-0.5 bg-[#0a0d1a]/95 border border-white/15 rounded-2xl p-1 backdrop-blur-md w-full" role="tablist" aria-label="Map tools">
+          <div id="rail-modes" class="grid grid-cols-2 gap-0.5 bg-[#0a0d1a]/95 border border-white/15 rounded-2xl p-1 backdrop-blur-md w-full" role="tablist" aria-label="View">
             <button type="button" data-rail-btn="map" class="rail-mode active" role="tab" aria-selected="true">Map</button>
             <button type="button" data-rail-btn="body" class="rail-mode" role="tab" aria-selected="false">Body</button>
-            <button type="button" data-rail-btn="stack" class="rail-mode" role="tab" aria-selected="false">Stack</button>
           </div>
 
           <!-- Map / Constellation Selector (primary on right).
@@ -258,7 +319,7 @@
           <div id="constellation-picker" class="flex flex-col gap-0.5 bg-[#0a0d1a]/95 border border-white/15 rounded-2xl p-1 backdrop-blur-md w-full">
             <button id="constellation-picker-toggle"
                     type="button"
-                    class="md:hidden w-full flex items-center justify-between px-1 py-0.5 rounded-lg hover:bg-white/5 text-white/80 transition"
+                    class="w-full flex items-center justify-between px-1 py-0.5 rounded-lg hover:bg-white/5 text-white/80 transition"
                     title="Choose a map"
                     aria-expanded="false"
                     aria-controls="constellation-picker-list">
@@ -376,7 +437,7 @@
                   <input id="anatomy-op-muscles" type="range" min="0" max="100" value="0" class="w-[72px] max-md:flex-1 max-md:w-auto accent-cyan-400" />
                 </label>
               </div>
-              <div class="text-[8px] max-md:text-[10px] text-white/35 leading-snug px-0.5">Placeholders until photoreal art lands (#16).</div>
+              <div class="text-[8px] max-md:text-[10px] text-white/35 leading-snug px-0.5">Full body, same plane as the map. Layers change muscles, bones, and organs.</div>
             </div>
           </div>
 
@@ -486,10 +547,14 @@
           </div>
         </div>
 
-        <!-- Bottom bar (desktop only): Node Limit slider + horizontal-scrollable group filter chips.
-             On mobile these live in the right column under the selector (vertical). -->
+        <div id="body-status" class="hidden absolute bottom-14 left-3 z-[70] w-[min(20rem,calc(100%-7.5rem))] rounded-2xl border border-cyan-400/20 bg-[#0a0d1a]/92 backdrop-blur-md p-3">
+          <div class="text-[10px] uppercase tracking-[2px] text-cyan-300/80">Your body</div>
+          <div id="body-status-line" class="text-xs text-white/80 mt-1 leading-snug"></div>
+          <div id="body-status-organs" class="mt-2"></div>
+          <p class="mt-2 text-[10px] text-white/40 leading-snug">Tap the body to open it. Scores are from your stack, not a diagnosis.</p>
+        </div>
         <div id="bottom-controls"
-             class="absolute bottom-0 left-0 right-0 z-[95] pointer-events-auto hidden md:flex flex-col gap-0.5 px-2 py-1 text-[10px] border-t border-white/10 bg-[#05070f]/95 backdrop-blur">
+             class="absolute bottom-0 left-0 right-0 z-[95] pointer-events-auto flex flex-col gap-0.5 px-2 py-1 text-[10px] border-t border-white/10 bg-[#05070f]/95 backdrop-blur">
           <div id="node-limit-control" class="flex items-center gap-2 text-[10px]"></div>
           <div id="group-filters"
                class="flex items-center gap-1 overflow-x-auto whitespace-nowrap px-0.5 py-0.5"></div>
@@ -644,8 +709,7 @@
 
   <!-- Soft footer: Feedback + Pricing + version + legal. Desktop: wraps inside the 20rem sidebar (padded) so it never covers the filter bar. -->
   <footer id="app-footer"
-          class="fixed bottom-2 left-2 z-[110] pointer-events-auto flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] text-white/70
-                 max-w-[min(100%-5.5rem,22rem)] sm:max-w-none md:max-w-[19.5rem]
+          class="fixed bottom-2 left-2 z-[110] pointer-events-auto flex items-center gap-1.5 text-[10px] text-white/70
                  max-md:bottom-[max(10px,env(safe-area-inset-bottom))] max-md:left-2"
           aria-label="App footer">
     <button type="button" id="feedback-btn"
@@ -653,34 +717,17 @@
             title="Send feedback">
       <i class="fa-regular fa-message mr-1"></i>Feedback
     </button>
-    <a id="footer-pricing-page" href="pricing.html"
-       class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-       title="Free vs Pro pricing">
-      Pricing
-    </a>
-    <button type="button" id="pricing-btn"
-            class="hidden md:inline-flex px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-            title="StackMap Pro">
-      <i class="fa-solid fa-crown mr-1 text-amber-400/70"></i>Pro
-    </button>
-    <span id="app-version"
-          class="px-1.5 py-0.5 rounded-full font-mono tabular-nums text-white/60 border border-white/10 bg-[#0a0d1a]/70"
-          title="App version">v0.3.12</span>
-    <a id="footer-medical" href="terms.html#medical"
-       class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-       title="Educational only, not medical advice">
-      Not medical advice
-    </a>
-    <a id="footer-privacy" href="privacy.html"
-       class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-       title="Privacy">
-      Privacy
-    </a>
-    <a id="footer-terms" href="terms.html"
-       class="px-2 py-1 rounded-full border border-white/15 bg-[#0a0d1a]/85 backdrop-blur-sm hover:bg-white/10 hover:text-amber-200 transition"
-       title="Terms">
-      Terms
-    </a>
+    <details class="footer-more">
+      <summary>More</summary>
+      <div class="footer-more-panel">
+        <a id="footer-pricing-page" href="pricing.html" class="footer-pill" title="Free vs Pro pricing">Pricing</a>
+        <button type="button" id="pricing-btn" class="footer-pill" title="StackMap Pro">Pro</button>
+        <span id="app-version" class="footer-pill font-mono" title="App version">v0.3.12</span>
+        <a id="footer-medical" href="terms.html#medical" class="footer-pill" title="Educational only, not medical advice">Not medical advice</a>
+        <a id="footer-privacy" href="privacy.html" class="footer-pill" title="Privacy">Privacy</a>
+        <a id="footer-terms" href="terms.html" class="footer-pill" title="Terms">Terms</a>
+      </div>
+    </details>
   </footer>
 
   <!-- First-run coach mark: select node → Add to My Stack → Anatomy (localStorage dismiss) -->

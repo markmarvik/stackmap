@@ -32,16 +32,78 @@
   color: #f4e9c8;
 }
 
-/* Phone map list starts collapsed (is-collapsed). Desktop always shows the list; the toggle row stays off. */
+/* Two modes only. Map lists and the third rail stay out of the way. */
+#constellation-picker,
+#anatomy-controls,
+#mystack-controls,
+#mobile-map-extra,
+#node-limit-control,
+#mobile-node-limit-control {
+  display: none !important;
+}
+body.mode-body #bottom-controls,
+body.mode-body #node-search {
+  display: none !important;
+}
+#constellation-picker-list.is-collapsed {
+  display: none;
+}
+
+/* Inspector is an overlay, so the map keeps the full window. */
+#left-sidebar.is-open {
+  display: flex;
+  position: fixed;
+  top: 3.25rem;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  width: min(20rem, calc(100vw - 1.5rem));
+  z-index: 80;
+}
 @media (max-width: 767px) {
-  #constellation-picker-list.is-collapsed {
-    display: none;
+  #left-sidebar.is-open { display: none; }
+  #left-sidebar.is-open[data-pin="you"] {
+    display: flex;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: min(70vh, 520px);
+    border-radius: 1.5rem 1.5rem 0 0;
   }
 }
 @media (min-width: 768px) {
-  #constellation-picker-toggle {
-    display: none;
-  }
+  #app-footer { bottom: 3.4rem; }
+}
+
+#app-footer .footer-pill {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 13, 26, 0.9);
+}
+#app-footer .footer-more { position: relative; }
+#app-footer .footer-more > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 13, 26, 0.85);
+}
+#app-footer .footer-more > summary::-webkit-details-marker { display: none; }
+#app-footer .footer-more-panel {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 16rem;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(10, 13, 26, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* Footer is z-110, above the sheet, and covers the hint. Hide it only while the sheet is open. */

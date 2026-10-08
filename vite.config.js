@@ -40,6 +40,11 @@ function siteUrlPlugin(siteUrl) {
         const text = fs.readFileSync(file, 'utf8');
         if (text.includes(token)) fs.writeFileSync(file, apply(text));
       }
+      // GitHub Pages has no rewrite: /run/:id refresh must still serve the app.
+      const indexFile = path.join(outDir, 'index.html');
+      if (fs.existsSync(indexFile)) {
+        fs.copyFileSync(indexFile, path.join(outDir, '404.html'));
+      }
     }
   };
 }

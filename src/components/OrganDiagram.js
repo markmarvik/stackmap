@@ -1,309 +1,326 @@
 /**
- * OrganDiagram
- *
- * Beautiful simplified human body silhouette with highlightable organs.
- * Ported & cleaned from the original monolith (drawBodySVG + pulseSpecificOrgan)
- * for visual parity in the modular detail panel.
- *
- * Supports:
- *  - render(activeOrgans: string[]) — draws + highlights
- *  - pulse(organKey) — temporary bright pulse (clickable organs)
- *  - Future: subscribe to globalOrganSystem for cumulative +/- state
+ * Optimized body-camera view.
+ * BodyParts3D release 4.0, © The Database Center for Life Science,
+ * CC BY 4.0. The same meshes are the source set of Z-Anatomy.
+ * Positions are quantized. One lit draw per part. No postprocessing.
  */
+
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  DoubleSide,
+  Group,
+  Mesh,
+  PerspectiveCamera,
+  Scene,
+  ShaderMaterial,
+  SRGBColorSpace,
+  WebGLRenderer
+} from 'three';
+
+const VERT = `
+varying vec3 vN;
+varying vec3 vP;
+void main() {
+  vec4 world = modelMatrix * vec4(position, 1.0);
+  vP = world.xyz;
+  vN = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * world;
+}
+`;
+
+const FRAG = `
+precision mediump float;
+uniform vec3 uColor;
+uniform vec3 uRim;
+uniform float uGlow;
+uniform float uOpacity;
+uniform float uSpec;
+varying vec3 vN;
+varying vec3 vP;
+void main() {
+  vec3 n = normalize(vN);
+  if (!gl_FrontFacing) n = -n;
+  vec3 v = normalize(cameraPosition - vP);
+  vec3 keyL = normalize(vec3(0.45, 0.82, 0.62));
+  vec3 fillL = normalize(vec3(-0.72, 0.12, 0.28));
+  float key = clamp(dot(n, keyL) * 0.55 + 0.45, 0.0, 1.0);
+  float fill = clamp(dot(n, fillL) * 0.5 + 0.5, 0.0, 1.0);
+  float fres = pow(1.0 - max(dot(n, v), 0.0), 2.35);
+  float spec = pow(max(dot(n, normalize(keyL + v)), 0.0), 36.0);
+  vec3 col = uColor * (key * 0.78 + fill * 0.28);
+  col += uRim * fres;
+  col += vec3(1.0, 0.96, 0.9) * spec * uSpec;
+  col += uColor * uGlow;
+  gl_FragColor = vec4(col, uOpacity);
+}
+`;
+
+const LOOK = {
+  ribs: { color: '#145e68', rim: '#37d6e8', glow: 0.05, opacity: 0.38, spec: 0.04, transparent: true, order: 0 },
+  heart: { color: '#e23b3b', rim: '#ffb0a4', glow: 0.14, opacity: 1, spec: 0.32, order: 1 },
+  aorta: { color: '#d83232', rim: '#ffc9c0', glow: 0.2, opacity: 1, spec: 0.38, order: 1 },
+  ivc: { color: '#3b7de2', rim: '#c9ddff', glow: 0.12, opacity: 1, spec: 0.28, order: 1 },
+  artery: { color: '#e23b3b', rim: '#ffd0c8', glow: 0.18, opacity: 1, spec: 0.34, order: 3, with: 'liver' },
+  hepatic: { color: '#3b7de2', rim: '#d7e6ff', glow: 0.16, opacity: 1, spec: 0.28, order: 3, with: 'liver' },
+  liver: { color: '#e8a317', rim: '#f0d48a', glow: 0.28, opacity: 1, spec: 0.1, order: 2, organ: 'liver' }
+};
+
+function materialFor(look) {
+  return new ShaderMaterial({
+    uniforms: {
+      uColor: { value: new Color(look.color) },
+      uRim: { value: new Color(look.rim) },
+      uGlow: { value: look.glow },
+      uOpacity: { value: look.opacity },
+      uSpec: { value: look.spec }
+    },
+    vertexShader: VERT,
+    fragmentShader: FRAG,
+    transparent: !!look.transparent,
+    depthWrite: !look.transparent,
+    side: DoubleSide,
+    toneMapped: false
+  });
+}
+
+function parseTorso(buffer) {
+  const view = new DataView(buffer);
+  const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+  if (magic !== 'BOD2') throw new Error('bad body mesh');
+  let offset = 4;
+  const count = view.getUint16(offset, true);
+  offset += 4;
+  const radius = view.getFloat32(offset, true);
+  offset += 4;
+  const scale = view.getFloat32(offset, true);
+  offset += 4;
+  const text = new TextDecoder();
+  const groups = [];
+  for (let g = 0; g < count; g += 1) {
+    const nameLen = view.getUint8(offset);
+    offset += 1;
+    const name = text.decode(new Uint8Array(buffer, offset, nameLen));
+    offset += nameLen;
+    const verts = view.getUint32(offset, true);
+    offset += 4;
+    const indexCount = view.getUint32(offset, true);
+    offset += 4;
+    const use16 = view.getUint8(offset) === 1;
+    offset += 1;
+    const pos = new Float32Array(verts * 3);
+    for (let i = 0; i < pos.length; i += 1) {
+      pos[i] = view.getInt16(offset, true) * scale;
+      offset += 2;
+    }
+    const nrm = new Float32Array(verts * 3);
+    for (let i = 0; i < nrm.length; i += 1) {
+      nrm[i] = view.getInt8(offset) / 127;
+      offset += 1;
+    }
+    const idx = use16 ? new Uint16Array(indexCount) : new Uint32Array(indexCount);
+    for (let i = 0; i < indexCount; i += 1) {
+      idx[i] = use16 ? view.getUint16(offset, true) : view.getUint32(offset, true);
+      offset += use16 ? 2 : 4;
+    }
+    groups.push({ name, pos, nrm, idx });
+  }
+  return { radius, groups };
+}
 
 export class OrganDiagram {
   constructor(containerId = 'body-diagram') {
     this.container = document.getElementById(containerId);
-    this.ns = 'http://www.w3.org/2000/svg';
     this.activeOrgans = [];
+    this.parts = {};
+    this.yaw = -0.55;
+    this.pitch = 0.12;
+    this.dragging = false;
+    this.alive = false;
+    this.pendingPulse = null;
+    this.idleUntil = 0;
   }
 
   render(activeOrgans = []) {
     if (!this.container) return;
-    this.activeOrgans = activeOrgans;
-    this.container.innerHTML = '';
+    this.activeOrgans = Array.isArray(activeOrgans) ? activeOrgans : [];
+    if (this.container.dataset.bodyCamera !== '1') this.mount();
+    this.sync();
+  }
 
-    const svg = this.container;
-    const ns = this.ns;
-    const has = (k) => activeOrgans.includes(k);
+  mount() {
+    const root = this.container;
+    root.dataset.bodyCamera = '1';
+    this.canvas = document.createElement('canvas');
+    this.canvas.className = 'run-body-canvas';
+    this.canvas.setAttribute('aria-label', 'ALCOHOL LOAD');
+    root.appendChild(this.canvas);
+    if (!root.querySelector('.run-body-value')) {
+      const claim = document.createElement('p');
+      claim.className = 'run-body-label';
+      claim.textContent = 'alcohol load on a first heavy night';
+      const value = document.createElement('p');
+      value.className = 'run-body-value';
+      value.textContent = 'ALCOHOL LOAD';
+      root.append(claim, value);
+    }
+    root.addEventListener('pointerdown', (event) => this.onDown(event));
+    root.addEventListener('pointermove', (event) => this.onMove(event));
+    root.addEventListener('pointerup', () => { this.dragging = false; });
+    root.addEventListener('pointercancel', () => { this.dragging = false; });
+    this.load();
+  }
 
-    // Subtle outer skin / body glow
-    const skinGlow = document.createElementNS(ns, 'path');
-    skinGlow.setAttribute('d', 'M85 18 Q68 50 74 98 Q77 138 70 176 Q85 192 100 176 Q92 138 97 98 Q103 50 85 18');
-    skinGlow.setAttribute('fill', 'none');
-    skinGlow.setAttribute('stroke', has('skin') ? '#fbbf24' : '#334155');
-    skinGlow.setAttribute('stroke-width', has('skin') ? '15' : '9');
-    skinGlow.setAttribute('stroke-linecap', 'round');
-    skinGlow.setAttribute('opacity', has('skin') ? '0.35' : '0.18');
-    if (has('skin')) skinGlow.classList.add('organ', 'active');
-    svg.appendChild(skinGlow);
+  async load() {
+    try {
+      const base = import.meta.env.BASE_URL || '/';
+      const response = await fetch(`${base}assets/body/camera/torso.bin?v=2`);
+      if (!response.ok) throw new Error('mesh missing');
+      const data = parseTorso(await response.arrayBuffer());
+      if (!this.container.isConnected) return;
+      this.build(data);
+      this.sync();
+      if (this.pendingPulse) this.runPulse(this.pendingPulse);
+    } catch (error) {
+      console.warn('[body camera]', error);
+    }
+  }
 
-    // Background soft body silhouette
-    const body = document.createElementNS(ns, 'path');
-    body.setAttribute('d', 'M 85 10 C 70 30, 65 70, 70 120 C 75 160, 75 180, 85 180 C 95 180, 95 160, 100 120 C 105 70, 100 30, 85 10');
-    body.setAttribute('fill', 'none');
-    body.setAttribute('stroke', '#475569');
-    body.setAttribute('stroke-width', '4');
-    body.setAttribute('stroke-linecap', 'round');
-    body.setAttribute('opacity', '0.6');
-    svg.appendChild(body);
-
-    // Head (more proportional)
-    const head = document.createElementNS(ns, 'circle');
-    head.setAttribute('cx', '85');
-    head.setAttribute('cy', '18');
-    head.setAttribute('r', '10');
-    head.setAttribute('fill', 'none');
-    head.setAttribute('stroke', '#475569');
-    head.setAttribute('stroke-width', '4');
-    head.setAttribute('opacity', '0.6');
-    svg.appendChild(head);
-
-    // Brain (inside head)
-    const brain = document.createElementNS(ns, 'ellipse');
-    brain.setAttribute('id', 'organ-brain');
-    brain.setAttribute('cx', '85');
-    brain.setAttribute('cy', '26');
-    brain.setAttribute('rx', '8.5');
-    brain.setAttribute('ry', '7.5');
-    brain.setAttribute('fill', has('brain') ? '#c084fc' : '#374151');
-    brain.setAttribute('fill-opacity', has('brain') ? '0.75' : '0.2');
-    brain.setAttribute('stroke', has('brain') ? '#c084fc' : '#4b5563');
-    brain.setAttribute('stroke-width', has('brain') ? '1.6' : '0.9');
-    if (has('brain')) brain.classList.add('organ', 'active');
-    svg.appendChild(brain);
-
-    // Eyes
-    const eyeL = document.createElementNS(ns, 'circle');
-    eyeL.setAttribute('id', 'organ-eyes');
-    eyeL.setAttribute('cx', '79');
-    eyeL.setAttribute('cy', '25');
-    eyeL.setAttribute('r', '1.8');
-    eyeL.setAttribute('fill', has('eyes') ? '#60a5fa' : '#4b5563');
-    if (has('eyes')) eyeL.classList.add('organ', 'active');
-    svg.appendChild(eyeL);
-
-    const eyeR = document.createElementNS(ns, 'circle');
-    eyeR.setAttribute('id', 'organ-eyes');
-    eyeR.setAttribute('cx', '91');
-    eyeR.setAttribute('cy', '25');
-    eyeR.setAttribute('r', '1.8');
-    eyeR.setAttribute('fill', has('eyes') ? '#60a5fa' : '#4b5563');
-    if (has('eyes')) eyeR.classList.add('organ', 'active');
-    svg.appendChild(eyeR);
-
-    // Torso base
-    const torso = document.createElementNS(ns, 'path');
-    torso.setAttribute('d', 'M74 46 Q66 78 70 115 Q85 125 100 115 Q104 78 96 46');
-    torso.setAttribute('fill', 'none');
-    torso.setAttribute('stroke', '#374151');
-    torso.setAttribute('stroke-width', '13');
-    torso.setAttribute('stroke-linecap', 'round');
-    torso.setAttribute('opacity', '0.5');
-    svg.appendChild(torso);
-
-    // Heart (anatomical left = screen right, more realistic curved shape)
-    const heart = document.createElementNS(ns, 'path');
-    heart.setAttribute('id', 'organ-heart');
-    heart.setAttribute('d', 'M88 68 Q96 72 98 80 Q95 88 88 90 Q82 85 80 76 Q84 70 88 68');
-    heart.setAttribute('fill', has('heart') ? '#f87171' : '#374151');
-    heart.setAttribute('fill-opacity', has('heart') ? '0.85' : '0.3');
-    heart.setAttribute('stroke', has('heart') ? '#f87171' : '#4b5563');
-    heart.setAttribute('stroke-width', has('heart') ? '1.8' : '1');
-    if (has('heart')) heart.classList.add('organ', 'active');
-    svg.appendChild(heart);
-
-    // Lungs - actual lobed (asymmetric)
-    // Anatomical right lung (screen left, larger)
-    const lungL = document.createElementNS(ns, 'path');
-    lungL.setAttribute('id', 'organ-lungs');
-    lungL.setAttribute('d', 'M71 55 Q62 58 61 72 Q58 80 63 82 Q57 92 60 105 Q67 112 78 108 Q81 95 79 78 Q80 62 71 55');
-    lungL.setAttribute('fill', has('lungs') ? '#67e8f9' : '#374151');
-    lungL.setAttribute('fill-opacity', has('lungs') ? '0.55' : '0.22');
-    if (has('lungs')) lungL.classList.add('organ', 'active');
-    svg.appendChild(lungL);
-
-    // Anatomical left lung (screen right, smaller + notch)
-    const lungR = document.createElementNS(ns, 'path');
-    lungR.setAttribute('id', 'organ-lungs');
-    lungR.setAttribute('d', 'M99 56 Q107 59 106 70 Q108 74 103 75 Q109 82 102 95 Q97 94 94 85 Q95 62 99 56');
-    lungR.setAttribute('fill', has('lungs') ? '#67e8f9' : '#374151');
-    lungR.setAttribute('fill-opacity', has('lungs') ? '0.55' : '0.22');
-    if (has('lungs')) lungR.classList.add('organ', 'active');
-    svg.appendChild(lungR);
-
-    // Liver - actual lobed (screen left = anatomical right)
-    const liver = document.createElementNS(ns, 'path');
-    liver.setAttribute('id', 'organ-liver');
-    liver.setAttribute('d', 'M60 86 Q55 88 56 96 Q62 100 78 99 Q82 95 80 88 Q72 85 60 86');
-    liver.setAttribute('fill', has('liver') ? '#a3e635' : '#374151');
-    liver.setAttribute('fill-opacity', has('liver') ? '0.65' : '0.25');
-    if (has('liver')) liver.classList.add('organ', 'active');
-    svg.appendChild(liver);
-
-    // Stomach (screen right, J-shaped sac) + intestines (coils)
-    const stomach = document.createElementNS(ns, 'path');
-    stomach.setAttribute('id', 'organ-gut');
-    stomach.setAttribute('d', 'M88 88 Q95 86 101 90 Q100 97 94 100 Q89 98 88 92');
-    stomach.setAttribute('fill', has('gut') ? '#4ade80' : '#374151');
-    stomach.setAttribute('fill-opacity', has('gut') ? '0.55' : '0.22');
-    if (has('gut')) stomach.classList.add('organ', 'active');
-    svg.appendChild(stomach);
-
-    // Intestinal coils (multiple for realistic look)
-    const gutCoils = [
-      {cx:83, cy:108, rx:4, ry:3.5},
-      {cx:88, cy:112, rx:4.5, ry:3},
-      {cx:82, cy:116, rx:5, ry:3.2},
-      {cx:90, cy:118, rx:3.5, ry:2.8}
-    ];
-    gutCoils.forEach((c, i) => {
-      const coil = document.createElementNS(ns, 'ellipse');
-      coil.setAttribute('cx', c.cx);
-      coil.setAttribute('cy', c.cy);
-      coil.setAttribute('rx', c.rx);
-      coil.setAttribute('ry', c.ry);
-      coil.setAttribute('fill', has('gut') ? '#4ade80' : '#374151');
-      coil.setAttribute('fill-opacity', has('gut') ? (0.45 - i*0.05) : '0.18');
-      if (has('gut')) coil.classList.add('organ', 'active');
-      svg.appendChild(coil);
+  build(data) {
+    this.renderer = new WebGLRenderer({
+      canvas: this.canvas,
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance'
     });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    this.renderer.setClearColor(0x070b14, 1);
+    this.renderer.outputColorSpace = SRGBColorSpace;
+    this.scene = new Scene();
+    this.group = new Group();
+    this.scene.add(this.group);
+    const dist = data.radius / Math.sin((14 * Math.PI) / 180);
+    this.camera = new PerspectiveCamera(28, 1, data.radius * 0.02, dist * 4);
+    this.camera.position.set(0, data.radius * 0.04, dist * 0.92);
+    data.groups.forEach((group) => {
+      const look = LOOK[group.name];
+      if (!look) return;
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new BufferAttribute(group.pos, 3));
+      geo.setAttribute('normal', new BufferAttribute(group.nrm, 3));
+      geo.setIndex(new BufferAttribute(group.idx, 1));
+      const mesh = new Mesh(geo, materialFor(look));
+      mesh.name = group.name;
+      mesh.renderOrder = look.order;
+      mesh.userData.restGlow = look.glow;
+      mesh.userData.with = look.with || null;
+      this.group.add(mesh);
+      this.parts[group.name] = mesh;
+    });
+    this.alive = true;
+    this.observer = new ResizeObserver(() => this.resize());
+    this.observer.observe(this.container);
+    this.resize();
+    this.last = performance.now();
+    this.frame = (now) => this.tick(now);
+    requestAnimationFrame(this.frame);
+  }
 
-    // Muscles / Arms (abstract)
-    const armL = document.createElementNS(ns, 'path');
-    armL.setAttribute('id', 'organ-muscle');
-    armL.setAttribute('d', 'M68 58 Q52 78 55 115');
-    armL.setAttribute('fill', 'none');
-    armL.setAttribute('stroke', has('muscle') ? '#fb923c' : '#374151');
-    armL.setAttribute('stroke-width', has('muscle') ? '5.5' : '4');
-    armL.setAttribute('stroke-linecap', 'round');
-    armL.setAttribute('stroke-opacity', has('muscle') ? '0.9' : '0.45');
-    if (has('muscle')) armL.classList.add('organ', 'active');
-    svg.appendChild(armL);
+  resize() {
+    if (!this.renderer || !this.container) return;
+    const width = this.container.clientWidth || 320;
+    const height = this.container.clientHeight || 400;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    this.renderer.setSize(width, height, false);
+    this.camera.aspect = width / Math.max(height, 1);
+    this.camera.updateProjectionMatrix();
+  }
 
-    const armR = document.createElementNS(ns, 'path');
-    armR.setAttribute('id', 'organ-muscle');
-    armR.setAttribute('d', 'M102 58 Q118 78 115 115');
-    armR.setAttribute('fill', 'none');
-    armR.setAttribute('stroke', has('muscle') ? '#fb923c' : '#374151');
-    armR.setAttribute('stroke-width', has('muscle') ? '5.5' : '4');
-    armR.setAttribute('stroke-linecap', 'round');
-    armR.setAttribute('stroke-opacity', has('muscle') ? '0.9' : '0.45');
-    if (has('muscle')) armR.classList.add('organ', 'active');
-    svg.appendChild(armR);
+  tick(now) {
+    if (!this.alive) return;
+    if (!this.container.isConnected) {
+      this.dispose();
+      return;
+    }
+    const dt = Math.min(0.05, (now - this.last) / 1000);
+    this.last = now;
+    if (!this.dragging && now > this.idleUntil) this.yaw += dt * 0.32;
+    this.group.rotation.order = 'YXZ';
+    this.group.rotation.y = this.yaw;
+    this.group.rotation.x = this.pitch;
+    this.renderer.render(this.scene, this.camera);
+    requestAnimationFrame(this.frame);
+  }
 
-    // Lower body hint (legs)
-    const legL = document.createElementNS(ns, 'path');
-    legL.setAttribute('d', 'M77 123 Q71 155 74 177');
-    legL.setAttribute('fill', 'none');
-    legL.setAttribute('stroke', '#374151');
-    legL.setAttribute('stroke-width', '5');
-    legL.setAttribute('stroke-linecap', 'round');
-    legL.setAttribute('opacity', '0.4');
-    svg.appendChild(legL);
+  onDown(event) {
+    this.dragging = true;
+    this.lastX = event.clientX;
+    this.lastY = event.clientY;
+    this.idleUntil = performance.now() + 2600;
+    if (this.container.setPointerCapture) this.container.setPointerCapture(event.pointerId);
+  }
 
-    const legR = document.createElementNS(ns, 'path');
-    legR.setAttribute('d', 'M93 123 Q99 155 96 177');
-    legR.setAttribute('fill', 'none');
-    legR.setAttribute('stroke', '#374151');
-    legR.setAttribute('stroke-width', '5');
-    legR.setAttribute('stroke-linecap', 'round');
-    legR.setAttribute('opacity', '0.4');
-    svg.appendChild(legR);
+  onMove(event) {
+    if (!this.dragging) return;
+    this.yaw += (event.clientX - this.lastX) * 0.008;
+    this.pitch = Math.max(-0.65, Math.min(0.85, this.pitch + (event.clientY - this.lastY) * 0.005));
+    this.lastX = event.clientX;
+    this.lastY = event.clientY;
+    this.idleUntil = performance.now() + 2600;
+  }
 
-    // Spine hint
-    const spine = document.createElementNS(ns, 'path');
-    spine.setAttribute('d', 'M85 40 L85 120');
-    spine.setAttribute('fill', 'none');
-    spine.setAttribute('stroke', '#475569');
-    spine.setAttribute('stroke-width', '1.8');
-    spine.setAttribute('opacity', '0.6');
-    svg.appendChild(spine);
-
-    // Bones (knees abstract)
-    const kneeL = document.createElementNS(ns, 'circle');
-    kneeL.setAttribute('cx', '74');
-    kneeL.setAttribute('cy', '153');
-    kneeL.setAttribute('r', '3');
-    kneeL.setAttribute('fill', (has('bones') || has('joints')) ? '#f3e8d8' : '#374151');
-    kneeL.setAttribute('fill-opacity', (has('bones') || has('joints')) ? '0.9' : '0.35');
-    if (has('bones') || has('joints')) kneeL.classList.add('organ', 'active');
-    svg.appendChild(kneeL);
-
-    const kneeR = document.createElementNS(ns, 'circle');
-    kneeR.setAttribute('cx', '96');
-    kneeR.setAttribute('cy', '153');
-    kneeR.setAttribute('r', '3');
-    kneeR.setAttribute('fill', (has('bones') || has('joints')) ? '#f3e8d8' : '#374151');
-    kneeR.setAttribute('fill-opacity', (has('bones') || has('joints')) ? '0.9' : '0.35');
-    if (has('bones') || has('joints')) kneeR.classList.add('organ', 'active');
-    svg.appendChild(kneeR);
-
-    // Joints (shoulders / hips)
-    const jointShoulderL = document.createElementNS(ns, 'circle');
-    jointShoulderL.setAttribute('cx', '68');
-    jointShoulderL.setAttribute('cy', '55');
-    jointShoulderL.setAttribute('r', '2.2');
-    jointShoulderL.setAttribute('fill', has('joints') ? '#f472b6' : '#475569');
-    jointShoulderL.setAttribute('fill-opacity', has('joints') ? '0.95' : '0.5');
-    if (has('joints')) jointShoulderL.classList.add('organ', 'active');
-    svg.appendChild(jointShoulderL);
-
-    const jointShoulderR = document.createElementNS(ns, 'circle');
-    jointShoulderR.setAttribute('cx', '102');
-    jointShoulderR.setAttribute('cy', '55');
-    jointShoulderR.setAttribute('r', '2.2');
-    jointShoulderR.setAttribute('fill', has('joints') ? '#f472b6' : '#475569');
-    jointShoulderR.setAttribute('fill-opacity', has('joints') ? '0.95' : '0.5');
-    if (has('joints')) jointShoulderR.classList.add('organ', 'active');
-    svg.appendChild(jointShoulderR);
-
-    // Mitochondria abstract glow (near heart)
-    const mito = document.createElementNS(ns, 'circle');
-    mito.setAttribute('cx', '88');
-    mito.setAttribute('cy', '78');
-    mito.setAttribute('r', has('mito') ? '5.2' : '3.8');
-    mito.setAttribute('fill', has('mito') ? '#facc15' : '#475569');
-    mito.setAttribute('fill-opacity', has('mito') ? '0.65' : '0.18');
-    mito.setAttribute('stroke', has('mito') ? '#facc15' : '#334155');
-    mito.setAttribute('stroke-width', has('mito') ? '1.8' : '0.6');
-    if (has('mito')) mito.classList.add('organ', 'active');
-    svg.appendChild(mito);
-
-    // Make organs clickable for pulse feedback (nice UX parity with original)
-    svg.querySelectorAll('[id^="organ-"]').forEach((el) => {
-      const key = el.id.replace('organ-', '');
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.pulse(key);
-      });
+  sync() {
+    const liverOn = this.activeOrgans.includes('liver');
+    const liver = this.parts.liver;
+    if (liver) {
+      const glow = liverOn ? 0.28 : 0.05;
+      liver.userData.restGlow = glow;
+      liver.material.uniforms.uGlow.value = glow;
+      liver.material.uniforms.uOpacity.value = liverOn ? 1 : 0.22;
+      liver.material.transparent = !liverOn;
+      liver.material.depthWrite = liverOn;
+      liver.material.needsUpdate = true;
+    }
+    Object.values(this.parts).forEach((mesh) => {
+      if (mesh.userData.with) mesh.visible = liverOn;
     });
   }
 
-  /**
-   * Temporary bright pulse on a specific organ (or organs sharing the key prefix).
-   * Used for click feedback in the body diagram and detail badges.
-   */
   pulse(organKey) {
-    if (!this.container) return;
-    const els = this.container.querySelectorAll(`#organ-${organKey}, [id="organ-${organKey}"]`);
-    els.forEach((el) => {
-      el.style.transition = 'all .12s ease';
-      el.setAttribute('fill-opacity', '0.95');
-      el.style.filter = 'brightness(1.8) saturate(1.6)';
-
-      setTimeout(() => {
-        el.style.filter = '';
-        const isActive = el.classList.contains('active');
-        el.setAttribute('fill-opacity', isActive ? '0.75' : '0.3');
-      }, 680);
-    });
+    if (!organKey) return;
+    this.pendingPulse = organKey;
+    this.runPulse(organKey);
   }
 
-  /** Optional: clear highlights (future use with OrganSystem reset) */
+  runPulse(organKey) {
+    const mesh = this.parts[organKey];
+    if (!mesh) return;
+    const rest = mesh.userData.restGlow ?? 0.46;
+    const start = performance.now();
+    const from = 1.25;
+    const step = (now) => {
+      if (!mesh.material) return;
+      const t = Math.min(1, (now - start) / 2400);
+      mesh.material.uniforms.uGlow.value = from + (rest - from) * t;
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  dispose() {
+    this.alive = false;
+    this.observer?.disconnect();
+    this.renderer?.dispose();
+    Object.values(this.parts).forEach((mesh) => {
+      mesh.geometry.dispose();
+      mesh.material.dispose();
+    });
+    this.parts = {};
+  }
+
   clear() {
-    if (this.container) this.container.innerHTML = '';
     this.activeOrgans = [];
+    this.sync();
   }
 }
