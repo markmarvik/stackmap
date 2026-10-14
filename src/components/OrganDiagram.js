@@ -194,7 +194,7 @@ export class OrganDiagram {
       alpha: false,
       powerPreference: 'high-performance'
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setClearColor(0x070b14, 1);
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.scene = new Scene();
@@ -231,7 +231,7 @@ export class OrganDiagram {
     if (!this.renderer || !this.container) return;
     const width = this.container.clientWidth || 320;
     const height = this.container.clientHeight || 400;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / Math.max(height, 1);
     this.camera.updateProjectionMatrix();
