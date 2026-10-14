@@ -15,11 +15,43 @@ import { getBodyStage } from "../components/BodyStage.js";
 import {
   OrganExplodeController,
   ORGAN_EXPLODE_KEYS,
-  ORGAN_LABELS,
   BODY_HIT_PAD,
   nodeMatchesOrgan,
   nodeIsNegativeImpact
 } from "../core/OrganExplode.js";
+import { createLabelCollider, fitLabel, labelFontPx } from "../core/LabelSize.js";
+import { ORGAN_LABEL_TEXT, stackOrganLabels } from "../core/OrganLabels.js";
+
+const labelWidthCache = new Map();
+const labelFont600 = new Map();
+const labelFont700 = new Map();
+let labelMeasureCtx = null;
+let labelMeasureFont = '';
+
+function fontFor(selected, size) {
+  const table = selected ? labelFont700 : labelFont600;
+  const cached = table.get(size);
+  if (cached) return cached;
+  if (table.size > 120) table.clear();
+  const font = (selected ? '700 ' : '600 ') + size + 'px Inter, system-ui, sans-serif';
+  table.set(size, font);
+  return font;
+}
+
+function measureLabelWidth(text) {
+  let bucket = labelWidthCache.get(labelMeasureFont);
+  if (!bucket) {
+    if (labelWidthCache.size > 48) labelWidthCache.clear();
+    bucket = new Map();
+    labelWidthCache.set(labelMeasureFont, bucket);
+  }
+  const hit = bucket.get(text);
+  if (hit !== undefined) return hit;
+  if (bucket.size > 4000) bucket.clear();
+  const width = labelMeasureCtx.measureText(text).width;
+  bucket.set(text, width);
+  return width;
+}
 
 export class SupplementTree extends BaseTree {
   /** Matches _drawCentralBody scale; used for keep-out ellipse. */
@@ -740,6 +772,35 @@ export class SupplementTree extends BaseTree {
     ctx.fillText(vit, dx, dy);
   }
 
+  _drawNodeLabel(ctx, node, nx, ny, r, scale, panX, panY, viewW, viewH, isSelected, isDimmed) {
+    const name = node.short || node.name || '';
+    if (!name || !(scale > 0)) return;
+    const labelSize = labelFontPx(r, scale);
+    labelMeasureCtx = ctx;
+    labelMeasureFont = fontFor(isSelected, labelSize);
+    ctx.font = labelMeasureFont;
+    ctx.fillStyle = isDimmed ? '#6b7280' : (isSelected ? '#f4e9c8' : '#e5e7eb');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    const maxWorld = Math.max(3 * r * scale, 90) / scale;
+    const fitted = fitLabel(name, maxWorld, measureLabelWidth);
+    if (!fitted) return;
+    const textScreenW = measureLabelWidth(fitted) * scale;
+    const textScreenH = labelSize * scale;
+    const anchorWorldY = ny - r - 8;
+    const screenX = (nx - panX) * scale + viewW / 2;
+    const screenTop = (anchorWorldY - panY) * scale + viewH / 2 - textScreenH;
+    const flip = (2 * r + 16 + labelSize) * scale;
+    const dyScreen = this._labelCollider.place(
+      screenX - textScreenW / 2,
+      screenTop,
+      textScreenW,
+      textScreenH,
+      flip
+    );
+    ctx.fillText(fitted, nx, anchorWorldY + dyScreen / scale);
+  }
+
   draw(highlightIds = []) {
     if (this._disposed || !this.ctx) return;
 
@@ -809,7 +870,9 @@ export class SupplementTree extends BaseTree {
     // Culling + unified simplified node rendering (same for panning and static)
     // Removes shading (inner gradients) + inner circle for optimum mobile perf.
     // Always shows score (vitality), name, warnings. Selected glow preserved.
-    const margin = 60;
+    const margin = Math.max(60, 48 / scale);
+    if (!this._labelCollider) this._labelCollider = createLabelCollider(48);
+    this._labelCollider.reset();
     const invScale = 1 / scale;
     const viewHalfW = (w * invScale) / 2;
     const viewHalfH = (h * invScale) / 2;
@@ -879,16 +942,7 @@ export class SupplementTree extends BaseTree {
       });
 
       this._drawNodeScore(ctx, node, r, { isDimmed, isSelected, isHighValue, x: nx, y: ny, scale });
-
-      const labelSize = Math.round(Math.max(8, Math.min(11, r * 0.38)));
-      const showLabel = isSelected || isHovered || (labelSize * scale >= 7.5);
-      if (showLabel) {
-        ctx.fillStyle = isDimmed ? "#6b7280" : (isSelected ? "#f4e9c8" : "#e5e7eb");
-        ctx.font = `${isSelected ? 700 : 600} ${labelSize}px Inter, system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(node.short, nx, ny - r - 8);
-      }
+      this._drawNodeLabel(ctx, node, nx, ny, r, scale, panX, panY, w, h, isSelected, isDimmed);
 
       if (isDimmed) ctx.globalAlpha = 1;
 
@@ -1014,35 +1068,44 @@ export class SupplementTree extends BaseTree {
     this._organDrawPositions = { ...(stage.centers || {}) };
     const filterKey = explode?.activeOrganFilter || null;
     const hoverOrg = explode?.hoveredOrgan || null;
-    const labels = {
-      ...ORGAN_LABELS,
-      tongue: 'Tongue',
-      teeth: 'Teeth',
-      spleen: 'Spleen',
-      bladder: 'Bladder',
-      glands: 'Glands'
-    };
     if (explodeP > 0.45) {
+      const fontPx = Math.round(11 + explodeP * 2);
+      const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
+      const items = [];
       Object.entries(this._organDrawPositions).forEach(([key, pos]) => {
-        if (!labels[key]) return;
-        const isFilter = filterKey === key;
-        const isHover = hoverOrg === key;
-        const above = key === 'brain' || key === 'eyes' || key === 'teeth';
-        const side = pos.x < 0 ? -1 : 1;
-        const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
-        ctx.globalAlpha = labelA;
-        ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
-        ctx.fillStyle = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
-        if (above) {
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(labels[key], pos.x, pos.y - (pos.hy || 16) - 6);
-        } else {
-          ctx.textAlign = side < 0 ? 'right' : 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(labels[key], pos.x + side * ((pos.hx || 16) + 10), pos.y);
-        }
+        const label = ORGAN_LABEL_TEXT[key];
+        if (!label || !pos) return;
+        items.push({
+          key,
+          label,
+          x: pos.x,
+          y: pos.y,
+          hx: pos.hx || 16,
+          hy: pos.hy || 16,
+          above: key === 'brain' || key === 'eyes' || key === 'teeth'
+        });
       });
+      const placed = stackOrganLabels(items, { minGap: 4, fontPx });
+      ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < placed.length; i++) {
+        const item = placed[i];
+        const isFilter = filterKey === item.key;
+        const isHover = hoverOrg === item.key;
+        const color = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
+        ctx.globalAlpha = labelA;
+        if (item.leader) {
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(item.leader.x1, item.leader.y1);
+          ctx.lineTo(item.leader.x2, item.leader.y2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = color;
+        ctx.textAlign = item.align;
+        ctx.textBaseline = item.baseline;
+        ctx.fillText(item.label, item.textX, item.textY);
+      }
       ctx.globalAlpha = 1;
     }
     // Seated organs still need a hit point before the mesh centers exist.
@@ -1061,7 +1124,7 @@ export class SupplementTree extends BaseTree {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillStyle = '#a7f3d0';
-      ctx.fillText(`Nodes linked to ${ORGAN_LABELS[filterKey] || filterKey}`, cx, cy - 250);
+      ctx.fillText(`Nodes linked to ${ORGAN_LABEL_TEXT[filterKey] || filterKey}`, cx, cy - 250);
     }
     ctx.restore();
   }
@@ -1269,6 +1332,10 @@ export class SupplementTree extends BaseTree {
     }
   }
 
+  get minScale() {
+    return 0.55;
+  }
+
   zoom(delta) {
     const factor = delta > 0 ? 1.18 : 0.82;
     this.zoomFactor(factor);
@@ -1284,7 +1351,9 @@ export class SupplementTree extends BaseTree {
     if (!Number.isFinite(factor) || factor <= 0) return;
     const oldScale = v.scale || 1;
     let newScale = oldScale * factor;
-    newScale = Math.max(0.55, Math.min(2.8, newScale));
+    const minScale = this.minScale;
+    const floor = minScale > 0 && Number.isFinite(minScale) ? minScale : 0.55;
+    newScale = Math.max(floor, Math.min(2.8, newScale));
     // No-op when clamped (avoids pinch pan drift at min/max zoom)
     if (Math.abs(newScale - oldScale) < 1e-6) return;
 
