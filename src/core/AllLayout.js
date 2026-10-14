@@ -1,12 +1,14 @@
-import { labelFontPx } from './LabelSize.js';
+import { fitLabel, labelFontPx } from './LabelSize.js';
 
 export const ALL_NODE_RADIUS = 12;
-export const ALL_LABEL_SCALE = 0.48;
+export const S_REF = 0.5;
 export const ALL_MIN_GAP = 6;
 export const ALL_LABEL_GAP = 8;
 export const ALL_TITLE_GAP = 16;
 export const LABEL_ANCHOR_GAP = 8;
 export const TITLE_FONT_PX = 14;
+export const TITLE_MIN_SCREEN = 13;
+export const TITLE_MAX_SCREEN = 18;
 
 const GROUP_ORDER = ['supplements', 'habits', 'exercises', 'foods', 'environment', 'biomarkers'];
 const GROUP_LABELS = {
@@ -30,13 +32,22 @@ function num(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
-export function allLabelMetrics(text, r = ALL_NODE_RADIUS, scale = ALL_LABEL_SCALE) {
-  const fontPx = labelFontPx(r, scale);
-  const s = text == null ? '' : String(text);
+export function allLabelMetrics(text, r = ALL_NODE_RADIUS, scale = S_REF) {
+  const fontPx = labelFontPx(12, scale);
+  const safeScale = scale > 0 && Number.isFinite(scale) ? scale : 1;
+  const radius = Number.isFinite(r) ? r : ALL_NODE_RADIUS;
+  const maxWorld = Math.max(3 * radius * safeScale, 90) / safeScale;
+  const measure = (value) => {
+    const s = value == null ? '' : String(value);
+    return s.length * fontPx * 0.6;
+  };
+  const raw = text == null ? '' : String(text);
+  const fitted = fitLabel(raw, maxWorld, measure);
   return {
     fontPx,
-    labelW: s.length * fontPx * 0.6,
-    labelH: fontPx
+    labelW: measure(fitted),
+    labelH: fontPx,
+    text: fitted
   };
 }
 
@@ -46,6 +57,14 @@ export function estimateTitleBox(text, fontPx = TITLE_FONT_PX) {
     w: s.length * fontPx * 0.6,
     h: fontPx
   };
+}
+
+export function titleFontPx(scale) {
+  const safeScale = scale > 0 && Number.isFinite(scale) ? scale : 1;
+  const screen = TITLE_FONT_PX * safeScale;
+  if (screen < TITLE_MIN_SCREEN) return TITLE_MIN_SCREEN / safeScale;
+  if (screen > TITLE_MAX_SCREEN) return TITLE_MAX_SCREEN / safeScale;
+  return TITLE_FONT_PX;
 }
 
 export function nodeLabelBox(x, y, r, labelW, labelH) {
@@ -60,7 +79,7 @@ export function nodeLabelBox(x, y, r, labelW, labelH) {
   };
 }
 
-export function buildAllGroups(nodes) {
+export function buildAllGroups(nodes, scale = S_REF) {
   const buckets = new Map(GROUP_ORDER.map((key) => [key, []]));
   const rest = [];
   for (const node of nodes || []) {
@@ -75,7 +94,7 @@ export function buildAllGroups(nodes) {
       key,
       label,
       nodes: ranked.filter((n) => n.id != null).map((n) => {
-        const metrics = allLabelMetrics(n.short || n.name || '');
+        const metrics = allLabelMetrics(n.short || n.name || '', ALL_NODE_RADIUS, scale);
         return {
           id: n.id,
           r: ALL_NODE_RADIUS,
@@ -516,7 +535,7 @@ function placeTitles(wedges, nodes, titleGap) {
   const titles = [];
   for (let i = 0; i < wedges.length; i++) {
     const wedge = wedges[i];
-    const size = estimateTitleBox(wedge.label);
+    const size = estimateTitleBox(wedge.label, titleFontPx(S_REF));
     const w = Math.max(size.w, 1);
     const h = Math.max(size.h, 1);
     let extent = 0;

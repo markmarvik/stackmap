@@ -8,10 +8,16 @@ import { environment } from '../src/data/environment.js';
 import { biomarkers, computeBiomarkerScore } from '../src/data/biomarkers.js';
 import { buildUniverse } from '../src/data/universe.js';
 import { calcVitality } from '../src/core/ScoringEngine.js';
+import { labelFontPx } from '../src/core/LabelSize.js';
 import {
   layoutAll,
   buildAllGroups,
+  allLabelMetrics,
   nodeLabelBox,
+  estimateTitleBox,
+  titleFontPx,
+  S_REF,
+  ALL_NODE_RADIUS,
   ALL_MIN_GAP,
   ALL_LABEL_GAP,
   ALL_TITLE_GAP
@@ -62,7 +68,31 @@ function allNodes() {
 }
 
 test('all-node layout keeps circles, labels, and titles apart', () => {
-  const groups = buildAllGroups(allNodes());
+  assert.ok(labelFontPx(12, S_REF) * S_REF >= 10.5);
+  assert.ok(titleFontPx(S_REF) * S_REF >= 13);
+  assert.ok(titleFontPx(S_REF) * S_REF <= 18);
+
+  const catalog = allNodes();
+  const groups = buildAllGroups(catalog, S_REF);
+  const byId = new Map();
+  for (let i = 0; i < catalog.length; i++) {
+    const node = catalog[i];
+    if (node.id != null) byId.set(node.id, node);
+  }
+  for (let g = 0; g < groups.length; g++) {
+    const specs = groups[g].nodes;
+    for (let i = 0; i < specs.length; i++) {
+      const spec = specs[i];
+      const src = byId.get(spec.id);
+      const metrics = allLabelMetrics(src.short || src.name || '', spec.r, S_REF);
+      assert.equal(spec.r, ALL_NODE_RADIUS);
+      assert.equal(metrics.fontPx, labelFontPx(12, S_REF));
+      assert.equal(spec.labelW, metrics.labelW);
+      assert.equal(spec.labelH, metrics.labelH);
+      assert.equal(spec.labelH, metrics.fontPx);
+    }
+  }
+
   const opts = {
     bodyEdgeRadius,
     minGap: ALL_MIN_GAP,
@@ -125,6 +155,9 @@ test('all-node layout keeps circles, labels, and titles apart', () => {
 
   for (let i = 0; i < layout.titles.length; i++) {
     const title = layout.titles[i];
+    const reserved = estimateTitleBox(title.label, titleFontPx(S_REF));
+    assert.equal(title.w, Math.max(reserved.w, 1));
+    assert.equal(title.h, Math.max(reserved.h, 1));
     assert.equal(Number.isFinite(title.x + title.y + title.w + title.h), true);
     assert.ok(title.w > 0 && title.h > 0);
     for (let n = 0; n < placed.length; n++) {

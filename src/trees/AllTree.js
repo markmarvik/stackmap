@@ -1,20 +1,17 @@
-/**
- * One map of every constellation. Nodes keep their source id for My Stack.
- * The camera frames the whole set; names appear once you zoom in.
- */
-
 import { SupplementTree } from './SupplementTree.js';
 import { calcVitality } from '../core/ScoringEngine.js';
 import { computeBiomarkerScore } from '../data/biomarkers.js';
 import {
   layoutAll,
   buildAllGroups,
+  allLabelMetrics,
+  nodeLabelBox,
+  titleFontPx,
   ALL_NODE_RADIUS,
-  ALL_LABEL_SCALE,
+  S_REF,
   ALL_MIN_GAP,
   ALL_LABEL_GAP,
-  ALL_TITLE_GAP,
-  TITLE_FONT_PX
+  ALL_TITLE_GAP
 } from '../core/AllLayout.js';
 
 export const allCategories = [
@@ -27,6 +24,10 @@ export const allCategories = [
 ];
 
 export class AllTree extends SupplementTree {
+  get minScale() {
+    return S_REF;
+  }
+
   static CONST_COLORS = {
     supplements: '#fbbf24',
     habits: '#34d399',
@@ -68,7 +69,7 @@ export class AllTree extends SupplementTree {
 
   computeLayout() {
     const visible = this._getVisibleNodes();
-    const groups = buildAllGroups(visible);
+    const groups = buildAllGroups(visible, S_REF);
     const layout = layoutAll(groups, {
       bodyEdgeRadius: (angle) => this._bodyEdgeRadius(angle),
       minGap: ALL_MIN_GAP,
@@ -89,10 +90,12 @@ export class AllTree extends SupplementTree {
     }));
     this._layoutBounds = layout.bounds;
 
-    if (!this.view) this.view = { panX: 0, panY: 0, scale: ALL_LABEL_SCALE };
+    if (!this.view) this.view = { panX: 0, panY: 0, scale: S_REF };
     if (typeof this.view.panX !== 'number') this.view.panX = 0;
     if (typeof this.view.panY !== 'number') this.view.panY = 0;
-    if (typeof this.view.scale !== 'number') this.view.scale = ALL_LABEL_SCALE;
+    if (typeof this.view.scale !== 'number' || !(this.view.scale >= this.minScale)) {
+      this.view.scale = this.minScale;
+    }
   }
 
   fitToNodes() {
@@ -100,6 +103,10 @@ export class AllTree extends SupplementTree {
     const { width: w, height: h } = this.getLogicalSize();
     if (!bounds || !w || !h || !Number.isFinite(bounds.minX)) {
       super.fitToNodes();
+      if (this.view && !(this.view.scale >= this.minScale)) {
+        this.view.scale = this.minScale;
+        this.draw();
+      }
       return;
     }
     const pad = 12;
@@ -116,9 +123,11 @@ export class AllTree extends SupplementTree {
     const insetB = narrow ? 120 : 56;
     const availW = Math.max(80, w - insetL - insetR);
     const availH = Math.max(80, h - insetT - insetB);
-    const scale = Math.max(0.02, Math.min(1.05, Math.min(availW / bw, availH / bh)));
-    const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
+    const fitScale = Math.min(1.05, Math.min(availW / bw, availH / bh));
+    const scale = Math.max(this.minScale, fitScale);
+    const framed = fitScale >= this.minScale;
+    const cx = framed ? (minX + maxX) / 2 : 0;
+    const cy = framed ? (minY + maxY) / 2 : 0;
     const targetX = insetL + availW / 2;
     const targetY = insetT + availH / 2;
     this.view = {
@@ -134,10 +143,26 @@ export class AllTree extends SupplementTree {
     this.draw();
   }
 
+  _drawNodeLabel(ctx, node, nx, ny, r, scale, panX, panY, viewW, viewH, isSelected, isDimmed) {
+    const name = node.short || node.name || '';
+    if (!name || !(scale > 0)) return;
+    const layoutR = Number.isFinite(node.radius) ? node.radius : (Number.isFinite(r) ? r : ALL_NODE_RADIUS);
+    const metrics = allLabelMetrics(name, layoutR, scale);
+    if (!metrics.text) return;
+    const box = nodeLabelBox(nx, ny, layoutR, metrics.labelW, metrics.labelH);
+    ctx.font = `${isSelected ? 700 : 600} ${metrics.fontPx}px Inter, system-ui, sans-serif`;
+    ctx.fillStyle = isDimmed ? '#6b7280' : (isSelected ? '#f4e9c8' : '#e5e7eb');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(metrics.text, box.x + box.w / 2, box.y + box.h);
+  }
+
   _drawMapGuides(ctx) {
     if (this.bodyFocus || !this._mapTitles || !this._mapTitles.length) return;
+    const scale = this.view && this.view.scale > 0 ? this.view.scale : S_REF;
+    const fontPx = titleFontPx(scale);
     ctx.save();
-    ctx.font = `600 ${TITLE_FONT_PX}px Inter, system-ui, sans-serif`;
+    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let i = 0; i < this._mapTitles.length; i++) {

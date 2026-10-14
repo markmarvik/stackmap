@@ -1332,6 +1332,10 @@ export class SupplementTree extends BaseTree {
     }
   }
 
+  get minScale() {
+    return 0.55;
+  }
+
   zoom(delta) {
     const factor = delta > 0 ? 1.18 : 0.82;
     this.zoomFactor(factor);
@@ -1347,7 +1351,9 @@ export class SupplementTree extends BaseTree {
     if (!Number.isFinite(factor) || factor <= 0) return;
     const oldScale = v.scale || 1;
     let newScale = oldScale * factor;
-    newScale = Math.max(0.55, Math.min(2.8, newScale));
+    const minScale = this.minScale;
+    const floor = minScale > 0 && Number.isFinite(minScale) ? minScale : 0.55;
+    newScale = Math.max(floor, Math.min(2.8, newScale));
     // No-op when clamped (avoids pinch pan drift at min/max zoom)
     if (Math.abs(newScale - oldScale) < 1e-6) return;
 
