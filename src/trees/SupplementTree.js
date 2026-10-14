@@ -20,6 +20,38 @@ import {
   nodeMatchesOrgan,
   nodeIsNegativeImpact
 } from "../core/OrganExplode.js";
+import { createLabelCollider, fitLabel, labelFontPx } from "../core/LabelSize.js";
+
+const labelWidthCache = new Map();
+const labelFont600 = new Map();
+const labelFont700 = new Map();
+let labelMeasureCtx = null;
+let labelMeasureFont = '';
+
+function fontFor(selected, size) {
+  const table = selected ? labelFont700 : labelFont600;
+  const cached = table.get(size);
+  if (cached) return cached;
+  if (table.size > 120) table.clear();
+  const font = (selected ? '700 ' : '600 ') + size + 'px Inter, system-ui, sans-serif';
+  table.set(size, font);
+  return font;
+}
+
+function measureLabelWidth(text) {
+  let bucket = labelWidthCache.get(labelMeasureFont);
+  if (!bucket) {
+    if (labelWidthCache.size > 48) labelWidthCache.clear();
+    bucket = new Map();
+    labelWidthCache.set(labelMeasureFont, bucket);
+  }
+  const hit = bucket.get(text);
+  if (hit !== undefined) return hit;
+  if (bucket.size > 4000) bucket.clear();
+  const width = labelMeasureCtx.measureText(text).width;
+  bucket.set(text, width);
+  return width;
+}
 
 export class SupplementTree extends BaseTree {
   /** Matches _drawCentralBody scale; used for keep-out ellipse. */
@@ -740,6 +772,35 @@ export class SupplementTree extends BaseTree {
     ctx.fillText(vit, dx, dy);
   }
 
+  _drawNodeLabel(ctx, node, nx, ny, r, scale, panX, panY, viewW, viewH, isSelected, isDimmed) {
+    const name = node.short || node.name || '';
+    if (!name || !(scale > 0)) return;
+    const labelSize = labelFontPx(r, scale);
+    labelMeasureCtx = ctx;
+    labelMeasureFont = fontFor(isSelected, labelSize);
+    ctx.font = labelMeasureFont;
+    ctx.fillStyle = isDimmed ? '#6b7280' : (isSelected ? '#f4e9c8' : '#e5e7eb');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    const maxWorld = Math.max(3 * r * scale, 90) / scale;
+    const fitted = fitLabel(name, maxWorld, measureLabelWidth);
+    if (!fitted) return;
+    const textScreenW = measureLabelWidth(fitted) * scale;
+    const textScreenH = labelSize * scale;
+    const anchorWorldY = ny - r - 8;
+    const screenX = (nx - panX) * scale + viewW / 2;
+    const screenTop = (anchorWorldY - panY) * scale + viewH / 2 - textScreenH;
+    const flip = (2 * r + 16 + labelSize) * scale;
+    const dyScreen = this._labelCollider.place(
+      screenX - textScreenW / 2,
+      screenTop,
+      textScreenW,
+      textScreenH,
+      flip
+    );
+    ctx.fillText(fitted, nx, anchorWorldY + dyScreen / scale);
+  }
+
   draw(highlightIds = []) {
     if (this._disposed || !this.ctx) return;
 
@@ -809,7 +870,9 @@ export class SupplementTree extends BaseTree {
     // Culling + unified simplified node rendering (same for panning and static)
     // Removes shading (inner gradients) + inner circle for optimum mobile perf.
     // Always shows score (vitality), name, warnings. Selected glow preserved.
-    const margin = 60;
+    const margin = Math.max(60, 48 / scale);
+    if (!this._labelCollider) this._labelCollider = createLabelCollider(48);
+    this._labelCollider.reset();
     const invScale = 1 / scale;
     const viewHalfW = (w * invScale) / 2;
     const viewHalfH = (h * invScale) / 2;
@@ -879,16 +942,7 @@ export class SupplementTree extends BaseTree {
       });
 
       this._drawNodeScore(ctx, node, r, { isDimmed, isSelected, isHighValue, x: nx, y: ny, scale });
-
-      const labelSize = Math.round(Math.max(8, Math.min(11, r * 0.38)));
-      const showLabel = isSelected || isHovered || (labelSize * scale >= 7.5);
-      if (showLabel) {
-        ctx.fillStyle = isDimmed ? "#6b7280" : (isSelected ? "#f4e9c8" : "#e5e7eb");
-        ctx.font = `${isSelected ? 700 : 600} ${labelSize}px Inter, system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(node.short, nx, ny - r - 8);
-      }
+      this._drawNodeLabel(ctx, node, nx, ny, r, scale, panX, panY, w, h, isSelected, isDimmed);
 
       if (isDimmed) ctx.globalAlpha = 1;
 
