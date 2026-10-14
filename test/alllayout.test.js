@@ -20,7 +20,8 @@ import {
   ALL_NODE_RADIUS,
   ALL_MIN_GAP,
   ALL_LABEL_GAP,
-  ALL_TITLE_GAP
+  ALL_TITLE_GAP,
+  LABEL_MIN_GAP
 } from '../src/core/AllLayout.js';
 import { stackOrganLabels, ORGAN_LABEL_TEXT } from '../src/core/OrganLabels.js';
 import { SLOT } from '../src/components/BodyStage.js';
@@ -38,12 +39,28 @@ function boxesOverlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-function circleHitsBox(cx, cy, r, box) {
+function boxDistance(a, b) {
+  const gapX = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w));
+  const gapY = Math.max(b.y - (a.y + a.h), a.y - (b.y + b.h));
+  if (gapX < 0 && gapY < 0) return Math.max(gapX, gapY);
+  if (gapX < 0) return gapY;
+  if (gapY < 0) return gapX;
+  return Math.hypot(gapX, gapY);
+}
+
+function circleBoxDistance(cx, cy, r, box) {
   const nx = Math.max(box.x, Math.min(cx, box.x + box.w));
   const ny = Math.max(box.y, Math.min(cy, box.y + box.h));
-  const dx = cx - nx;
-  const dy = cy - ny;
-  return dx * dx + dy * dy < r * r;
+  return Math.hypot(cx - nx, cy - ny) - r;
+}
+
+function uppercaseFloor(text, fontPx) {
+  let count = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charAt(i);
+    if (ch >= 'A' && ch <= 'Z') count += 1;
+  }
+  return count * fontPx * 0.7;
 }
 
 function allNodes() {
@@ -142,13 +159,22 @@ test('all-node layout keeps circles, labels, and titles apart', () => {
         `${a.id} overlaps ${b.id}`
       );
       if (a.labelW > 0 && a.labelH > 0 && b.labelW > 0 && b.labelH > 0) {
-        assert.equal(boxesOverlap(a.box, b.box), false, `${a.id} label ${b.id}`);
+        assert.ok(
+          boxDistance(a.box, b.box) >= LABEL_MIN_GAP - 1e-4,
+          `${a.id} label ${b.id}`
+        );
       }
       if (b.labelW > 0 && b.labelH > 0) {
-        assert.equal(circleHitsBox(a.x, a.y, a.r, b.box), false, `${a.id} circle ${b.id} label`);
+        assert.ok(
+          circleBoxDistance(a.x, a.y, a.r, b.box) >= LABEL_MIN_GAP - 1e-4,
+          `${a.id} circle ${b.id} label`
+        );
       }
       if (a.labelW > 0 && a.labelH > 0) {
-        assert.equal(circleHitsBox(b.x, b.y, b.r, a.box), false, `${b.id} circle ${a.id} label`);
+        assert.ok(
+          circleBoxDistance(b.x, b.y, b.r, a.box) >= LABEL_MIN_GAP - 1e-4,
+          `${b.id} circle ${a.id} label`
+        );
       }
     }
   }
@@ -160,11 +186,21 @@ test('all-node layout keeps circles, labels, and titles apart', () => {
     assert.equal(title.h, Math.max(reserved.h, 1));
     assert.equal(Number.isFinite(title.x + title.y + title.w + title.h), true);
     assert.ok(title.w > 0 && title.h > 0);
+    assert.ok(title.x >= layout.bounds.minX - 1e-6, `${title.key} minX`);
+    assert.ok(title.y >= layout.bounds.minY - 1e-6, `${title.key} minY`);
+    assert.ok(title.x + title.w <= layout.bounds.maxX + 1e-6, `${title.key} maxX`);
+    assert.ok(title.y + title.h <= layout.bounds.maxY + 1e-6, `${title.key} maxY`);
     for (let n = 0; n < placed.length; n++) {
       const node = placed[n];
-      assert.equal(circleHitsBox(node.x, node.y, node.r, title), false, `${title.key} ${node.id}`);
+      assert.ok(
+        circleBoxDistance(node.x, node.y, node.r, title) >= ALL_TITLE_GAP - 1e-4,
+        `${title.key} ${node.id}`
+      );
       if (node.labelW > 0 && node.labelH > 0) {
-        assert.equal(boxesOverlap(title, node.box), false, `${title.key} label ${node.id}`);
+        assert.ok(
+          boxDistance(title, node.box) >= ALL_TITLE_GAP - 1e-4,
+          `${title.key} label ${node.id}`
+        );
       }
     }
     for (let j = i + 1; j < layout.titles.length; j++) {
@@ -174,6 +210,21 @@ test('all-node layout keeps circles, labels, and titles apart', () => {
 
   assert.ok(layout.bounds.maxX > layout.bounds.minX);
   assert.ok(layout.bounds.maxY > layout.bounds.minY);
+});
+
+test('label width estimate covers uppercase Inter samples', () => {
+  const fontPx = labelFontPx(12, S_REF);
+  const samples = ['ST JOHNS WORT', 'WALK MEET', 'TUDCA'];
+  for (let i = 0; i < samples.length; i++) {
+    const sample = samples[i];
+    const floor = uppercaseFloor(sample, fontPx);
+    const metrics = allLabelMetrics(sample, ALL_NODE_RADIUS, S_REF);
+    const title = estimateTitleBox(sample, fontPx);
+    assert.equal(metrics.text, sample);
+    assert.ok(metrics.labelW >= floor, `${sample} ${metrics.labelW} < ${floor}`);
+    assert.ok(title.w >= floor, `${sample} title ${title.w} < ${floor}`);
+    assert.equal(title.w, metrics.labelW);
+  }
 });
 
 test('exploded organ labels do not overlap', () => {
