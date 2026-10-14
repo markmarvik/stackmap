@@ -16,6 +16,8 @@ const LEGACY_PRO_LICENSE_KEY = 'aetheris-pro-key';
 /** Free-tier soft ceiling for My Stack size. Soft warning only — never hard-block adds. */
 export const FREE_STACK_LIMIT = 15;
 
+export const SHOW_RUN_ENTRY = false;
+
 /**
  * Hosted checkout URL (Lemon Squeezy / Stripe Payment Link).
  * Prefer Vite env `VITE_CHECKOUT_URL`; falls back to `#` placeholder.
@@ -77,6 +79,7 @@ export function softProGate(featureLabel = 'this feature') {
 export const FeatureFlags = {
   APP_VERSION,
   FREE_STACK_LIMIT,
+  SHOW_RUN_ENTRY,
   PRO_LICENSE_KEY,
   CHECKOUT_URL,
   PRICING_CHECKOUT_URL,

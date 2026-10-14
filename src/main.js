@@ -37,7 +37,8 @@ import {
   CHECKOUT_URL,
   PRICING_CHECKOUT_URL,
   pricingPageUrl,
-  FEEDBACK_FORM_URL
+  FEEDBACK_FORM_URL,
+  SHOW_RUN_ENTRY
 } from "./core/FeatureFlags.js";
 import { track, trackPageView, trackConstellation, initAnalytics } from "./core/Analytics.js";
 import { downloadStackShareCard } from "./core/ShareCard.js";
@@ -48,6 +49,20 @@ import { bootRun } from "./run/boot.js";
 
 // Import Tailwind + custom styles (processed by Vite)
 import './style.css';
+
+function syncRunEntry() {
+  const link = document.getElementById("play-first-night");
+  if (!link) return;
+  if (!SHOW_RUN_ENTRY) {
+    link.remove();
+    return;
+  }
+  link.hidden = false;
+  link.classList.add("is-on");
+}
+
+syncRunEntry();
+document.addEventListener("DOMContentLoaded", syncRunEntry);
 
 // Expose organ meta globally for components that need it
 window.AETHERIS_ORGAN_META = organMeta;

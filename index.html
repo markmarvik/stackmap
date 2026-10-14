@@ -81,12 +81,15 @@
     }
     #play-first-night {
       position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 600;
-      display: inline-flex; align-items: center; justify-content: center;
+      display: none !important; align-items: center; justify-content: center;
       height: 32px; padding: 0 14px; border-radius: 999px;
       background: #fbbf24; color: #1a1406;
       font: 600 12px/1 Inter, system-ui, sans-serif;
       text-decoration: none; white-space: nowrap;
       box-shadow: 0 8px 22px rgba(0,0,0,.35);
+    }
+    #play-first-night.is-on {
+      display: inline-flex !important;
     }
     @media (max-width: 767px) {
       #play-first-night {
@@ -225,7 +228,7 @@
     </div>
   </div>
 
-  <a id="play-first-night" href="%BASE_URL%run/1">
+  <a id="play-first-night" hidden href="%BASE_URL%run/1">
     Play first night
   </a>
 
