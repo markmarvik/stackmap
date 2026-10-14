@@ -293,8 +293,8 @@ class BodyStage {
     this.camera = new OrthographicCamera(-frame, frame, frame, -frame, -4000, 4000);
     this.camera.position.set(0, 0, 2000);
     this.camera.lookAt(0, 0, 0);
-    this.canvas.width = 900;
-    this.canvas.height = 900;
+    const pr = Math.min(window.devicePixelRatio || 1, 2);
+    this.renderer.setPixelRatio(pr);
     this.renderer.setSize(900, 900, false);
     this._layoutSlots();
     this._loadPlayer();
