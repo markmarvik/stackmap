@@ -41,7 +41,7 @@ export class ExplorerModal {
     badge.textContent = vit + ' VS';
     badge.title = 'App rating, not a health outcome';
     if (isNeg) {
-      badge.textContent = vit + ' HARM';
+      badge.textContent = vit + ' CAUTION';
       badge.className = 'font-mono text-sm px-3 py-1 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold';
     } else {
       badge.className = vit >= 85 
@@ -51,8 +51,8 @@ export class ExplorerModal {
 
     // Glance
     const glance = document.getElementById('modal-glance');
-    const gLabel = isNeg ? 'Harm Score' : 'Longevity';
-    const cLabel = isNeg ? 'Harms' : 'Conditions';
+    const gLabel = isNeg ? 'Caution score (research)' : 'Longevity';
+    const cLabel = isNeg ? 'Research concerns' : 'Conditions';
     glance.innerHTML = `
       <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10" title="App rating, not a health outcome">${gLabel} <span class="font-mono ${isNeg ? 'text-red-400' : 'text-emerald-400'}">${node.longevity}</span></div>
       <div class="bg-[#0a0d1a] px-3 py-1.5 rounded-2xl border border-white/10" title="App rating, not a health outcome">QoL <span class="font-mono text-violet-400">${node.qol}</span></div>
@@ -139,7 +139,7 @@ export class ExplorerModal {
     // Studies
     const studyEl = document.getElementById('modal-studies');
     studyEl.innerHTML = '';
-    const studies = node.studies || (isNeg ? [{ year: 2020, finding: 'Associated with harm in some reports', source: 'RCTs, metas, cohorts' }] : [{ year: 2023, finding: 'Investigated for possible effects in human and mechanistic research', source: 'Meta-analyses & RCTs' }]);
+    const studies = node.studies || (isNeg ? [{ year: 2020, finding: 'Associated with concern in some reports', source: 'RCTs, metas, cohorts' }] : [{ year: 2023, finding: 'Investigated for possible effects in human and mechanistic research', source: 'Meta-analyses & RCTs' }]);
     // study header text is static in HTML; the card content above already signals harm via red styling and negative findings in data
     studies.forEach(s => {
       const card = document.createElement('div');

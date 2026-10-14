@@ -52,22 +52,22 @@ export class FoodsTree extends SupplementTree {
       teas: '#10b981',
       oils: '#eab308',
       superfoods: '#a855f7',
-      // Harmful categories get red-ish base (overridden by impact flag anyway)
-      "harmful-sugars": '#b91c1c',
-      "harmful-drinks": '#991b1b',
-      "harmful-fried": '#7f1d1d',
-      "harmful-snacks": '#9f1239',
-      "harmful-meats": '#881337',
-      "harmful-processed": '#7c2d12',
-      "harmful-refined": '#854d0e',
-      "harmful-fats": '#78350f'
+      // Caution categories get a red-ish base (overridden by impact flag anyway)
+      "caution-sugars": '#b91c1c',
+      "caution-drinks": '#991b1b',
+      "caution-fried": '#7f1d1d',
+      "caution-snacks": '#9f1239',
+      "caution-meats": '#881337',
+      "caution-processed": '#7c2d12',
+      "caution-refined": '#854d0e',
+      "caution-fats": '#78350f'
     };
 
     // Sequence for potential horizontal views (food categories)
     this.sequenceOrder = [
       'vegetables', 'fruits', 'berries', 'nuts-seeds', 'legumes', 'grains',
       'fish', 'proteins', 'fermented', 'spices', 'teas', 'oils', 'superfoods',
-      'harmful-sugars', 'harmful-drinks', 'harmful-fried', 'harmful-snacks', 'harmful-meats', 'harmful-processed', 'harmful-refined', 'harmful-fats'
+      'caution-sugars', 'caution-drinks', 'caution-fried', 'caution-snacks', 'caution-meats', 'caution-processed', 'caution-refined', 'caution-fats'
     ];
   }
 

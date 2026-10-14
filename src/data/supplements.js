@@ -382,7 +382,7 @@ const supplementsCore = [
         dosage: "55–200 mcg daily (selenomethionine or yeast-bound best)", synergies: ["nac", "vitc", "iodine (balance)", "zinc"],
         gorkipedia: "Gorkipedia Entry: A trace mineral with a narrow intake range. It is a cofactor for a major antioxidant enzyme system and for thyroid hormone handling. Higher is not the goal. 55-100 mcg from food plus 50-100 mcg supplemental is a typical pattern in low-soil areas. Brazil nuts (1-2/day) are a food source.",
         risks: "Toxicity above ~400 mcg/day chronic. Hair/nail changes are early signs. Test if supplementing long-term.",
-        highDoseRisks: "Chronic intake >200-400 mcg/day (from supp + food) associated with increased type 2 diabetes risk, hair/nail loss (selenosis), thyroid dysfunction, garlic breath, liver toxicity, neuro symptoms. U-shaped curve: both deficiency and excess harmful. Limit supplemental to 50-100 mcg in most cases; test levels.",
+        highDoseRisks: "Chronic intake >200-400 mcg/day (from supp + food) associated with increased type 2 diabetes risk, hair/nail loss (selenosis), thyroid dysfunction, garlic breath, liver toxicity, neuro symptoms. U-shaped curve: studies suggest both deficiency and excess may be unfavorable. Limit supplemental to 50-100 mcg in most cases; test levels.",
         timing: "Any time with food; consistent.",
         bestForms: "Selenomethionine or selenium yeast (higher retention); avoid selenite for long term.",
         deficiencySigns: "Hypothyroid symptoms, low glutathione peroxidase activity, frequent infections, male infertility, white nail beds.",
@@ -600,7 +600,7 @@ const supplementsCore = [
         studies: [{year:2022, finding:"Free testosterone & estradiol in men (RCT)", source:"J Trace Elem Med Biol"}, {year:2023, finding:"Bone density & joint pain (meta)", source:"Biol Trace Elem Res"}, {year:2024, finding:"Inflammatory markers & vitamin D status", source:"Nutrients"}],
         dosage: "6–10 mg daily (elemental; most use 6-9mg)", synergies: ["vitd", "vitk2", "magnesium", "zinc"],
         gorkipedia: "Gorkipedia Entry: A trace mineral studied for hormones and bone. Trials have examined free testosterone, estrogen balance, and pairing with D3, K2, and magnesium, usually at 6-10 mg. Also discussed for inflammation markers. Often mentioned for men over 40 and perimenopausal women.",
-        risks: "Safe at 6-10mg. Very high doses (>20mg) can be toxic. Not for pregnancy without guidance.",
+        risks: "Safe at 6-10mg. Studies suggest very high doses (>20mg) may be unsafe. Not for pregnancy without guidance.",
         timing: "Any time with meal or with D3/K2 stack.",
         bestForms: "Boron glycinate, citrate, or aspartate. Avoid high-dose borax DIY.",
         deficiencySigns: "Low free T, joint/bone issues, higher inflammation, poor vitamin D response.",
@@ -738,11 +738,11 @@ const supplementsCore = [
         deficiencySigns: "Frequent infections, gut permeability issues, slow recovery, poor immune response.",
         absorption: "IgG acts locally in gut mostly; growth factors absorbed systemically. Take away from hot liquids." },
 
-      // === 20 HARMFUL / MISTAKENLY-TAKEN SUPPLEMENTS (impact: negative)
-      // These are popular but evidence shows net harm or no benefit + risk for most healthy people.
-      // They will appear in the supplements constellation with red "harm" styling, low scores, warning Gorkipedia.
+      // === 20 CAUTION / MISTAKENLY-TAKEN SUPPLEMENTS (impact: negative)
+      // Research framing for popular products with concerning evidence for most healthy people.
+      // They appear in the supplements constellation with red caution styling, low scores, warning Gorkipedia.
 
-      { id: "beta-carotene", name: "High-Dose Beta-Carotene", short: "BETA-CAROTENE", cat: "harmful-vit", impact: "negative", longevity: 39, qol: 47, diseases: 9, organs: ["lungs", "liver", "skin"], evidence: "5/5", blurb: "Marketed for antioxidant support, but high-dose supplements are associated with higher lung cancer risk and all-cause mortality in smokers and former smokers (ATBC, CARET trials).",
+      { id: "beta-carotene", name: "High-Dose Beta-Carotene", short: "BETA-CAROTENE", cat: "caution-vit", impact: "negative", longevity: 39, qol: 47, diseases: 9, organs: ["lungs", "liver", "skin"], evidence: "5/5", blurb: "Marketed for antioxidant support, but high-dose supplements are associated with higher lung cancer risk and all-cause mortality in smokers and former smokers (ATBC, CARET trials). Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Acts as pro-oxidant in high-oxygen lung environment of smokers", "Studied for retinoid signaling and carcinogenic processes in smokers", "Associated with higher cardiovascular and total mortality in at-risk groups"],
         studies: [{year:1994, finding:"Associated with higher lung cancer and total mortality (ATBC trial, 29k smokers)", source:"NEJM"}, {year:1996, finding:"Associated with higher lung cancer and mortality (CARET, smokers and asbestos exposure)", source:"NEJM"}, {year:2007, finding:"No clear benefit and possible harm in a general-population meta", source:"Lancet"}],
         dosage: "Common mistaken: 15–30 mg daily 'for eyes/skin/antioxidant'", synergies: [],
@@ -750,10 +750,10 @@ const supplementsCore = [
         risks: "Associated with higher lung cancer risk (especially in smokers), higher all-cause mortality, and possible liver or skin issues at very high doses.",
         timing: "Often taken daily year-round as an antioxidant supplement.",
         bestForms: "The cheap synthetic 15-30mg capsules or 'eye health' multis people buy.",
-        deficiencySigns: "Marketers claim 'low carotenoid status' or 'need more antioxidants' — but blood levels from food are fine; supplementation harms.",
-        absorption: "Well absorbed; stores in fat — leads to high circulating levels that turn harmful in oxidative environments." },
+        deficiencySigns: "Marketers claim 'low carotenoid status' or 'need more antioxidants' — but blood levels from food are fine; studies suggest supplementation may raise risk.",
+        absorption: "Well absorbed; stores in fat — leads to high circulating levels that studies suggest may raise concern in oxidative environments." },
 
-      { id: "vit-e-high", name: "High-Dose Vitamin E", short: "VIT E HIGH", cat: "harmful-vit", impact: "negative", longevity: 42, qol: 50, diseases: 8, organs: ["heart", "brain", "prostate"], evidence: "5/5", blurb: "Sold for heart and brain support, but meta-analyses associate high-dose vitamin E (≥400 IU) with higher all-cause mortality, hemorrhagic stroke, and prostate cancer risk.",
+      { id: "vit-e-high", name: "High-Dose Vitamin E", short: "VIT E HIGH", cat: "caution-vit", impact: "negative", longevity: 42, qol: 50, diseases: 8, organs: ["heart", "brain", "prostate"], evidence: "5/5", blurb: "Sold for heart and brain support, but meta-analyses associate high-dose vitamin E (≥400 IU) with higher all-cause mortality, hemorrhagic stroke, and prostate cancer risk. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Disrupts redox balance at high doses (pro-oxidant)", "Inhibits platelet aggregation → bleeding risk", "Interferes with statin and other drug metabolism"],
         studies: [{year:2005, finding:"Higher all-cause mortality at doses ≥400 IU (meta of 19 trials)", source:"Ann Intern Med"}, {year:2005, finding:"Heart failure and hospitalization signals (HOPE-TOO)", source:"JAMA"}, {year:2011, finding:"Associated with higher prostate cancer risk (SELECT trial)", source:"JAMA"}],
         dosage: "Common mistaken: 400–800 IU daily 'for heart/anti-aging'", synergies: [],
@@ -762,9 +762,9 @@ const supplementsCore = [
         timing: "Mistakenly taken every day as 'essential antioxidant' with multivitamins or standalone.",
         bestForms: "The synthetic high-dose 400IU+ softgels found in every pharmacy 'heart health' section.",
         deficiencySigns: "People believe 'modern diets are deficient in E' or 'need extra for oxidation from exercise' — rare true deficiency.",
-        absorption: "Fat soluble, accumulates — the reason harm shows up in long-term high-dose trials." },
+        absorption: "Fat soluble, accumulates — the reason concern shows up in long-term high-dose trials." },
 
-      { id: "calcium-alone", name: "Calcium Supplements (Standalone)", short: "CALCIUM", cat: "harmful-min", impact: "negative", longevity: 44, qol: 52, diseases: 7, organs: ["heart", "kidney", "vessels"], evidence: "4/5", blurb: "Promoted for bone health, but without vitamin D, K2, and magnesium, supplements are associated with higher vascular calcification, heart-attack risk, and kidney stones, with little fracture signal for many adults.",
+      { id: "calcium-alone", name: "Calcium Supplements (Standalone)", short: "CALCIUM", cat: "caution-min", impact: "negative", longevity: 44, qol: 52, diseases: 7, organs: ["heart", "kidney", "vessels"], evidence: "4/5", blurb: "Promoted for bone health, but without vitamin D, K2, and magnesium, supplements are associated with higher vascular calcification, heart-attack risk, and kidney stones, with little fracture signal for many adults. Research suggests caution for most people without a specific need; a clinician can check whether you have one.",
         mechanisms: ["Associated with ectopic calcification in arteries when K2 is low", "Associated with higher myocardial infarction risk in some analyses", "May contribute to high serum calcium and kidney stones"],
         studies: [{year:2010, finding:"Myocardial infarction and stroke risk with calcium supplements (meta)", source:"BMJ"}, {year:2013, finding:"No reduction in hip fracture, possible harm (large WHI reanalysis)", source:"JAMA Internal Med"}, {year:2015, finding:"Higher coronary artery calcium scores with supplementation", source:"JACC"}],
         dosage: "Common mistaken: 1000–1200 mg elemental calcium daily 'because dairy is bad'", synergies: [],
@@ -775,7 +775,7 @@ const supplementsCore = [
         deficiencySigns: "DEXA scan fear + 'I don't drink milk' marketing — most people do not need extra calcium pills.",
         absorption: "Absorbed in spikes; without K2 the calcium goes to soft tissue instead of bone." },
 
-      { id: "iron-routine", name: "Iron Supplements (Routine / Non-Deficient)", short: "IRON", cat: "harmful-min", impact: "negative", longevity: 41, qol: 48, diseases: 8, organs: ["liver", "heart", "brain", "gut"], evidence: "4/5", blurb: "Common in multis and energy formulas. Unnecessary iron in people who are not deficient is associated with oxidative stress, higher infection risk, and iron-overload patterns over time.",
+      { id: "iron-routine", name: "Iron Supplements (Routine / Non-Deficient)", short: "IRON", cat: "caution-min", impact: "negative", longevity: 41, qol: 48, diseases: 8, organs: ["liver", "heart", "brain", "gut"], evidence: "4/5", blurb: "Common in multis and energy formulas. Unnecessary iron in people who are not deficient is associated with oxidative stress, higher infection risk, and iron-overload patterns over time. Research suggests caution for most people without a specific need; a clinician can check whether you have one.",
         mechanisms: ["Catalytic free iron generates hydroxyl radicals (Fenton reaction)", "Promotes oxidative damage to lipids, proteins, DNA", "May support pathogen growth; associated with higher infection susceptibility", "Can overload liver, heart, pancreas in susceptible people"],
         studies: [{year:2001, finding:"Higher iron stores associated with increased MI and cancer risk (multiple cohorts)", source:"Circulation & others"}, {year:2014, finding:"Iron supplementation and higher malaria or infection risk in children", source:"Lancet"}, {year:2022, finding:"Routine iron in elderly without deficiency linked to higher oxidative stress", source:"Nutrients"}],
         dosage: "Common mistaken: 18–45 mg in daily multis or 'low energy' tonics", synergies: [],
@@ -786,18 +786,18 @@ const supplementsCore = [
         deficiencySigns: "Fatigue + 'women need iron' or 'I feel anemic' self-diagnosis — get ferritin tested first.",
         absorption: "Absorbed well when not needed; body has no good excretion path for excess." },
 
-      { id: "selenium-high", name: "High-Dose Selenium", short: "SELENIUM HIGH", cat: "harmful-min", impact: "negative", longevity: 45, qol: 51, diseases: 7, organs: ["thyroid", "liver", "nerves"], evidence: "5/5", blurb: "Marketed as a master antioxidant mineral. The dose-response is U-shaped — above ~200 mcg/day chronically, studies associate higher intake with diabetes, skin cancer, thyroid problems, hair and nail changes, and neurotoxicity.",
+      { id: "selenium-high", name: "High-Dose Selenium", short: "SELENIUM HIGH", cat: "caution-min", impact: "negative", longevity: 45, qol: 51, diseases: 7, organs: ["thyroid", "liver", "nerves"], evidence: "5/5", blurb: "Marketed as a master antioxidant mineral. The dose-response is U-shaped — above ~200 mcg/day chronically, studies associate higher intake with diabetes, skin cancer, thyroid problems, hair and nail changes, and neurotoxicity. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Excess selenoproteins and reactive selenium species become pro-oxidant", "Disrupts thyroid hormone metabolism at high levels", "Associated with higher type 2 diabetes risk (SELECT trial)", "Accumulates; associated with selenosis (hair, nail, and nerve changes)"],
         studies: [{year:2007, finding:"Diabetes risk at 200 mcg/day (SELECT)", source:"Ann Intern Med"}, {year:2011, finding:"Higher non-melanoma skin cancer with supplementation in some groups", source:"JAMA"}, {year:2013, finding:"U-shaped mortality curve; both low and high selenium harmful (NHANES)", source:"J Nutr"}],
         dosage: "Common mistaken: 200–400 mcg+ daily for thyroid, immune, or cancer-related goals", synergies: [],
-        gorkipedia: "Gorkipedia Entry (WARNING): Selenium has one of the narrowest intake ranges of any nutrient. 55-100 mcg from food is usually enough. Supplementing 200 mcg or more (common in thyroid and antioxidant formulas) is the range associated with harm in trials. Brazil nuts (1-2/day) are a food source if intake is truly low.",
+        gorkipedia: "Gorkipedia Entry (WARNING): Selenium has one of the narrowest intake ranges of any nutrient. 55-100 mcg from food is usually enough. Supplementing 200 mcg or more (common in thyroid and antioxidant formulas) is the range studies associate with risk in trials. Brazil nuts (1-2/day) are a food source if intake is truly low.",
         risks: "Type 2 diabetes, thyroid dysfunction, hair loss, nail brittleness, garlic breath, liver toxicity, increased skin cancer in some, neurological symptoms at very high.",
         timing: "Mistakenly taken daily in multis + extra 'selenium 200 mcg' capsules.",
-        bestForms: "Selenomethionine 200 mcg tablets (the form used in the harm trials).",
+        bestForms: "Selenomethionine 200 mcg tablets (the form used in the trials that reported risk).",
         deficiencySigns: "Thyroid issues or 'low selenium soil' fear — most people in supplemented countries are sufficient or high.",
-        absorption: "Very well absorbed; body does not excrete excess efficiently until toxic levels." },
+        absorption: "Very well absorbed; body does not excrete excess efficiently until levels associated with selenosis." },
 
-      { id: "iodine-high", name: "High-Dose Iodine / Kelp", short: "IODINE HIGH", cat: "harmful-min", impact: "negative", longevity: 43, qol: 49, diseases: 8, organs: ["thyroid", "breast", "heart"], evidence: "4/5", blurb: "Popular in thyroid, detox, and breast-health products. Excess iodine in euthyroid people is associated with the Wolff-Chaikoff effect, autoimmune thyroiditis, hyper- or hypothyroidism, and acne-like eruptions.",
+      { id: "iodine-high", name: "High-Dose Iodine / Kelp", short: "IODINE HIGH", cat: "caution-min", impact: "negative", longevity: 43, qol: 49, diseases: 8, organs: ["thyroid", "breast", "heart"], evidence: "4/5", blurb: "Popular in thyroid, detox, and breast-health products. Excess iodine in euthyroid people is associated with the Wolff-Chaikoff effect, autoimmune thyroiditis, hyper- or hypothyroidism, and acne-like eruptions. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Wolff-Chaikoff block of thyroid hormone synthesis", "Jod-Basedow hyperthyroidism in autonomous nodules", "Associated with Hashimoto and Graves patterns in susceptible people", "Inhibits thyroid peroxidase at high levels"],
         studies: [{year:2012, finding:"Excess iodine associated with higher hypothyroidism and autoimmune thyroid disease", source:"J Clin Endocrinol Metab"}, {year:2015, finding:"Kelp supplements and severe hyperthyroidism or thyrotoxicosis (case series)", source:"Thyroid"}, {year:2020, finding:"High iodine intake and papillary thyroid cancer rates in some populations", source:"Nutrients"}],
         dosage: "Common mistaken: 1–12 mg+ daily from kelp tablets or 'nascent iodine' drops (RDA is 150 mcg!)", synergies: [],
@@ -808,7 +808,7 @@ const supplementsCore = [
         deficiencySigns: "Fatigue + 'my doctor says my TSH is normal but I read I need more iodine' — usually not deficient.",
         absorption: "Rapidly absorbed; excess is excreted in urine but thyroid can be damaged before that." },
 
-      { id: "st-johns-wort", name: "St. John's Wort (High Dose)", short: "ST JOHNS WORT", cat: "harmful-herb", impact: "negative", longevity: 46, qol: 53, diseases: 9, organs: ["liver", "brain", "heart"], evidence: "4/5", blurb: "Sold as a natural mood product. A strong CYP3A4 inducer associated with serious drug interactions (contraceptive failure, transplant-drug issues, serotonin syndrome with SSRIs, and lower levels of many medicines).",
+      { id: "st-johns-wort", name: "St. John's Wort (High Dose)", short: "ST JOHNS WORT", cat: "caution-herb", impact: "negative", longevity: 46, qol: 53, diseases: 9, organs: ["liver", "brain", "heart"], evidence: "4/5", blurb: "Sold as a natural mood product. A strong CYP3A4 inducer associated with serious drug interactions (contraceptive failure, transplant-drug issues, serotonin syndrome with SSRIs, and lower levels of many medicines). Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Strong inducer of CYP3A4 and P-glycoprotein (associated with lower levels of many drugs)", "MAOI-like + SSRI-like activity → serotonin syndrome risk", "Photosensitization and liver enzyme elevation"],
         studies: [{year:2000, finding:"Induces CYP3A4; associated with lower indinavir, cyclosporine, and oral contraceptive levels", source:"Lancet & Clin Pharm"}, {year:2008, finding:"Serotonin syndrome cases with SSRIs/SNRIs (multiple reports)", source:"Pharmacotherapy"}, {year:2014, finding:"Consistent pharmacokinetic interactions across many drug classes", source:"Br J Clin Pharmacol"}],
         dosage: "Common mistaken: 300–900 mg standardized extract daily 'for mood / anxiety / sleep'", synergies: [],
@@ -819,7 +819,7 @@ const supplementsCore = [
         deficiencySigns: "Mild depression + 'I don't want to take real meds' — but it is a real drug with real risks.",
         absorption: "Good; effects on liver enzymes last days after stopping." },
 
-      { id: "kava", name: "Kava Kava (Chronic)", short: "KAVA", cat: "harmful-herb", impact: "negative", longevity: 40, qol: 55, diseases: 7, organs: ["liver", "brain", "skin"], evidence: "5/5", blurb: "Marketed for anxiety and sleep. Hepatotoxicity is documented in case series (liver failure, transplants, and deaths), especially with non-noble varieties, poor extraction, or long-term use. Banned or restricted in many countries.",
+      { id: "kava", name: "Kava Kava (Chronic)", short: "KAVA", cat: "caution-herb", impact: "negative", longevity: 40, qol: 55, diseases: 7, organs: ["liver", "brain", "skin"], evidence: "5/5", blurb: "Marketed for anxiety and sleep. Hepatotoxicity is documented in case series (liver failure, transplants, and deaths), especially with non-noble varieties, poor extraction, or long-term use. Banned or restricted in many countries. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Kavalactones and alkaloids associated with liver injury (especially in poor extracts)", "CYP inhibition; associated with idiosyncratic liver injury", "Dermopathy (scaly skin) with chronic use"],
         studies: [{year:2002, finding:"Severe hepatotoxicity and liver transplants linked to kava products (case series)", source:"Ann Intern Med & FDA"}, {year:2003, finding:"Germany, UK, Canada, Australia restrictions/bans after deaths", source:"Regulatory actions"}, {year:2016, finding:"Noble vs non-noble varieties; traditional prep safer but still risk", source:"Phytomedicine"}],
         dosage: "Common mistaken: 100–300 mg kavalactones daily 'for anxiety / better sleep than benzos'", synergies: [],
@@ -830,7 +830,7 @@ const supplementsCore = [
         deficiencySigns: "Anxiety + 'benzos are addictive so I'll use this plant instead' — liver doesn't care.",
         absorption: "Rapid; kavalactones accumulate with daily use." },
 
-      { id: "yohimbine", name: "Yohimbine (Fat Loss / ED)", short: "YOHIMBINE", cat: "harmful-stim", impact: "negative", longevity: 38, qol: 44, diseases: 8, organs: ["heart", "brain", "adrenals"], evidence: "4/5", blurb: "Sold in fat-burner and male-enhancement products. An alpha-2 antagonist associated with higher adrenaline, blood pressure, heart rate, and anxiety. Case reports include hypertensive crisis, panic attacks, and heart rhythm problems.",
+      { id: "yohimbine", name: "Yohimbine (Fat Loss / ED)", short: "YOHIMBINE", cat: "caution-stim", impact: "negative", longevity: 38, qol: 44, diseases: 8, organs: ["heart", "brain", "adrenals"], evidence: "4/5", blurb: "Sold in fat-burner and male-enhancement products. An alpha-2 antagonist associated with higher adrenaline, blood pressure, heart rate, and anxiety. Case reports include hypertensive crisis, panic attacks, and heart rhythm problems. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Blocks alpha-2 receptors; associated with norepinephrine release", "Increases sympathetic drive, BP, HR, cortisol", "Anxiogenic and pro-panic even at moderate doses"],
         studies: [{year:1993, finding:"Blood pressure and heart rate increases; anxiety reported", source:"Eur J Clin Pharmacol"}, {year:2001, finding:"Panic attacks and hypertensive emergencies in susceptible users", source:"J Clin Psychopharmacol"}, {year:2010, finding:"Adverse events in weight loss trials; limited efficacy, high side effects", source:"Obes Rev"}],
         dosage: "Common mistaken: 5–20 mg 'pre-workout' or with caffeine for 'stubborn fat' or ED", synergies: [],
@@ -841,7 +841,7 @@ const supplementsCore = [
         deficiencySigns: "Desire for quick fat loss or 'natural Viagra' — marketing preys on insecurity.",
         absorption: "Rapid; effects within 30-60 min, lasts hours. Stacks badly with coffee." },
 
-      { id: "synephrine", name: "Synephrine / Bitter Orange", short: "SYNEPHRINE", cat: "harmful-stim", impact: "negative", longevity: 42, qol: 48, diseases: 7, organs: ["heart", "brain", "vessels"], evidence: "3/5", blurb: "Marketed as an ephedra replacement in fat burners after ephedra was banned. Structurally similar to ephedrine and associated with higher blood pressure and heart rate. Linked to heart attacks, strokes, and deaths in combination products.",
+      { id: "synephrine", name: "Synephrine / Bitter Orange", short: "SYNEPHRINE", cat: "caution-stim", impact: "negative", longevity: 42, qol: 48, diseases: 7, organs: ["heart", "brain", "vessels"], evidence: "3/5", blurb: "Marketed as an ephedra replacement in fat burners after ephedra was banned. Structurally similar to ephedrine and associated with higher blood pressure and heart rate. Linked to heart attacks, strokes, and deaths in combination products. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Beta-3 and alpha-1 adrenergic agonism → increased metabolism + vasoconstriction", "Raises heart rate and blood pressure similar to mild ephedrine", "Synergistic toxicity with caffeine and other stims"],
         studies: [{year:2004, finding:"Adverse cardiovascular events reported to FDA after ephedra ban (bitter orange products)", source:"FDA AERs"}, {year:2011, finding:"Increased BP and HR in humans; safety concerns in combos", source:"Int J Med Sci"}, {year:2016, finding:"Case reports of MI, stroke, and death with synephrine + caffeine stacks", source:"J Med Toxicol"}],
         dosage: "Common mistaken: 10–50 mg 'p-synephrine' in pre-workouts and fat burners", synergies: [],
@@ -850,9 +850,9 @@ const supplementsCore = [
         timing: "Mistakenly taken 1-2x daily in 'thermogenic' or 'pre workout' formulas.",
         bestForms: "Synephrine HCl or 'bitter orange extract' standardized to 6-10% synephrine in weight loss pills.",
         deficiencySigns: "'I need help burning fat' — the product is sold to create the problem it claims to solve.",
-        absorption: "Good; effects amplified dangerously in multi-stimulant blends." },
+        absorption: "Good; studies suggest effects may be stronger in multi-stimulant blends." },
 
-      { id: "tribulus", name: "Tribulus Terrestris (marketed T-booster)", short: "TRIBULUS", cat: "harmful-horm", impact: "negative", longevity: 47, qol: 55, diseases: 6, organs: ["prostate", "liver", "hormone"], evidence: "3/5", blurb: "A top-selling product marketed to raise testosterone. Multiple RCTs do not show higher testosterone, free T, or strength in humans. Prostate symptoms and gynecomastia are reported in some users, by unclear mechanisms.",
+      { id: "tribulus", name: "Tribulus Terrestris (marketed T-booster)", short: "TRIBULUS", cat: "caution-horm", impact: "negative", longevity: 47, qol: 55, diseases: 6, organs: ["prostate", "liver", "hormone"], evidence: "3/5", blurb: "A top-selling product marketed to raise testosterone. Multiple RCTs do not show higher testosterone, free T, or strength in humans. Prostate symptoms and gynecomastia are reported in some users, by unclear mechanisms. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["No consistent effect on LH, FSH, or testosterone in controlled human trials", "PSA changes and hormonal imbalance reported in some sensitive users", "Possible liver enzyme elevation with long-term high dose"],
         studies: [{year:2005, finding:"No change in testosterone, strength, or body comp in resistance trained men (RCT)", source:"J Strength Cond Res"}, {year:2014, finding:"No effect on testosterone or erectile function (meta of human trials)", source:"Andrologia"}, {year:2016, finding:"PSA and prostate symptoms reported in some users", source:"Urol J"}],
         dosage: "Common mistaken: 500–1500 mg 'standardized' extract daily for 'low T', libido, gym gains", synergies: [],
@@ -863,7 +863,7 @@ const supplementsCore = [
         deficiencySigns: "'I read online my free T is low because of plastics so I need tribulus' — blood test first.",
         absorption: "Absorbed but the active claims don't translate to human endocrine system." },
 
-      { id: "dhea-otc", name: "DHEA (OTC Hormone Precursor)", short: "DHEA", cat: "harmful-horm", impact: "negative", longevity: 40, qol: 47, diseases: 9, organs: ["hormone", "liver", "prostate", "breast"], evidence: "4/5", blurb: "Widely sold as an anti-aging and testosterone supplement. Uncontrolled use is associated with shifts across the steroid cascade, including estrogen and DHT, and with concern for hormone-sensitive tissues. Users rarely track bloodwork.",
+      { id: "dhea-otc", name: "DHEA (OTC Hormone Precursor)", short: "DHEA", cat: "caution-horm", impact: "negative", longevity: 40, qol: 47, diseases: 9, organs: ["hormone", "liver", "prostate", "breast"], evidence: "4/5", blurb: "Widely sold as an anti-aging and testosterone supplement. Uncontrolled use is associated with shifts across the steroid cascade, including estrogen and DHT, and with concern for hormone-sensitive tissues. Users rarely track bloodwork. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Peripheral conversion to testosterone, estrogen, and DHT in unpredictable ratios", "Suppresses natural production via feedback", "May affect hormone-sensitive tissues (prostate, breast, endometrium)"],
         studies: [{year:2006, finding:"No consistent change in well-being, libido, or body composition in healthy older adults; safety concerns", source:"J Clin Endocrinol Metab reviews"}, {year:2013, finding:"Hormone-sensitive cancer and cardiovascular signals in some cohorts", source:"JAMA & others"}, {year:2018, finding:"Multiple steroid changes and side effects reported with supplementation", source:"Steroids"}],
         dosage: "Common mistaken: 25–100 mg daily 'because levels decline with age'", synergies: [],
@@ -874,7 +874,7 @@ const supplementsCore = [
         deficiencySigns: "Age 40+ + low energy/libido + 'DHEA declines so I should replace it' — test DHEA-S first, and interpret in context.",
         absorption: "Good oral bioavailability; converts systemically with high inter-individual variability." },
 
-      { id: "melatonin-high", name: "High-Dose Melatonin (Chronic)", short: "MEL HIGH", cat: "harmful-horm", impact: "negative", longevity: 48, qol: 52, diseases: 6, organs: ["brain", "hormone", "repro"], evidence: "3/5", blurb: "The 10 mg and higher dose sold for sleep and aging. Low doses (0.3-1 mg) are studied for circadian rhythm. Chronic high doses are associated with lower endogenous production and with reproductive-hormone changes, and are discussed for pro-oxidant effects in some contexts.",
+      { id: "melatonin-high", name: "High-Dose Melatonin (Chronic)", short: "MEL HIGH", cat: "caution-horm", impact: "negative", longevity: 48, qol: 52, diseases: 6, organs: ["brain", "hormone", "repro"], evidence: "3/5", blurb: "The 10 mg and higher dose sold for sleep and aging. Low doses (0.3-1 mg) are studied for circadian rhythm. Chronic high doses are associated with lower endogenous production and with reproductive-hormone changes, and are discussed for pro-oxidant effects in some contexts. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Chronic high exposure studied for lower endogenous melatonin signaling", "Studied for phase shifts and reproductive hormones (LH, FSH, testosterone in men)", "Possible daytime grogginess, vivid nightmares, and hormonal disruption"],
         studies: [{year:2005, finding:"High doses and endogenous secretion or reproductive hormones", source:"J Clin Endocrinol Metab"}, {year:2012, finding:"No clear added sleep effect above 1-3 mg in most meta-analyses; side effects more often reported", source:"Sleep Med Rev"}, {year:2022, finding:"Blunted natural melatonin rhythms reported in chronic high-dose users", source:"J Pineal Res"}],
         dosage: "Common mistaken: 5–30 mg nightly for deep sleep, longevity, or cancer-related goals", synergies: [],
@@ -885,18 +885,18 @@ const supplementsCore = [
         deficiencySigns: "'I have insomnia so I need more melatonin' — often the high dose is making sleep architecture worse.",
         absorption: "Excellent; high doses easily overwhelm receptors and feedback." },
 
-      { id: "colloidal-silver", name: "Colloidal Silver", short: "COLLOIDAL SILVER", cat: "harmful-min", impact: "negative", longevity: 35, qol: 40, diseases: 10, organs: ["skin", "nerves", "kidney", "liver"], evidence: "5/5", blurb: "Marketed as a natural antimicrobial and immune product. Ingestion is associated with permanent blue-gray skin (argyria). Silver can accumulate in tissues, with no established way to remove it. Regulators have issued warnings; it is still sold.",
+      { id: "colloidal-silver", name: "Colloidal Silver", short: "COLLOIDAL SILVER", cat: "caution-min", impact: "negative", longevity: 35, qol: 40, diseases: 10, organs: ["skin", "nerves", "kidney", "liver"], evidence: "5/5", blurb: "Marketed as a natural antimicrobial and immune product. Ingestion is associated with permanent blue-gray skin (argyria). Silver can accumulate in tissues, with no established way to remove it. Regulators have issued warnings; it is still sold. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Silver ions bind to proteins and accumulate in skin, nails, organs, brain", "Permanent deposition of silver sulfide/selenide granules in dermis → blue-gray discoloration", "Associated with neurological and kidney findings at high chronic exposure"],
         studies: [{year:2008, finding:"Argyria from colloidal silver ingestion — multiple case reports, irreversible", source:"J Am Acad Dermatol & others"}, {year:2012, finding:"Silver accumulation in brain and organs in animal models; human case reports of neurotoxicity", source:"Neurotoxicology"}, {year:2020, finding:"Persistent argyria years after stopping; no established way to clear it", source:"Dermatology"}],
         dosage: "Common mistaken: 1 tsp – 1 oz daily 'for immune support, gut, or when sick'", synergies: [],
-        gorkipedia: "Gorkipedia Entry (WARNING): Colloidal silver remains on the market despite clear harm reports. Pathogen-killing marketing claims are not clinical evidence. The consistent finding is argyria, a blue-gray skin color that persists. Chelation or lasers described online are not an established way to clear it.",
+        gorkipedia: "Gorkipedia Entry (WARNING): Colloidal silver remains on the market despite clear reports of adverse effects. Pathogen-killing marketing claims are not clinical evidence. The consistent finding is argyria, a blue-gray skin color that persists. Chelation or lasers described online are not an established way to clear it.",
         risks: "Associated with permanent argyria (blue-gray skin, especially sun-exposed areas), argyrosis of the eye, and possible kidney, liver, and neurological damage. No established internal benefit.",
         timing: "Often taken daily or during colds and flu as a natural antimicrobial.",
         bestForms: "10-30 ppm colloidal silver in brown bottles, nasal sprays, or 'sovereign silver' branded.",
         deficiencySigns: "Fear of 'antibiotic resistance' or 'gut dysbiosis' leading to self-medication with silver.",
         absorption: "Absorbed and then deposited permanently in tissues. Half-life is extremely long." },
 
-      { id: "green-tea-extract-high", name: "High-Dose Green Tea Extract (Empty Stomach)", short: "GTE HIGH", cat: "harmful-herb", impact: "negative", longevity: 44, qol: 50, diseases: 7, organs: ["liver", "gut", "stomach"], evidence: "5/5", blurb: "Concentrated EGCG pills marketed for fat loss and antioxidant use. On an empty stomach or at high dose, they are a leading source of reported herbal liver injury, including transplant and death case reports.",
+      { id: "green-tea-extract-high", name: "High-Dose Green Tea Extract (Empty Stomach)", short: "GTE HIGH", cat: "caution-herb", impact: "negative", longevity: 44, qol: 50, diseases: 7, organs: ["liver", "gut", "stomach"], evidence: "5/5", blurb: "Concentrated EGCG pills marketed for fat loss and antioxidant use. On an empty stomach or at high dose, they are a leading source of reported herbal liver injury, including transplant and death case reports. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["High-dose EGCG associated with lower glutathione and mitochondrial stress in hepatocytes", "Idiosyncratic and dose-dependent hepatotoxicity, especially fasted", "Associated with acute liver failure requiring transplant in case reports"],
         studies: [{year:2006, finding:"Multiple cases of hepatotoxicity from green tea extract supplements (US and Europe)", source:"Liver Transpl & Ann Intern Med"}, {year:2016, finding:"Green tea extract was a leading reported source of liver injury in some supplement registries", source:"Hepatology"}, {year:2020, finding:"Fasted administration associated with higher liver-toxicity risk in trials", source:"J Nutr"}],
         dosage: "Common mistaken: 500–1000+ mg EGCG daily for metabolism or cancer-related goals, often on an empty stomach", synergies: [],
@@ -905,9 +905,9 @@ const supplementsCore = [
         timing: "Often taken first thing in the morning, before breakfast, for a metabolism effect.",
         bestForms: "500-1000mg green tea extract capsules standardized to 50-98% EGCG (the 'fat burner' ones).",
         deficiencySigns: "'I need to speed up my metabolism' — the product creates more problems than it solves.",
-        absorption: "Much more toxic when absorbed rapidly without food matrix." },
+        absorption: "Studies suggest absorption without a food matrix is the pattern more often discussed in liver-injury reports." },
 
-      { id: "bcaas", name: "Isolated BCAAs (Non-Athlete / Chronic)", short: "BCAAS", cat: "harmful-horm", impact: "negative", longevity: 49, qol: 58, diseases: 6, organs: ["muscle", "brain", "metabolic"], evidence: "3/5", blurb: "Bought by the tub for muscle sparing and recovery. For most people not in a large deficit or fasted training, extra BCAAs show no added effect over food and may over-activate mTOR, and they compete with other amino acids for brain uptake.",
+      { id: "bcaas", name: "Isolated BCAAs (Non-Athlete / Chronic)", short: "BCAAS", cat: "caution-horm", impact: "negative", longevity: 49, qol: 58, diseases: 6, organs: ["muscle", "brain", "metabolic"], evidence: "3/5", blurb: "Bought by the tub for muscle sparing and recovery. For most people not in a large deficit or fasted training, extra BCAAs show no added effect over food and may over-activate mTOR, and they compete with other amino acids for brain uptake. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Leucine activates mTOR (acute muscle-protein signaling; chronic overactivation discussed in aging research)", "Competes with tryptophan and tyrosine for LAT1 transporter → can lower serotonin and catecholamines", "Unnecessary nitrogen load if protein intake is already adequate"],
         studies: [{year:2016, finding:"BCAAs associated with higher risk of metabolic disease and insulin resistance in large cohorts", source:"J Nutr & Diabetes Care"}, {year:2018, finding:"No added effect on resistance training when total protein is adequate", source:"J Int Soc Sports Nutr meta"}, {year:2020, finding:"Elevated BCAAs track with later diabetes and are discussed as more than a passive marker", source:"Nat Rev Endocrinol"}],
         dosage: "Common mistaken: 5–20 g during or between meals 'to stay anabolic' or while dieting", synergies: [],
@@ -918,18 +918,18 @@ const supplementsCore = [
         deficiencySigns: "'I'm training fasted / in a deficit so I need BCAAs to not lose muscle' — total daily protein matters far more.",
         absorption: "Rapid spikes of leucine etc.; the very thing that can be problematic chronically." },
 
-      { id: "arginine", name: "High-Dose L-Arginine", short: "ARGININE", cat: "harmful-stim", impact: "negative", longevity: 46, qol: 53, diseases: 6, organs: ["heart", "gut", "herpes", "stomach"], evidence: "3/5", blurb: "Sold for pump, blood flow, erectile function, and heart health. Oral arginine is poorly bioavailable (most is metabolized by gut and liver arginase). High doses are associated with herpes outbreaks and with GI distress, with less nitric-oxide change than citrulline.",
+      { id: "arginine", name: "High-Dose L-Arginine", short: "ARGININE", cat: "caution-stim", impact: "negative", longevity: 46, qol: 53, diseases: 6, organs: ["heart", "gut", "herpes", "stomach"], evidence: "3/5", blurb: "Sold for pump, blood flow, erectile function, and heart health. Oral arginine is poorly bioavailable (most is metabolized by gut and liver arginase). High doses are associated with herpes outbreaks and with GI distress, with less nitric-oxide change than citrulline. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Most oral arginine is broken down before reaching circulation", "Associated with herpes simplex reactivation (cold sores, genital)", "High doses associated with osmotic diarrhea and abdominal pain"],
         studies: [{year:2006, finding:"No improvement in endothelial function or exercise capacity with oral arginine in heart failure (RCT)", source:"JACC"}, {year:2009, finding:"Higher mortality reported in post-MI patients (RCT stopped early)", source:"JAMA"}, {year:2015, finding:"Arginine and HSV reactivation; citrulline not described the same way", source:"J Virol & clinical observations"}],
         dosage: "Common mistaken: 3–10 g pre-workout or daily 'for blood flow and pumps'", synergies: [],
         gorkipedia: "Gorkipedia Entry (WARNING): Arginine was an early nitric-oxide product. Oral doses are largely metabolized in the gut and liver. Citrulline is the comparator that raises arginine with fewer of these downsides. People with cold sores often report outbreaks with high arginine.",
-        risks: "Associated with herpes outbreaks (a common report), GI distress at higher doses, possible harm after myocardial infarction, and little nitric-oxide change for most users.",
+        risks: "Associated with herpes outbreaks (a common report), GI distress at higher doses, possible added risk after myocardial infarction, and little nitric-oxide change for most users.",
         timing: "Mistakenly taken 30-60 min pre-workout in 'pump' products.",
         bestForms: "L-arginine HCl or AKG 3-5g+ capsules/powder (the ones in pre-workouts before citrulline took over).",
         deficiencySigns: "Often bought for pumps and blood flow. Citrulline or food nitrates (beets) are the usual alternatives discussed.",
         absorption: "Poor for raising plasma arginine; extensive first-pass metabolism." },
 
-      { id: "echinacea-chronic", name: "Echinacea (Chronic Daily)", short: "ECHINACEA", cat: "harmful-herb", impact: "negative", longevity: 50, qol: 58, diseases: 6, organs: ["immune", "liver", "gut", "stomach"], evidence: "3/5", blurb: "Marketed as immune support for colds. Chronic daily use is discussed as immune dysregulation, with possible worsening of autoimmune conditions, and some extracts are linked to liver toxicity. Research, when used, is usually short-term.",
+      { id: "echinacea-chronic", name: "Echinacea (Chronic Daily)", short: "ECHINACEA", cat: "caution-herb", impact: "negative", longevity: 50, qol: 58, diseases: 6, organs: ["immune", "liver", "gut", "stomach"], evidence: "3/5", blurb: "Marketed as immune support for colds. Chronic daily use is discussed as immune dysregulation, with possible worsening of autoimmune conditions, and some extracts are linked to liver toxicity. Research, when used, is usually short-term. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Alkylamides and polysaccharides stimulate macrophages and cytokines non-specifically", "Associated with autoimmune flares (TNF, IL-1 and related signals)", "Some preparations contain pyrrolizidine alkaloids with hepatotoxic potential"],
         studies: [{year:2007, finding:"No consistent finding for colds or duration in large trials", source:"Cochrane & NEJM"}, {year:2010, finding:"Case reports of hepatotoxicity and autoimmune flare with chronic use", source:"Liver Int & Clin Rheumatol"}, {year:2014, finding:"May increase risk of allergic reactions and asthma exacerbation in some", source:"Ann Allergy Asthma Immunol"}],
         dosage: "Common mistaken: 500–1000 mg extract daily through winter for colds", synergies: [],
@@ -940,7 +940,7 @@ const supplementsCore = [
         deficiencySigns: "'I get every cold that goes around so my immune system must be weak' — chronic use can make it less discerning.",
         absorption: "Variable by preparation; effects are immunomodulatory rather than nutritive." },
 
-      { id: "garcinia", name: "Garcinia Cambogia (HCA)", short: "GARCINIA", cat: "harmful-herb", impact: "negative", longevity: 41, qol: 46, diseases: 8, organs: ["liver", "brain", "gut", "stomach"], evidence: "3/5", blurb: "A weight-loss fruit extract (HCA) once marketed with strong claims. Case reports include acute liver failure, deaths, and transplants. Stronger trials show little lasting weight change beyond placebo plus diet. Still widely marketed.",
+      { id: "garcinia", name: "Garcinia Cambogia (HCA)", short: "GARCINIA", cat: "caution-herb", impact: "negative", longevity: 41, qol: 46, diseases: 8, organs: ["liver", "brain", "gut", "stomach"], evidence: "3/5", blurb: "A weight-loss fruit extract (HCA) once marketed with strong claims. Case reports include acute liver failure, deaths, and transplants. Stronger trials show little lasting weight change beyond placebo plus diet. Still widely marketed. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["HCA is studied at citrate lyase; human weight change is small", "Serotonin changes reported; mania and liver stress discussed via unclear mechanisms", "Some extracts contaminated or have direct hepatotoxins"],
         studies: [{year:2014, finding:"Multiple cases of acute liver injury and failure requiring transplant linked to Garcinia products", source:"World J Gastroenterol & FDA"}, {year:2011, finding:"Meta-analysis: small, short-term weight change (~1 kg), not considered meaningful", source:"J Obes"}, {year:2016, finding:"Further reports of hepatotoxicity, some fatal", source:"Intern Med J"}],
         dosage: "Common mistaken: 500–1500 mg HCA daily 'to block fat and suppress appetite'", synergies: [],
@@ -951,7 +951,7 @@ const supplementsCore = [
         deficiencySigns: "Often bought from a wish to block dietary fat. Trials do not support that claim; energy balance is the variable studies actually track.",
         absorption: "Absorbed; the problem is downstream toxicity, not lack of effect on the target enzyme." },
 
-      { id: "high-dose-vit-c-chronic", name: "Megadose Vitamin C (Chronic 3g+)", short: "VIT C MEGA", cat: "harmful-vit", impact: "negative", longevity: 51, qol: 55, diseases: 5, organs: ["kidney", "gut", "iron", "stomach"], evidence: "3/5", blurb: "Associated with Linus Pauling. Short-term high doses during illness have been studied. Chronic daily 3-10 g or more is associated with higher oxalate kidney-stone risk (especially in men), GI distress, higher iron absorption in hemochromatosis, and pro-oxidant activity in some contexts.",
+      { id: "high-dose-vit-c-chronic", name: "Megadose Vitamin C (Chronic 3g+)", short: "VIT C MEGA", cat: "caution-vit", impact: "negative", longevity: 51, qol: 55, diseases: 5, organs: ["kidney", "gut", "iron", "stomach"], evidence: "3/5", blurb: "Associated with Linus Pauling. Short-term high doses during illness have been studied. Chronic daily 3-10 g or more is associated with higher oxalate kidney-stone risk (especially in men), GI distress, higher iron absorption in hemochromatosis, and pro-oxidant activity in some contexts. Research suggests caution for many people, not a personal rule.",
         mechanisms: ["Metabolized to oxalate → calcium oxalate stones", "Associated with osmotic diarrhea and gut irritation at high doses", "Enhances non-heme iron absorption (harmful if iron overloaded)", "Can act as pro-oxidant in presence of free iron"],
         studies: [{year:1998, finding:"High vitamin C intake associated with increased kidney stone risk in men (large cohort)", source:"J Urol & KI"}, {year:2013, finding:"Dose-dependent GI side effects and no clear added effect above 200-500 mg for most", source:"Cochrane & Am J Clin Nutr"}, {year:2020, finding:"Higher stone risk reported; genetic susceptibility discussed in many men", source:"JAMA Internal Med"}],
         dosage: "Common mistaken: 2–10 g daily to stay well, for colds, or as an antioxidant", synergies: [],
@@ -965,7 +965,7 @@ const supplementsCore = [
 
 export const supplements = supplementsCore.concat(SUPPLEMENT_WAVE);
 
-// Core set plus the v0.3.9 wave. Includes harmful / mistakenly-taken nodes (impact: 'negative').
+// Core set plus the v0.3.9 wave. Includes caution / mistakenly-taken nodes (impact: 'negative').
 
 export const categories = [
   { key: "all", label: "ALL", icon: "fa-infinity" },
@@ -979,12 +979,12 @@ export const categories = [
   { key: "gut", label: "GUT", icon: "fa-bacteria" },
   { key: "joints", label: "JOINTS", icon: "fa-bone" },
   { key: "eyes", label: "EYES", icon: "fa-eye" },
-  // Harmful / mistakenly-taken categories (negative impact items for education/warning in the constellation)
-  { key: "harmful-vit", label: "HARM-VIT", icon: "fa-exclamation-triangle" },
-  { key: "harmful-min", label: "HARM-MIN", icon: "fa-exclamation-triangle" },
-  { key: "harmful-herb", label: "HARM-HERB", icon: "fa-skull-crossbones" },
-  { key: "harmful-stim", label: "HARM-STIM", icon: "fa-bolt" },
-  { key: "harmful-horm", label: "HARM-HORM", icon: "fa-vial" }
+  // Caution categories. localStorage stores node id + constellation, not cat, so no id migration.
+  { key: "caution-vit", label: "CAUTION-VIT", icon: "fa-exclamation-triangle" },
+  { key: "caution-min", label: "CAUTION-MIN", icon: "fa-exclamation-triangle" },
+  { key: "caution-herb", label: "CAUTION-HERB", icon: "fa-skull-crossbones" },
+  { key: "caution-stim", label: "CAUTION-STIM", icon: "fa-bolt" },
+  { key: "caution-horm", label: "CAUTION-HORM", icon: "fa-vial" }
 ];
 
 export const organMeta = {

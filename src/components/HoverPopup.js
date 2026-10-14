@@ -58,7 +58,7 @@ export class HoverPopup {
           : `Biomarker${spec}`;
         scoresEl.title = '';
       } else if (node._isEnvironment || node.impact === 'negative') {
-        scoresEl.textContent = `Harm: ${node.longevity ?? '—'}`;
+        scoresEl.textContent = `Caution: ${node.longevity ?? '—'}`;
         scoresEl.title = 'App rating, not a health outcome';
       } else {
         scoresEl.textContent = `L${node.longevity ?? '—'} · Q${node.qol ?? '—'}`;

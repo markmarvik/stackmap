@@ -106,7 +106,7 @@ const environmentCore = [
     diseases: 14,
     organs: ["brain", "kidney", "heart"],
     mechanisms: ["Binds sulfhydryl groups, disrupts enzymes", "Neuroinflammation"],
-    risks: "Tremors, memory loss, cardiovascular disease, fetal neurodevelopmental harm",
+    risks: "Tremors, memory loss, cardiovascular disease, fetal neurodevelopmental risk",
     blurb: "Methylmercury bioaccumulates in large fish. Also from old dental amalgams & coal plants.",
     avoidance: "Limit high-mercury fish (tuna, swordfish); consider safe amalgam removal by specialist",
     mitigation: "Selenium, glutathione precursors (NAC), cilantro/chlorella (supportive)"

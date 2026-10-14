@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CATALOG, STARTER_STACKS, searchCatalog } from '../src/data/catalog.js';
+import { supplements } from '../src/data/supplements.js';
 import { calcVitality, personalizedScore } from '../src/core/ScoringEngine.js';
 
 test('catalog entries have ids and names', () => {
@@ -24,6 +25,15 @@ test('starter stacks are named lists of catalog items', () => {
   for (const stack of STARTER_STACKS) {
     assert.ok(stack.id && stack.name && stack.items.length > 0);
     assert.ok(stack.items.every((item) => item.id && item.constellation && ids.has(item.id)));
+  }
+});
+
+test('calcium-alone and iron-routine are caution supplements', () => {
+  for (const id of ['calcium-alone', 'iron-routine']) {
+    const node = supplements.find((item) => item.id === id);
+    assert.ok(node, id);
+    assert.equal(node.impact, 'negative');
+    assert.match(node.cat, /^caution-/);
   }
 });
 

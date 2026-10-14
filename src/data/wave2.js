@@ -28,7 +28,7 @@ export const SUPPLEMENT_WAVE = [
     dosage: 'Often 200–400 mg elemental from a supplement, on top of food. Do not chase gram doses without a clinician if kidneys or pressure meds are in play.',
     timing: 'With meals, split if the dose is large.',
     bestForms: 'Citrate or bicarbonate for the alkali effect. Food (beans, potatoes, fruit) still does more of the work.',
-    risks: 'High supplemental potassium can be dangerous when kidneys do not clear it, or with certain blood-pressure drugs.',
+    risks: 'Research suggests high supplemental potassium may be risky when kidneys do not clear it, or with certain blood-pressure drugs.',
     highDoseRisks: 'Hyperkalemia is the real ceiling: weakness, palpitations, and worse. This is not a “more is better” mineral.',
     synergies: ['magnesium', 'omega3'],
     gorkipedia: 'Potassium is a diet story first. A modest citrate supplement is a tool when intake is low, not a substitute for food or a blood-pressure prescription.',
@@ -88,7 +88,7 @@ export const SUPPLEMENT_WAVE = [
     timing: 'Morning, or evening if you are using it for sleep quality.',
     bestForms: 'Extract standardized for crocins / safranal (affron is one studied brand). Kitchen saffron threads are a different, smaller dose.',
     risks: 'Culinary amounts are food. Concentrated extracts can interact with serotonergic drugs.',
-    highDoseRisks: 'Gram doses of the spice are toxic. Stay at extract-label doses.',
+    highDoseRisks: 'Studies suggest gram doses of the spice may be unsafe. Stay at extract-label doses.',
     synergies: ['ltheanine', 'magnesium'],
     gorkipedia: 'Saffron is one of the better-studied spice extracts for mood, and still a small evidence base. Stop if it does nothing after a month.',
     url: 'https://examine.com/supplements/saffron/'
@@ -559,7 +559,7 @@ export const ENV_WAVE = [
     mechanisms: ['Particulate and toxic gas inhalation', 'Studied for endothelial effects', 'Childhood exposure has its own record'],
     studies: note('The outcome data here are consistent. Avoidance is the main approach.'),
     avoidance: 'No smoking indoors or in the car. Leave patios that are actually smoking rooms. Ask, including of guests.',
-    risks: 'Heart disease, stroke, lung disease, and harm to children in the same air.',
+    risks: 'Heart disease, stroke, lung disease, and risk to children in the same air.',
     gorkipedia: 'This is not a willpower contest with the smoker. It is your air.'
   },
   {
@@ -590,7 +590,7 @@ export const ENV_WAVE = [
     studies: note('Heat-wave mortality is a well-documented environmental pattern in vital statistics.'),
     avoidance: 'A cool room for sleeping, water, less alcohol, shifted outdoor work, and checking on people who live alone.',
     risks: 'Heat illness, cardiac events, and kidney injury. Medications that alter fluid balance matter here.',
-    gorkipedia: 'A fan in a closed hot room is not a plan once the air itself is dangerous. Know where the cool place is before the week arrives.'
+    gorkipedia: 'A fan in a closed hot room is not a plan once the air itself is a serious heat risk. Know where the cool place is before the week arrives.'
   },
   {
     id: 'wood-smoke', name: 'Wood smoke indoors', short: 'WOOD SMOKE', cat: 'air-pollution', impact: 'negative',
@@ -599,7 +599,7 @@ export const ENV_WAVE = [
     mechanisms: ['Fine particles', 'Polycyclic aromatic hydrocarbons', 'Same biological pathways as other combustion smoke'],
     studies: note('Household solid-fuel smoke is a major global exposure. A decorative fireplace in a tight house is the smaller, local version.'),
     avoidance: 'EPA-certified stove, a real flue, doors closed, no idling smoke into the room. Skip indoor fires when outdoor air is already bad.',
-    risks: 'Respiratory and cardiovascular harm, worse in children.',
+    risks: 'Respiratory and cardiovascular risk, worse in children.',
     gorkipedia: 'If you can smell the fire from the couch, you are breathing the fire.'
   }
 ];

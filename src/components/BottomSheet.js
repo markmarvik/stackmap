@@ -100,7 +100,7 @@ export class BottomSheet {
     if (this.vitEl) {
       const vit = node.vitality || node.longevity || 0;
       const isNeg = !!(node.impact === 'negative' || node._isNegative);
-      this.vitEl.textContent = isNeg ? `${vit} HARM` : `${vit} VS`;
+      this.vitEl.textContent = isNeg ? `${vit} CAUTION` : `${vit} VS`;
       this.vitEl.title = 'App rating, not a health outcome';
       this.vitEl.className = isNeg
         ? 'font-mono text-[11px] px-2 py-0.5 rounded-xl bg-red-500/10 text-red-300 border border-red-400/30 shrink-0'
@@ -157,7 +157,7 @@ export class BottomSheet {
           <button id="sheet-mystack-btn" type="button" class="${stackCls}">${stackLabel}</button>
         </div>
         <div class="mt-2 text-[10px] text-white/40">Tap header or <span class="text-amber-300/90">DETAILS</span> • drag up to expand • drag down to close</div>
-        <div class="mt-1.5 text-[9px] text-white/45">Educational, not medical advice</div>
+        <div class="mt-1.5 text-[9px] text-white/45">Research-based guidelines, not medical advice. Everyone is different, so talk to a clinician.</div>
       `;
       this.previewEl.classList.remove('hidden');
 
