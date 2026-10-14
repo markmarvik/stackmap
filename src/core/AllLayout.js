@@ -5,10 +5,115 @@ export const S_REF = 0.5;
 export const ALL_MIN_GAP = 6;
 export const ALL_LABEL_GAP = 8;
 export const ALL_TITLE_GAP = 16;
+export const LABEL_MIN_GAP = 10;
 export const LABEL_ANCHOR_GAP = 8;
 export const TITLE_FONT_PX = 14;
 export const TITLE_MIN_SCREEN = 13;
 export const TITLE_MAX_SCREEN = 18;
+const LABEL_PAD_EM = 0.5;
+const CHAR_EM = {
+  ' ': 0.3,
+  i: 0.3,
+  j: 0.3,
+  l: 0.3,
+  I: 0.32,
+  '`': 0.38,
+  t: 0.38,
+  '\u00b4': 0.38,
+  '!': 0.4,
+  "'": 0.4,
+  '(': 0.4,
+  ')': 0.4,
+  ',': 0.4,
+  '.': 0.4,
+  '/': 0.4,
+  ':': 0.4,
+  ';': 0.4,
+  '[': 0.4,
+  '\\': 0.4,
+  ']': 0.4,
+  '|': 0.4,
+  '\u00b7': 0.4,
+  f: 0.42,
+  r: 0.42,
+  '-': 0.48,
+  '{': 0.48,
+  '}': 0.48,
+  '^': 0.5,
+  _: 0.5,
+  '\u2022': 0.5,
+  '\u2013': 0.52,
+  '"': 0.58,
+  '*': 0.58,
+  '?': 0.58,
+  L: 0.58,
+  s: 0.58,
+  F: 0.6,
+  J: 0.6,
+  a: 0.6,
+  c: 0.6,
+  k: 0.6,
+  x: 0.6,
+  z: 0.6,
+  E: 0.62,
+  e: 0.62,
+  v: 0.62,
+  y: 0.62,
+  h: 0.64,
+  n: 0.64,
+  o: 0.64,
+  u: 0.64,
+  '#': 0.66,
+  '1': 0.66,
+  '2': 0.66,
+  '3': 0.66,
+  '5': 0.66,
+  '6': 0.66,
+  '7': 0.66,
+  '9': 0.66,
+  P: 0.66,
+  b: 0.66,
+  d: 0.66,
+  g: 0.66,
+  p: 0.66,
+  q: 0.66,
+  $: 0.68,
+  '8': 0.68,
+  B: 0.68,
+  R: 0.68,
+  S: 0.68,
+  T: 0.68,
+  Z: 0.68,
+  '&': 0.7,
+  '+': 0.7,
+  '0': 0.7,
+  '4': 0.7,
+  '<': 0.7,
+  '=': 0.7,
+  '>': 0.7,
+  '~': 0.7,
+  D: 0.74,
+  K: 0.74,
+  A: 0.76,
+  C: 0.76,
+  H: 0.76,
+  U: 0.76,
+  V: 0.76,
+  X: 0.76,
+  Y: 0.76,
+  G: 0.78,
+  N: 0.78,
+  O: 0.8,
+  Q: 0.8,
+  w: 0.88,
+  m: 0.94,
+  M: 0.96,
+  '\u2026': 1.02,
+  '\u2014': 1.02,
+  '%': 1.04,
+  '@': 1.04,
+  W: 1.06
+};
 
 const GROUP_ORDER = ['supplements', 'habits', 'exercises', 'foods', 'environment', 'biomarkers'];
 const GROUP_LABELS = {
@@ -32,30 +137,49 @@ function num(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function charEm(ch) {
+  const known = CHAR_EM[ch];
+  return known == null ? 0.82 : known;
+}
+
+function glyphWidth(text, fontPx) {
+  if (!(fontPx > 0)) return 0;
+  const s = text == null ? '' : String(text);
+  let em = 0;
+  for (let i = 0; i < s.length; i++) em += charEm(s.charAt(i));
+  return em * fontPx;
+}
+
+function estimateTextWidth(text, fontPx) {
+  const s = text == null ? '' : String(text);
+  if (!s) return 0;
+  const glyph = glyphWidth(s, fontPx);
+  if (!(glyph > 0)) return 0;
+  return glyph + LABEL_PAD_EM * fontPx;
+}
+
 export function allLabelMetrics(text, r = ALL_NODE_RADIUS, scale = S_REF) {
   const fontPx = labelFontPx(12, scale);
   const safeScale = scale > 0 && Number.isFinite(scale) ? scale : 1;
   const radius = Number.isFinite(r) ? r : ALL_NODE_RADIUS;
-  const maxWorld = Math.max(3 * radius * safeScale, 90) / safeScale;
-  const measure = (value) => {
-    const s = value == null ? '' : String(value);
-    return s.length * fontPx * 0.6;
-  };
+  const maxWorld = Math.max(3 * radius * safeScale, 96) / safeScale;
+  const measure = (value) => glyphWidth(value, fontPx);
   const raw = text == null ? '' : String(text);
   const fitted = fitLabel(raw, maxWorld, measure);
+  const glyph = measure(fitted);
   return {
     fontPx,
-    labelW: measure(fitted),
+    labelW: glyph > 0 ? glyph + LABEL_PAD_EM * fontPx : 0,
     labelH: fontPx,
     text: fitted
   };
 }
 
 export function estimateTitleBox(text, fontPx = TITLE_FONT_PX) {
-  const s = text == null ? '' : String(text);
+  const px = fontPx > 0 && Number.isFinite(fontPx) ? fontPx : 0;
   return {
-    w: s.length * fontPx * 0.6,
-    h: fontPx
+    w: estimateTextWidth(text, px),
+    h: px
   };
 }
 
@@ -121,33 +245,35 @@ function resolveBodyEdge(options) {
   return () => constant;
 }
 
-function slotWidth(node) {
-  return Math.max(2 * node.r, node.labelW);
+function pairArc(a, b, minGap, labelMinGap) {
+  let sep = a.r + b.r + minGap;
+  const aLabel = a.labelW > 0 && a.labelH > 0;
+  const bLabel = b.labelW > 0 && b.labelH > 0;
+  if (aLabel && bLabel) sep = Math.max(sep, (a.labelW + b.labelW) / 2 + labelMinGap);
+  if (aLabel) sep = Math.max(sep, a.labelW / 2 + b.r + labelMinGap);
+  if (bLabel) sep = Math.max(sep, b.labelW / 2 + a.r + labelMinGap);
+  return sep;
 }
 
-function pairArc(a, b, minGap) {
-  return (slotWidth(a) + slotWidth(b)) / 2 + minGap;
-}
-
-function arcTotal(batch, minGap) {
+function arcTotal(batch, minGap, labelMinGap) {
   let total = 0;
-  for (let i = 1; i < batch.length; i++) total += pairArc(batch[i - 1], batch[i], minGap);
+  for (let i = 1; i < batch.length; i++) total += pairArc(batch[i - 1], batch[i], minGap, labelMinGap);
   return total;
 }
 
-function radialStepFor(nodes, labelGap, minGap) {
+function radialStepFor(nodes, labelGap, minGap, labelMinGap) {
   let step = 0;
-  for (const node of nodes) step = Math.max(step, 2 * node.r + node.labelH + labelGap + minGap);
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const stacked = 2 * node.r + node.labelH + labelGap + minGap;
+    const labelSpan = node.labelH > 0 ? LABEL_ANCHOR_GAP + node.labelH + labelMinGap : minGap;
+    step = Math.max(step, stacked, 2 * node.r + labelSpan);
+  }
   return step;
 }
 
 function pointAt(angle, dist) {
   return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist };
-}
-
-function boxesOverlap(a, b) {
-  if (!(a.w > 0) || !(a.h > 0) || !(b.w > 0) || !(b.h > 0)) return false;
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
 function circleHitsBox(cx, cy, r, box) {
@@ -157,6 +283,13 @@ function circleHitsBox(cx, cy, r, box) {
   const dx = cx - nx;
   const dy = cy - ny;
   return dx * dx + dy * dy < r * r;
+}
+
+function circleBoxGap(cx, cy, r, box) {
+  if (!(box.w > 0) || !(box.h > 0)) return Infinity;
+  const nx = Math.max(box.x, Math.min(cx, box.x + box.w));
+  const ny = Math.max(box.y, Math.min(cy, box.y + box.h));
+  return Math.hypot(cx - nx, cy - ny) - r;
 }
 
 function circlesClear(ax, ay, ar, bx, by, br, minGap) {
@@ -261,7 +394,7 @@ function pushInterval(intervals, interval) {
   intervals.push([lo - 0.05, hi + 0.05]);
 }
 
-function collectNodeIntervals(node, other, dirX, dirY, minGap, intervals) {
+function collectNodeIntervals(node, other, dirX, dirY, minGap, labelMinGap, intervals) {
   pushInterval(
     intervals,
     circleInterval(dirX, dirY, other.x, other.y, node.r + other.r + minGap)
@@ -271,15 +404,15 @@ function collectNodeIntervals(node, other, dirX, dirY, minGap, intervals) {
   if (hasLabel && otherHas) {
     const otherBox = nodeLabelBox(other.x, other.y, other.r, other.labelW, other.labelH);
     pushInterval(intervals, movingRectInterval(dirX, dirY, labelRel(node), {
-      x: otherBox.x - 0.05,
-      y: otherBox.y - 0.05,
-      w: otherBox.w + 0.1,
-      h: otherBox.h + 0.1
+      x: otherBox.x - labelMinGap,
+      y: otherBox.y - labelMinGap,
+      w: otherBox.w + labelMinGap * 2,
+      h: otherBox.h + labelMinGap * 2
     }));
   }
   if (otherHas) {
     const otherBox = nodeLabelBox(other.x, other.y, other.r, other.labelW, other.labelH);
-    const pad = node.r;
+    const pad = node.r + labelMinGap;
     pushInterval(intervals, movingRectInterval(dirX, dirY, { l: 0, r: 0, t: 0, b: 0 }, {
       x: otherBox.x - pad,
       y: otherBox.y - pad,
@@ -289,7 +422,7 @@ function collectNodeIntervals(node, other, dirX, dirY, minGap, intervals) {
   }
   if (hasLabel) {
     const rel = labelRel(node);
-    const pad = other.r;
+    const pad = other.r + labelMinGap;
     pushInterval(intervals, movingRectInterval(dirX, dirY, {
       l: rel.l - pad,
       r: rel.r + pad,
@@ -332,25 +465,27 @@ function positioned(node, dist) {
   };
 }
 
-function pairClearAt(node, dist, other, minGap) {
+function pairClearAt(node, dist, other, minGap, labelMinGap) {
   const here = positioned(node, dist);
   if (!circlesClear(here.x, here.y, node.r, other.x, other.y, other.r, minGap)) return false;
   const otherBox = nodeLabelBox(other.x, other.y, other.r, other.labelW, other.labelH);
-  if (boxesOverlap(here.box, otherBox)) return false;
-  if (circleHitsBox(here.x, here.y, node.r, otherBox)) return false;
-  if (circleHitsBox(other.x, other.y, other.r, here.box)) return false;
+  const hereHas = here.box.w > 0 && here.box.h > 0;
+  const otherHas = otherBox.w > 0 && otherBox.h > 0;
+  if (hereHas && otherHas && boxGap(here.box, otherBox) < labelMinGap - 1e-6) return false;
+  if (otherHas && circleHitsBox(here.x, here.y, node.r + labelMinGap, otherBox)) return false;
+  if (hereHas && circleHitsBox(other.x, other.y, other.r + labelMinGap, here.box)) return false;
   return true;
 }
 
-function clearAt(edgeAt, node, dist, others, minGap) {
+function clearAt(edgeAt, node, dist, others, minGap, labelMinGap) {
   if (!bodyClear(edgeAt, node, dist, minGap)) return false;
   for (let i = 0; i < others.length; i++) {
-    if (!pairClearAt(node, dist, others[i], minGap)) return false;
+    if (!pairClearAt(node, dist, others[i], minGap, labelMinGap)) return false;
   }
   return true;
 }
 
-function overlapDepth(node, dist, other, minGap) {
+function overlapDepth(node, dist, other, minGap, labelMinGap) {
   const here = positioned(node, dist);
   let depth = 0;
   const dx = here.x - other.x;
@@ -359,41 +494,48 @@ function overlapDepth(node, dist, other, minGap) {
   const minD = node.r + other.r + minGap;
   if (distC < minD) depth = Math.max(depth, minD - distC);
   const otherBox = nodeLabelBox(other.x, other.y, other.r, other.labelW, other.labelH);
-  if (boxesOverlap(here.box, otherBox)) {
-    const ox = Math.min(here.box.x + here.box.w, otherBox.x + otherBox.w) - Math.max(here.box.x, otherBox.x);
-    const oy = Math.min(here.box.y + here.box.h, otherBox.y + otherBox.h) - Math.max(here.box.y, otherBox.y);
-    depth = Math.max(depth, Math.min(ox, oy));
+  const hereHas = here.box.w > 0 && here.box.h > 0;
+  const otherHas = otherBox.w > 0 && otherBox.h > 0;
+  if (hereHas && otherHas) {
+    const gap = boxGap(here.box, otherBox);
+    if (gap < labelMinGap) depth = Math.max(depth, labelMinGap - gap);
   }
-  if (circleHitsBox(here.x, here.y, node.r, otherBox)) depth = Math.max(depth, node.r);
-  if (circleHitsBox(other.x, other.y, other.r, here.box)) depth = Math.max(depth, other.r);
+  if (otherHas) {
+    const gap = circleBoxGap(here.x, here.y, node.r, otherBox);
+    if (gap < labelMinGap) depth = Math.max(depth, labelMinGap - gap);
+  }
+  if (hereHas) {
+    const gap = circleBoxGap(other.x, other.y, other.r, here.box);
+    if (gap < labelMinGap) depth = Math.max(depth, labelMinGap - gap);
+  }
   return depth;
 }
 
-function solveDist(edgeAt, node, floor, others, minGap) {
+function solveDist(edgeAt, node, floor, others, minGap, labelMinGap) {
   let dist = Math.max(node.dist, floor);
   const dirX = Math.cos(node.angle);
   const dirY = Math.sin(node.angle);
   for (let guard = 0; guard < 64; guard++) {
     const intervals = [];
     for (let i = 0; i < others.length; i++) {
-      collectNodeIntervals(node, others[i], dirX, dirY, minGap, intervals);
+      collectNodeIntervals(node, others[i], dirX, dirY, minGap, labelMinGap, intervals);
     }
     const jumped = jumpPast(dist, intervals);
     if (jumped > dist) dist = jumped;
     if (dist < floor) dist = floor;
-    if (clearAt(edgeAt, node, dist, others, minGap)) return dist;
+    if (clearAt(edgeAt, node, dist, others, minGap, labelMinGap)) return dist;
     let push = 1;
     for (let i = 0; i < others.length; i++) {
-      push = Math.max(push, overlapDepth(node, dist, others[i], minGap));
+      push = Math.max(push, overlapDepth(node, dist, others[i], minGap, labelMinGap));
     }
     if (!bodyClear(edgeAt, node, dist, minGap)) push = Math.max(push, 6);
     dist += Math.max(1, push);
   }
   let safety = 0;
-  while (!clearAt(edgeAt, node, dist, others, minGap) && safety < 120) {
+  while (!clearAt(edgeAt, node, dist, others, minGap, labelMinGap) && safety < 120) {
     let push = 6;
     for (let i = 0; i < others.length; i++) {
-      push = Math.max(push, overlapDepth(node, dist, others[i], minGap));
+      push = Math.max(push, overlapDepth(node, dist, others[i], minGap, labelMinGap));
     }
     dist += push;
     safety += 1;
@@ -408,24 +550,24 @@ function setDist(node, dist) {
   node.y = p.y;
 }
 
-function resolveNodes(edgeAt, nodes, minGap) {
+function resolveNodes(edgeAt, nodes, minGap, labelMinGap) {
   const ordered = nodes.slice().sort((a, b) => a.dist - b.dist || a.angle - b.angle || cmpStr(a.id, b.id));
   const fixed = [];
   for (let i = 0; i < ordered.length; i++) {
     const node = ordered[i];
     const floor = Math.max(node.dist, bodyMinDist(edgeAt, node, minGap));
-    const dist = solveDist(edgeAt, node, floor, fixed, minGap);
+    const dist = solveDist(edgeAt, node, floor, fixed, minGap, labelMinGap);
     setDist(node, dist);
     fixed.push(node);
   }
-  for (let pass = 0; pass < 6; pass++) {
+  for (let pass = 0; pass < 8; pass++) {
     let moved = false;
     for (let i = 0; i < ordered.length; i++) {
       const node = ordered[i];
       const others = [];
       for (let j = 0; j < ordered.length; j++) if (j !== i) others.push(ordered[j]);
-      if (clearAt(edgeAt, node, node.dist, others, minGap)) continue;
-      const dist = solveDist(edgeAt, node, node.dist, others, minGap);
+      if (clearAt(edgeAt, node, node.dist, others, minGap, labelMinGap)) continue;
+      const dist = solveDist(edgeAt, node, node.dist, others, minGap, labelMinGap);
       if (dist > node.dist + 1e-6) {
         setDist(node, dist);
         moved = true;
@@ -628,12 +770,17 @@ export function layoutAll(groups, opts) {
     const start = cursor;
     const mid = start + span / 2;
     cursor += span;
-    const radialStep = radialStepFor(group.nodes, labelGap, minGap);
+    const radialStep = radialStepFor(group.nodes, labelGap, minGap, LABEL_MIN_GAP);
     let basePad = 0;
-    let widest = 0;
+    let edgePad = 0;
     for (let i = 0; i < group.nodes.length; i++) {
-      basePad = Math.max(basePad, group.nodes[i].r + minGap);
-      widest = Math.max(widest, slotWidth(group.nodes[i]));
+      const node = group.nodes[i];
+      basePad = Math.max(basePad, node.r + minGap);
+      let pad = node.r + minGap / 2;
+      if (node.labelW > 0 && node.labelH > 0) {
+        pad = Math.max(pad, node.labelW / 2 + LABEL_MIN_GAP / 2);
+      }
+      edgePad = Math.max(edgePad, pad);
     }
     const wedge = {
       key: group.key,
@@ -643,23 +790,22 @@ export function layoutAll(groups, opts) {
       span,
       radialStep,
       basePad,
-      widest,
       placed: []
     };
     let index = 0;
     let ring = 0;
     while (index < group.nodes.length && ring < 96) {
       const orbit = edgeAt(mid) + basePad + ring * radialStep;
-      const gutter = Math.min(span * 0.49, (widest / 2 + minGap / 2) / Math.max(orbit, 1));
+      const gutter = Math.min(span * 0.49, edgePad / Math.max(orbit, 1));
       const usable = Math.max(0, span - gutter * 2);
       const budget = usable * Math.max(orbit, 1);
       const batch = [group.nodes[index]];
       while (index + batch.length < group.nodes.length) {
         const trial = batch.concat([group.nodes[index + batch.length]]);
-        if (arcTotal(trial, minGap) <= budget + 1e-6) batch.push(group.nodes[index + batch.length]);
+        if (arcTotal(trial, minGap, LABEL_MIN_GAP) <= budget + 1e-6) batch.push(group.nodes[index + batch.length]);
         else break;
       }
-      const total = arcTotal(batch, minGap);
+      const total = arcTotal(batch, minGap, LABEL_MIN_GAP);
       const radius = Math.max(orbit, 1);
       let acc = -total / 2;
       for (let k = 0; k < batch.length; k++) {
@@ -681,7 +827,7 @@ export function layoutAll(groups, opts) {
         setDist(rec, dist);
         wedge.placed.push(rec);
         placed.push(rec);
-        if (k < batch.length - 1) acc += pairArc(batch[k], batch[k + 1], minGap);
+        if (k < batch.length - 1) acc += pairArc(batch[k], batch[k + 1], minGap, LABEL_MIN_GAP);
       }
       index += batch.length;
       ring += 1;
@@ -689,7 +835,7 @@ export function layoutAll(groups, opts) {
     wedges.push(wedge);
   }
 
-  resolveNodes(edgeAt, placed, minGap);
+  resolveNodes(edgeAt, placed, minGap, LABEL_MIN_GAP);
   const titles = placeTitles(wedges, placed, titleGap);
   const positions = new Map();
   for (let i = 0; i < placed.length; i++) {
