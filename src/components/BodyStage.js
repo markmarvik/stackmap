@@ -80,6 +80,7 @@ const SLOT = {
 const HOT = new Color('#ef4444');
 
 const SLOT_ORDER = Object.keys(SLOT);
+export { SLOT };
 
 function easeOutBack(t) {
   const c1 = 0.7;

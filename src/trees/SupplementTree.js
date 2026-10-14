@@ -15,12 +15,12 @@ import { getBodyStage } from "../components/BodyStage.js";
 import {
   OrganExplodeController,
   ORGAN_EXPLODE_KEYS,
-  ORGAN_LABELS,
   BODY_HIT_PAD,
   nodeMatchesOrgan,
   nodeIsNegativeImpact
 } from "../core/OrganExplode.js";
 import { createLabelCollider, fitLabel, labelFontPx } from "../core/LabelSize.js";
+import { ORGAN_LABEL_TEXT, stackOrganLabels } from "../core/OrganLabels.js";
 
 const labelWidthCache = new Map();
 const labelFont600 = new Map();
@@ -1068,35 +1068,44 @@ export class SupplementTree extends BaseTree {
     this._organDrawPositions = { ...(stage.centers || {}) };
     const filterKey = explode?.activeOrganFilter || null;
     const hoverOrg = explode?.hoveredOrgan || null;
-    const labels = {
-      ...ORGAN_LABELS,
-      tongue: 'Tongue',
-      teeth: 'Teeth',
-      spleen: 'Spleen',
-      bladder: 'Bladder',
-      glands: 'Glands'
-    };
     if (explodeP > 0.45) {
+      const fontPx = Math.round(11 + explodeP * 2);
+      const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
+      const items = [];
       Object.entries(this._organDrawPositions).forEach(([key, pos]) => {
-        if (!labels[key]) return;
-        const isFilter = filterKey === key;
-        const isHover = hoverOrg === key;
-        const above = key === 'brain' || key === 'eyes' || key === 'teeth';
-        const side = pos.x < 0 ? -1 : 1;
-        const labelA = Math.min(1, (explodeP - 0.45) / 0.35) * 0.92;
-        ctx.globalAlpha = labelA;
-        ctx.font = `600 ${Math.round(11 + explodeP * 2)}px Inter, system-ui, sans-serif`;
-        ctx.fillStyle = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
-        if (above) {
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(labels[key], pos.x, pos.y - (pos.hy || 16) - 6);
-        } else {
-          ctx.textAlign = side < 0 ? 'right' : 'left';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(labels[key], pos.x + side * ((pos.hx || 16) + 10), pos.y);
-        }
+        const label = ORGAN_LABEL_TEXT[key];
+        if (!label || !pos) return;
+        items.push({
+          key,
+          label,
+          x: pos.x,
+          y: pos.y,
+          hx: pos.hx || 16,
+          hy: pos.hy || 16,
+          above: key === 'brain' || key === 'eyes' || key === 'teeth'
+        });
       });
+      const placed = stackOrganLabels(items, { minGap: 4, fontPx });
+      ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < placed.length; i++) {
+        const item = placed[i];
+        const isFilter = filterKey === item.key;
+        const isHover = hoverOrg === item.key;
+        const color = isFilter ? '#86efac' : (isHover ? '#f8fafc' : '#cbd5e1');
+        ctx.globalAlpha = labelA;
+        if (item.leader) {
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(item.leader.x1, item.leader.y1);
+          ctx.lineTo(item.leader.x2, item.leader.y2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = color;
+        ctx.textAlign = item.align;
+        ctx.textBaseline = item.baseline;
+        ctx.fillText(item.label, item.textX, item.textY);
+      }
       ctx.globalAlpha = 1;
     }
     // Seated organs still need a hit point before the mesh centers exist.
@@ -1115,7 +1124,7 @@ export class SupplementTree extends BaseTree {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillStyle = '#a7f3d0';
-      ctx.fillText(`Nodes linked to ${ORGAN_LABELS[filterKey] || filterKey}`, cx, cy - 250);
+      ctx.fillText(`Nodes linked to ${ORGAN_LABEL_TEXT[filterKey] || filterKey}`, cx, cy - 250);
     }
     ctx.restore();
   }
