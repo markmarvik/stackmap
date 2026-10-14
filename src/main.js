@@ -43,6 +43,7 @@ import { track, trackPageView, trackConstellation, initAnalytics } from "./core/
 import { downloadStackShareCard } from "./core/ShareCard.js";
 import { PRODUCT_NAME, PUBLIC_HOST_LABEL } from "./core/Brand.js";
 import { readStorage, writeStorage } from "./core/persist.js";
+import { parseDeepLink, buildDeepLink } from "./core/DeepLink.js";
 import { bootRun } from "./run/boot.js";
 
 // Import Tailwind + custom styles (processed by Vite)
@@ -139,31 +140,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Constellation switching (modular) ===
   let currentTreeType = 'supplements';
+  // Set when ?n= matches a node; applied after the first fit so centering sticks.
+  let pendingNodeDeepLink = null;
   const VALID_CONSTELLATIONS = ['all', 'supplements', 'habits', 'exercises', 'foods', 'environment', 'biomarkers'];
+  const NODE_PACKS = [
+    ['supplements', supplements],
+    ['habits', habits],
+    ['exercises', exercises],
+    ['foods', foods],
+    ['environment', environment],
+    ['biomarkers', biomarkers]
+  ];
+
+  function packHasId(list, id) {
+    return Array.isArray(list) && list.some((n) => n && n.id === id);
+  }
+
+  function constellationHasNode(type, id) {
+    if (type === 'all') return NODE_PACKS.some(([, list]) => packHasId(list, id));
+    const pack = NODE_PACKS.find(([name]) => name === type);
+    return !!(pack && packHasId(pack[1], id));
+  }
+
+  function firstConstellationWithNode(id) {
+    const hit = NODE_PACKS.find(([, list]) => packHasId(list, id));
+    return hit ? hit[0] : null;
+  }
+
+  // All-map nodes use constellation::id, which is not a legal ?n= token.
+  function publicNodeId(node) {
+    if (!node) return null;
+    let id = node._sourceId || node.id;
+    if (id && String(id).includes('::')) id = String(id).split('::').pop();
+    return id || null;
+  }
 
   function syncConstellationQuery(type) {
     try {
-      const url = new URL(window.location.href);
       const c = String(type || 'supplements').toLowerCase();
-      if (!VALID_CONSTELLATIONS.includes(c) || c === 'supplements') {
-        url.searchParams.delete('c');
-      } else {
-        url.searchParams.set('c', c);
-      }
-      history.replaceState(null, '', url.pathname + url.search + url.hash);
+      const next = buildDeepLink(window.location.href, {
+        c: (!VALID_CONSTELLATIONS.includes(c) || c === 'supplements') ? null : c,
+        n: null
+      });
+      history.replaceState(null, '', next);
     } catch (e) {
       console.warn('[AETHERIS] syncConstellationQuery failed', e);
     }
   }
 
-  function parseConstellationDeepLink() {
+  function syncNodeQuery(node) {
     try {
-      const raw = new URLSearchParams(window.location.search).get('c');
-      if (!raw) return null;
-      const c = String(raw).trim().toLowerCase();
-      return VALID_CONSTELLATIONS.includes(c) ? c : null;
-    } catch {
-      return null;
+      const c = (VALID_CONSTELLATIONS.includes(currentTreeType) && currentTreeType !== 'supplements')
+        ? currentTreeType
+        : null;
+      const next = buildDeepLink(window.location.href, { c, n: publicNodeId(node) });
+      history.replaceState(null, '', next);
+    } catch (e) {
+      console.warn('[AETHERIS] syncNodeQuery failed', e);
     }
   }
 
@@ -626,6 +659,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Hide loading overlay now that first render + resize is done (Issue #17)
     hideLoadingOverlay();
+    if (pendingNodeDeepLink) applyNodeDeepLink();
   });
 
   function hideLoadingOverlay() {
@@ -1277,12 +1311,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Mark initial active state
   updateConstellationButtons('supplements');
 
-  // Shareable constellation deep-link: ?c=supplements|habits|exercises|foods|environment|biomarkers
-  const deepLinkConstellation = parseConstellationDeepLink();
-  if (deepLinkConstellation && deepLinkConstellation !== 'all') {
-    switchConstellation(deepLinkConstellation, { fromDeepLink: true });
-  } else {
-    switchConstellation('all');
+  // Shareable links: ?c= constellation and ?n= node id (see src/core/DeepLink.js).
+  const deep = parseDeepLink(window.location.search);
+  let startType = null;
+  if (deep.n) {
+    if (deep.c && constellationHasNode(deep.c, deep.n)) startType = deep.c;
+    else startType = firstConstellationWithNode(deep.n);
+    if (startType) pendingNodeDeepLink = deep.n;
+  }
+  if (!startType) {
+    startType = (deep.c && deep.c !== 'all') ? deep.c : 'all';
+  }
+  if (startType !== currentTreeType) {
+    switchConstellation(startType, { fromDeepLink: true });
   }
 
   // Wire mobile-only expandable vertical filters toggle (right column under selector)
@@ -1322,7 +1363,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container || !node) return;
 
     const isNegative = (node.impact === 'negative' || node._isNegative);
-    const scoreLabel = isNegative ? 'Harm / Damage' : 'Longevity';
+    const scoreLabel = isNegative ? 'Caution score (research)' : 'Longevity';
     const scoreColor = isNegative ? 'text-red-400' : 'text-cyan-300';
     const overallColor = isNegative ? 'text-red-300' : 'text-amber-300';
     const supportsLabel = isNegative ? 'Associated with higher risk for' : 'Supports';
@@ -1376,7 +1417,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = `
       <div class="text-left w-full">
         <div class="text-2xl font-semibold title-font tracking-tight ${isNegative ? 'text-red-300' : ''}">${node.name}</div>
-        <div class="text-xs uppercase tracking-widest ${isNegative ? 'text-red-400' : 'text-amber-400'} mt-1">${(node._constellation ? node._constellation + (node._topic ? ' · ' + node._topic : '') : node.cat).toUpperCase()} • ${node.short}${(node._isBiomarker || node._isBlood) && node.specimen_type ? ' • ' + String(node.specimen_type).toUpperCase() : ''}${isNegative ? ' • RISK NODE' : ''}</div>
+        <div class="text-xs uppercase tracking-widest ${isNegative ? 'text-red-400' : 'text-amber-400'} mt-1">${(node._constellation ? node._constellation + (node._topic ? ' · ' + node._topic : '') : node.cat).toUpperCase()} • ${node.short}${(node._isBiomarker || node._isBlood) && node.specimen_type ? ' • ' + String(node.specimen_type).toUpperCase() : ''}${isNegative ? ' • CAUTION (RESEARCH)' : ''}</div>
         
         <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
           <div class="bg-[#0a0d1a] p-2 rounded-xl" title="App rating, not a health outcome">${scoreLabel} <span class="font-mono ${scoreColor}">${node.longevity ?? node.vitality ?? '—'}</span></div>
@@ -1417,7 +1458,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         ${isNegative && (node.avoidance || node.mitigation) ? `
           <div class="mt-2">
-            ${node.avoidance ? `<div class="text-[10px] uppercase tracking-widest text-red-400/70 mb-0.5">AVOID / REDUCE</div><div class="text-[10px] text-red-200/90">${node.avoidance}</div>` : ''}
+            ${node.avoidance ? `<div class="text-[10px] uppercase tracking-widest text-red-400/70 mb-0.5">WAYS TO REDUCE EXPOSURE</div><div class="text-[10px] text-red-200/90">${node.avoidance}</div>` : ''}
             ${node.mitigation ? `<div class="mt-1 text-[10px] uppercase tracking-widest text-amber-400/70 mb-0.5">MITIGATION SUPPORT</div><div class="text-[10px] text-amber-200/90">${node.mitigation}</div>` : ''}
           </div>` : ''}
 
@@ -1485,7 +1526,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
           <button id="ext-link-btn" class="px-3 text-xs py-2 rounded-2xl border border-white/20 hover:bg-white/10 text-white/80" title="External sources">↗</button>
         </div>
-        <p class="mt-3 text-[10px] text-white/45 leading-snug">Educational, not medical advice</p>
+        <p class="mt-3 text-[10px] text-white/45 leading-snug">Research-based guidelines, not medical advice. Everyone is different, so talk to a clinician.</p>
       </div>
     `;
 
@@ -1648,6 +1689,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (bs) bs.close();
       updateDetail(null);
     }
+    syncNodeQuery(node);
   }
 
   // Expose the shared renderer so BottomSheet (and future components) can render the exact same rich inspector.
@@ -2638,6 +2680,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // === Keyboard shortcuts (polish + power user delight) ===
+  // Runs after the first fit so ?n= can center like a click.
+  function applyNodeDeepLink() {
+    const id = pendingNodeDeepLink;
+    pendingNodeDeepLink = null;
+    if (!id || !treeInstance) return;
+    if (currentTreeType === 'all') {
+      const node = (treeInstance.nodes || []).find((n) => n._sourceId === id || n.id === id);
+      if (!node) return;
+      openCatalogNode(node._constellation, node._sourceId || id);
+      return;
+    }
+    openCatalogNode(currentTreeType, id);
+  }
+
   function openCatalogNode(constellation, id) {
     if (currentTreeType === 'all') {
       const composite = `${constellation}::${id}`;
