@@ -2860,6 +2860,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     // Phone: the sheet would open under the Quick start tip.
     if (isMobileViewport()) return;
+    // ?n= already selected a node (e.g. calcium-alone); don't replace it with omega-3.
+    if (deep.n) return;
     if (currentTreeType !== 'supplements' || !treeInstance) return;
     const omega = treeInstance.nodes.find(n => n.id === 'omega3');
     if (!omega) return;
